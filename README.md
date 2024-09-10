@@ -7,3 +7,6 @@ notes/ is mostly sticky notes type stuff:
 + algorithm.md - my thoughts about the algorithm
 + MIDI.md - just some notes on MIDI
 + notes.md - misc notes/snippets
+
+Scores/MIDIs: [imslp.org](imslp.org)
+More MIDIs: [classicalarchives.org](https://www.classicalarchives.com/midi.html)

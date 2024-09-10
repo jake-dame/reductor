@@ -8,5 +8,5 @@ notes/ is mostly sticky notes type stuff:
 + MIDI.md - just some notes on MIDI
 + notes.md - misc notes/snippets
 
-Scores/MIDIs: [imslp.org](imslp.org)
+Scores/MIDIs: [imslp.org](imslp.org)  
 More MIDIs: [classicalarchives.org](https://www.classicalarchives.com/midi.html)

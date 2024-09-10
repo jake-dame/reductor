@@ -27,7 +27,7 @@ public class Main
     {
         // oracle doc said use an InputStream but didn't say to NOT use a File
         // and this seems to work for now...
-        File fileIn = new File("Byrd_IN.mid");
+        File fileIn = new File( "Byrd_IN.mid" );
         File fileOut = new File("Byrd_OUT.mid");
         try
         {

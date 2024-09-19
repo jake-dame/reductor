@@ -1,24 +1,32 @@
 package com.example.reductor;
 
-public class Main {
+import java.util.Arrays;
 
-    private static final String NAME = "simple_quiet";
+public class Main
+{
+    private static final String MIDI_NAME = "simple";
+    private static final String MIDI_PATH = "midis/" + MIDI_NAME + ".mid";
 
-    private static final String PATH = "midis/" + NAME + ".mid";
+    public static void main(String[] args)
+    {
+        try
+        {
+            MIDI midi = new MIDI(MIDI_PATH);
+            //midi.printStuff();
 
-    public static void main(String[] args) {
+            for (byte b : midi.rawBytes) System.out.print(Integer.toHexString(b) + " ");
+            System.out.println('\n');
 
-        try {
+            //for (String[] arr : midi.noteEvents) System.out.println(Arrays.toString(arr));
 
-            MIDI midi = new MIDI(PATH);
-            midi.printStuff();
-            midi.printPerformance();
+            //for (String[] arr : midi.otherEvents) System.out.println(Arrays.toString(arr));
+
             //midi.play();
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
-
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
 }

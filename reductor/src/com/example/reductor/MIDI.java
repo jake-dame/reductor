@@ -2,161 +2,203 @@ package com.example.reductor;
 
 import javax.sound.midi.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class MIDI {
+public class MIDI
+{
+    // FILE STUFF
+    final Path filePath;
+    final File file;
+    final String name;
+    final byte[] rawBytes;
 
-    private final String filePath;
+    final MidiFileFormat fileFormat;
+    final int fileType;
 
-    private final String name;
+    // SEQUENCE STUFF
+    final Sequence sequence;
+    final Track[] tracks;
+    final int numTracks;
+    final int resolution;
 
-    private final Sequence seqIn;
-    private final Sequence seqAg;
+    int totalBytes;
+    int totalEvents;
+    int totalNotesOn;
+    int totalNotesOff;
 
-    MIDI(String filePath) throws InvalidMidiDataException, IOException {
+    // AGGREGATE STUFF
+    Sequence aggregate;
 
-        this.filePath = filePath;
+    // TOOL STUFF
+    ArrayList<String[]> allEvents;
+    ArrayList<String[]> otherEvents;
+    ArrayList<String[]> noteEvents;
 
-        this.name = filePath.substring(filePath.lastIndexOf("/") + 1).split("\\.")[0];
+    MIDI(String filePath)
+    {
+        this.filePath = Path.of(filePath); // midis/some_midi.mid
+        this.file = new File(this.filePath.toString());
 
-        this.seqIn = MidiSystem.getSequence( new File(filePath) );
+        int fileNameIndex = filePath.lastIndexOf('/') + 1;
+        String fileName = filePath.substring(fileNameIndex);
+        this.name = fileName.split("\\.")[0];
 
-        this.seqAg = aggregate();
+        try {
+            this.rawBytes = Files.readAllBytes(this.filePath);
+            this.sequence = MidiSystem.getSequence(this.file);
+            this.fileFormat = MidiSystem.getMidiFileFormat(this.file);
+        } catch (IOException | InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
+
+        this.tracks = this.sequence.getTracks();
+        this.numTracks = this.tracks.length;
+        this.resolution = this.sequence.getResolution();
+        this.fileType = this.fileFormat.getType();
+
+        this.allEvents = new ArrayList<>();
+        this.noteEvents = new ArrayList<>();
+        this.otherEvents = new ArrayList<>();
+
+        analyze();
+        aggregate();
     }
 
-    public void printPerformance() throws InterruptedException
+    private void analyze()
     {
-        Track[] tracks = seqIn.getTracks();
-
-        long lastTickValue = 0;
-        for (Track track : tracks)
+        for (Track track : this.tracks)
         {
             for (int i = 0; i < track.size(); i++)
             {
-                // Verbose but disambiguates
+                MidiEvent event = track.get(i);
+                System.out.println("i: " + i + ", event: " + event);
+                var message = event.getMessage();
+                System.out.println(message.getClass() + ": " + Arrays.toString(message.getMessage()) + "\n");
 
-                // Event == timestamped MidiMessage
-                MidiEvent currentEvent = track.get(i);
-                // MidiMessage is an object
-                MidiMessage msgObj = currentEvent.getMessage();
-                // Thus a getter is needed to get the actual data
-                byte[] bytes = msgObj.getMessage();
+                //translateAndAddToList(message);
 
-                // Do some print- and debug-friendly processing
-                // Or set me back 30 steps because I did it wrong
-                String[] decodedBytes = decodeMIDIMessage(bytes);
-
-                // These are in milliseconds, I believe, and don't totally know how
-                // to work with these, yet
-                long noteDuration = currentEvent.getTick() - lastTickValue;
-
-                System.out.println(i + ": " + Arrays.toString(decodedBytes) + ", " + currentEvent.getTick());
-
-                // Simulate how this would unfold in real-time by sleeping for note duration
-                // This applies to note offs, too, though, so this is hacky solution to avoid more code
-                if ( i % 2 == 0) {
-                    Thread.sleep(noteDuration);
-                }
+                //this.totalBytes += message.getLength();
             }
+        }
+
+        this.totalEvents = this.totalNotesOn + this.totalNotesOff;
+    }
+
+    private void translateAndAddToList(MidiMessage message)
+    {
+        byte[] data = message.getMessage();
+
+        int status = message.getStatus();
+
+        //if (status < 0x80 || status > 0x9F) {
+        if (status < 0x80 || status > 0x9F && status != 176) {
+            addOtherEvent(data);
+        } else {
+            addNoteEvent(data);
         }
 
     }
 
-    private String[] decodeMIDIMessage(byte[] bytes)
+    private void addOtherEvent(byte[] data)
     {
-        String[] strings;
+        String[] res = new String[data.length];
 
-        // This is a NOTE_ON or NOTE_OFF message
-        if (bytes.length == 3) {
-            strings = convertHexToEnglish(bytes);
-        // This is a message I don't care about but will still print jic
-        } else {
-            strings = new String[bytes.length];
-            for (int i = 0; i < bytes.length; i++) {
-                strings[i] = Integer.toString(bytes[i] & 0xFF);
-            }
+        for (int j = 0; j < data.length; j++) {
+            res[j] = String.valueOf(data[j] & 0xFF);
+            //res[j] = String.valueOf(data[j]);
+            //res[j] = Integer.toBinaryString(data[j]);
         }
 
-        return strings;
-    }
+        this.otherEvents.add(res);
+    } // 0
 
-    private String[] convertHexToEnglish(byte[] bytes)
+    private void addNoteEvent(byte[] data)
     {
-        String[] ret = new String[3];
-
-        int status = (int) bytes[0] & 0xFF;
-        int pitch = bytes[1];
-        int velocity = bytes[2];
-
-        // Label status bytes
-        if (status >= 128 && status <= 143) {
-            ret[0] = "_";
-        } else if (status >= 144 && status <= 159) {
-            ret[0] = "ON";
-        } else {
-            //ret[0] = "n/a: "+Integer.toBinaryString(status);
-            ret[0] = "_"; // until I figure out why these are all CONTROL_CHANGE messages instead of NOTE_OFFs
+        if (data.length != 3) {
+            throw new IllegalArgumentException("note event of not length 3");
         }
 
-        // Label pitch bytes
+        String[] res = new String[3];
+
+        int status = (int) data[0] & 0xFF;
+        //if (status < 0x90) {
+        if (status == 176) {
+            res[0] = "off";
+            this.totalNotesOff++;
+        } else {
+            res[0] = "ON";
+            this.totalNotesOn++;
+        }
+
+        int pitch = (int) data[1] & 0xFF;
         switch (pitch % 12) {
-            case 0: ret[1] = "C"; break;
-            case 1: ret[1] = "C#"; break;
-            case 2: ret[1] = "D"; break;
-            case 3: ret[1] = "D#"; break;
-            case 4: ret[1] = "E"; break;
-            case 5: ret[1] = "F"; break;
-            case 6: ret[1] = "F#"; break;
-            case 7: ret[1] = "G"; break;
-            case 8: ret[1] = "G#"; break;
-            case 9: ret[1] = "A"; break;
-            case 10: ret[1] = "A#"; break;
-            case 11: ret[1] = "B"; break;
-            default: ret[1] = "unknown: " + pitch;
+            case 0: res[1] = "C"; break;
+            case 1: res[1] = "C#"; break;
+            case 2: res[1] = "D"; break;
+            case 3: res[1] = "D#"; break;
+            case 4: res[1] = "E"; break;
+            case 5: res[1] = "F"; break;
+            case 6: res[1] = "F#"; break;
+            case 7: res[1] = "G"; break;
+            case 8: res[1] = "G#"; break;
+            case 9: res[1] = "A"; break;
+            case 10: res[1] = "A#"; break;
+            case 11: res[1] = "B"; break;
+            default: res[1] = "unknown: " + pitch;
         }
 
-        // Label velocity bytes
-        ret[2] = velocity > 63 ? "f" : "p";
+        int velocity = (int) data[2] & 0xFF;
+        //res[2] = velocity > 63 ? "f" : "p";
+        res[2] = String.valueOf(velocity);
 
-        return ret;
+        this.noteEvents.add(res);
     }
 
-    public void write() throws IOException {
-        MidiSystem.write(seqAg, 1, new File("midis/" + this.name + "_OUT.mid"));
-    }
+    public void aggregate()
+    {
+        try {
+            this.aggregate = new Sequence(Sequence.PPQ, this.resolution);
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
 
-    // Given a sequence with one or more tracks, outputs a single-track sequence.
-    public Sequence aggregate() throws InvalidMidiDataException {
-
-        Track[] tracksIn = seqIn.getTracks();
-
-        // Should probably just always match the input sequence's timing resolution
-        Sequence seqOut = new Sequence(Sequence.PPQ, seqIn.getResolution());
-        Track trackOut = seqOut.createTrack();
+        Track singleTrack = this.aggregate.createTrack();
 
         // Get every event from every track and add it to the single output track
-        for (Track track : tracksIn) {
-            for (int i = 1; i < track.size(); i++) { // .size() is # of events
+        for (Track track : this.tracks) {
+            for (int i = 1; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
-                trackOut.add(event);
+                singleTrack.add(event);
             }
         }
 
-        return seqOut;
     }
 
-    public void play() throws MidiUnavailableException, InvalidMidiDataException {
+    public void write() throws IOException
+    {
+        MidiSystem.write(this.sequence, 1, new File("midis/" + this.name + "_OUT.mid"));
+    }
 
-        // This connects to the default synth, too
-        Sequencer seqr = MidiSystem.getSequencer();
+    public void play()
+    {
+        Sequencer seqr;
+        try {
+            // This connects to the default synth, too
+            seqr = MidiSystem.getSequencer();
+            seqr.setSequence(this.sequence);
+            seqr.open();
+        }
+        catch (MidiUnavailableException | InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
 
-        seqr.setSequence(seqAg);
-
-        seqr.open();
         seqr.start();
 
         while (true) {
-            if (seqr.getTickPosition() >= seqr.getTickLength()) {
+            if (!seqr.isRunning()) {
                 seqr.close();
                 return;
             }
@@ -164,31 +206,28 @@ public class MIDI {
 
     }
 
-    public void printStuff() throws InvalidMidiDataException, IOException {
-
-        MidiFileFormat format = MidiSystem.getMidiFileFormat( new File(filePath));
-
-        System.out.println("================SCORE OBJECT===============");
+    public void printStuff() throws InvalidMidiDataException, IOException
+    {
+        System.out.println("================REDUCTOR===============");
         System.out.println("NAME OF WORK: " + this.name);
-        System.out.println(
-                        "TIMING RESOLUTION: " + format.getResolution()
-                        + "\nFILE FORMAT: " + format
-                        + "\nLENGTH (bytes): " + format.getByteLength()
-                        + "\nDIVISION TYPE: " + format.getDivisionType()
-                        + "\nFILE TYPE: " + format.getType()
-                        + "\nμsec LENGTH: " + format.getMicrosecondLength());
+        System.out.println("LENGTH IN BYTES (Raw): " + this.rawBytes.length);
 
+        System.out.println("================SEQUENCE===============");
+        System.out.println("RESOLUTION: "+ this.sequence.getResolution());
+        System.out.println("DIVISION TYPE: "+ this.sequence.getDivisionType());
+        //System.out.println("uSEC LENGTH: "+ this.sequence.getMicrosecondLength());
+        System.out.println("TICK LENGTH: "+ this.sequence.getTickLength());
+        //System.out.println("PATCH LIST: "+ Arrays.toString(this.sequence.getPatchList()));
 
-        MidiDevice.Info[] info = MidiSystem.getMidiDeviceInfo();
-        System.out.println("================DEVICES AVAILABLE===============");
-        for (var device : info) {
-            System.out.println(device.toString());
-        }
+        MidiFileFormat format = MidiSystem.getMidiFileFormat( new File(this.filePath.toString()) );
+        System.out.println("================MIDIFILEFORMAT===============");
+        System.out.println("LENGTH IN BYTES (MidiFileFormat): " + format.getByteLength());
 
-        System.out.println("================FILE TYPES SUPPORTED FOR WRITE===============");
-        for (int fileType : MidiSystem.getMidiFileTypes()) {
-            System.out.println(fileType);
-        }
+        //MidiDevice.Info[] info = MidiSystem.getMidiDeviceInfo();
+        //System.out.println("================DEVICES AVAILABLE===============");
+        //System.out.println(Arrays.toString(info));
+        //
+        //System.out.println("================FILE TYPES SUPPORTED FOR WRITE===============");
+        //System.out.println( Arrays.toString( MidiSystem.getMidiFileTypes() ) );
     }
-
 }

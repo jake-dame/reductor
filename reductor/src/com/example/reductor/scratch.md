@@ -215,3 +215,34 @@ long noteDuration = event.getTick() - lastTickValue;
         //else if (divisionType == SMPTE_30)
         //    this.divisionType = SMPTE_30;
         //else throw new InvalidMidiDataException("Unsupported division type: " + divisionType);
+
+
+
+
+------------------------------------------------------
+String velocity_str;
+if (velocity == 0) {
+    velocity_str = "0";
+} else if (velocity <= 8) {
+    velocity_str = velocity + "(pppp)";
+} else if (velocity <= 20) {
+    velocity_str = velocity + "(ppp)";
+} else if (velocity <= 31) {
+    velocity_str = velocity + "(pp)";
+} else if (velocity <= 42) {
+    velocity_str = velocity + "(p)";
+} else if (velocity <= 53) {
+    velocity_str = velocity + "(mp)";
+} else if (velocity <= 64) {
+    velocity_str = velocity + "(mf)";
+} else if (velocity <= 80) {
+    velocity_str = velocity + "(f)";
+} else if (velocity <= 96) {
+    velocity_str = velocity + "(ff)";
+} else if (velocity <= 112) {
+    velocity_str = velocity + "(fff)";
+} else if (velocity <= 127) {
+    velocity_str = velocity + "(ffff)";
+} else {
+    velocity_str = velocity + "(?)";
+}

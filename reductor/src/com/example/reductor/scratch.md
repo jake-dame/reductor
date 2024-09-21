@@ -1,6 +1,6 @@
 8 into 7
 
-------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 
 String velocity_str;
 if (velocity == 0) {
@@ -29,7 +29,7 @@ velocity_str = velocity + "(ffff)";
 velocity_str = velocity + "(?)";
 }
 
------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
 public void printFileInfo() throws InvalidMidiDataException, IOException
 {
@@ -88,3 +88,22 @@ if ( !sysexEvents_m.isEmpty() ) {
 //System.out.println(Arrays.toString(MidiSystem.getMidiDeviceInfo();));
 }
 
+-------------------------------------------------------------------------------------------------------------
+
+midi.getNoteEvents().forEach(System.out::println);
+
+-------------------------------------------------------------------------------------------------------------
+
+// Might be useful at some point to have an ArrayList<Chord> for more complex arpeggiation, etc.
+// Granularity (list length) need not be in microseconds; perhaps max tick / smallest duration (note value)
+
+// Chords would just have an ArrayList<Note> of notes on at a given time
+//private class Chord {
+//
+//    ArrayList<Node> notesOn_m;
+//    long tick;
+//
+//    Chord(ArrayList<Node> notes) {
+//
+//    }
+//}

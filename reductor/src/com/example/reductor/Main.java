@@ -12,13 +12,10 @@ public class Main {
 
         try {
 
-            MidiFile midi = new MidiFile("midis/minuet_SB_aggregate.mid");
+            MidiFile midi = new MidiFile(MOZART);
+            var newMidi = MidiFile.aggregate(midi);
 
-            midi.printNoteEvents();
-
-            NoteTree tree = new NoteTree(midi.getNoteEvents());
-            tree.printNoteObjects();
-
+            NoteTree tree = new NoteTree(newMidi.getNoteEvents());
         }
         catch (Exception e) {
             e.printStackTrace();

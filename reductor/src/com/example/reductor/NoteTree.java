@@ -30,37 +30,70 @@ public class NoteTree {
 
     }
 
-    // Might be useful at some point to have an ArrayList<Chord> for more complex arpeggiation, etc.
-    // Granularity (list length) need not be in microseconds; perhaps max tick / smallest duration (note value)
+    // A list of notes with [pitch, start, end];
+    ArrayList<Note> notes_m;
 
-    // Chords would just have an ArrayList<Note> of notes on at a given time
-    //private class Chord {
-    //
-    //    ArrayList<Node> notesOn_m;
-    //    long tick;
-    //
-    //    Chord(ArrayList<Node> notes) {
-    //
-    //    }
-    //}
+    // Minimum tick (tick of first note)
+    long min;
 
-    final private ArrayList<Note> notes_m;
+    // Maximum tick (length of sequence in ticks)
+    long max;
+
+    private class Node {
+        Node left_m, right_m;
+        Note note;
+    }
+
+    private Node root_m;
 
     NoteTree(ArrayList<MidiEvent> noteEvents) {
+
+        constructNotesList(noteEvents);
+
+    }
+
+    private void constructNotesList(ArrayList<MidiEvent> events) {
+
+        if (events.isEmpty()) {
+            throw new IllegalArgumentException("note events is empty");
+        }
+
+        if (events.size() % 2 != 0 ) {
+            throw new IllegalArgumentException("note events length is odd");
+        }
+
+        int firstMsgStatus = events.getFirst().getMessage().getStatus();
+        int lastMsgStatus = events.getLast().getMessage().getStatus();
+        if (firstMsgStatus != 0x90 || lastMsgStatus != 0x80) {
+            throw new RuntimeException("sequence begins with note off or ends with note on");
+        }
+
         notes_m = new ArrayList<>();
-        createNotesList(noteEvents);
+        createNotesList(events);
+
+        min = Long.MAX_VALUE;
+        max = -1;
+        getMinMax();
+    }
+
+    private void getMinMax() {
+
+        for (Note note : notes_m) {
+            if (note.start_m < min ) {
+                min = note.start_m;
+            }
+            if (note.end_m > max ) {
+                max = note.end_m;
+            }
+        }
+
+        if (max == -1 || min == Long.MAX_VALUE) {
+            throw new IllegalArgumentException("invalid min/max tick");
+        }
     }
 
     // Populates member list of `Note` objects with their respective duration/tick intervals
     private void createNotesList(ArrayList<MidiEvent> events) {
-
-        // Shouldn't be a problem but jic
-        int firstMsgStatus = events.getFirst().getMessage().getStatus();
-        int lastMsgStatus = events.getLast().getMessage().getStatus();
-
-        if (firstMsgStatus != 0x90 || lastMsgStatus != 0x80) {
-            throw new RuntimeException("sequence begins with note off or ends with note on");
-        }
 
         int size = events.size();
 
@@ -79,7 +112,7 @@ public class NoteTree {
             long endTick = -1;
 
             // If penultimate event, construct/add last `Note` and return
-            if (i == events.size() - 1) {
+            if (i == size - 1) {
                 endTick = events.getLast().getTick();
                 notes_m.add( new Note(pitch, startTick, endTick) );
                 return;
@@ -114,12 +147,17 @@ public class NoteTree {
             notes_m.add(note);
         }
 
+        if (notes_m.size() != (size / 2)) {
+            System.out.println("Note tree size mismatch");
+        }
     }
 
     public void printNoteObjects() {
         for (Note note : notes_m) {
             System.out.println(note);
         }
+        System.out.println("size: " + notes_m.size());
+        System.out.println("min: " + min + " max: " + max);
     }
 
 }

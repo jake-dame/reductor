@@ -1,4 +1,6 @@
-8 into 7
+1. I could just add all the Note Events to aggregate, 
+but you lose tempo, key signature (inconsequential depending on context), etc.
++ Also gives chance to change all channel prefixes to 1, change instrument to piano
 
 -------------------------------------------------------------------------------------------------------------
 
@@ -107,3 +109,32 @@ midi.getNoteEvents().forEach(System.out::println);
 //
 //    }
 //}
+
+---------------------------------------------------------------------------------------------------------------
+
+MIDI midi = new MIDI("midis/minuet_SB_aggregate.mid");
+var newMidi = Reductor.aggregate(midi);
+ArrayList<Converter.Note> notes = fromEvents(newMidi.getNoteEvents());
+ArrayList<MidiEvent> events = toEvents(notes);
+
+Sequence seq = new Sequence(Sequence.PPQ, 480);
+Track track = seq.createTrack();
+
+for (MidiEvent event : events) {
+    track.add(event);
+}
+
+Sequencer sequencer = MidiSystem.getSequencer();
+sequencer.setSequence(seq);
+sequencer.open();
+sequencer.start();
+
+while (true) {
+    if (!sequencer.isRunning()) {
+        sequencer.close();
+        return;
+    }
+}
+
+----------------------------------------------------------------------------------------------------------------
+

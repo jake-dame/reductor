@@ -1,8 +1,10 @@
 package com.example.reductor;
 
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.ShortMessage;
+import javax.sound.midi.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -201,6 +203,183 @@ class MidiUtility {
 
             System.out.println(type_label + ": " + dataString);
         }
+    }
+
+    public static void play(Sequence sequence) throws MidiUnavailableException, InvalidMidiDataException {
+
+        Sequencer sequencer = MidiSystem.getSequencer();
+        sequencer.setSequence(sequence);
+        sequencer.open();
+        sequencer.start();
+
+        while (true) {
+            if (!sequencer.isRunning()) {
+                sequencer.close();
+                return;
+            }
+        }
+
+    }
+
+    public static void write(Sequence sequence, String name) throws IOException {
+
+        int fileType = 0;
+
+        if (sequence.getTracks().length > 1) {
+            fileType = 1;
+        }
+
+        MidiSystem.write(sequence, fileType, new File("midis/" + name + "_OUT.mid") );
+    }
+
+    private static ArrayList<Note> convertEventsToNotes(ArrayList<MidiEvent> events) {
+
+        if (events.isEmpty()) {
+            throw new IllegalArgumentException("note events is empty");
+        }
+
+        if (events.size() % 2 != 0 ) {
+            throw new IllegalArgumentException("note events length is odd");
+        }
+
+        int firstMsgStatus = events.getFirst().getMessage().getStatus();
+        int lastMsgStatus = events.getLast().getMessage().getStatus();
+        if (firstMsgStatus != 0x90 || lastMsgStatus != 0x80) {
+            throw new RuntimeException("sequence begins with note off or ends with note on");
+        }
+
+        ArrayList<Note> notes = new ArrayList<>();
+
+        int size = events.size();
+
+        // NOTE ON loop
+        for (int i = 0; i < size; i++) {
+
+            MidiEvent event = events.get(i);
+
+            // Skip NOTE OFFs for outer loop
+            if (event.getMessage().getStatus() != 0x90) {
+                continue;
+            }
+
+            int pitch = ((ShortMessage) event.getMessage()).getData1();
+            long startTick = event.getTick();
+            long endTick = -1;
+
+            // If penultimate event, construct/add last `Note` and return
+            if (i == size - 1) {
+                endTick = events.getLast().getTick();
+                notes.add( new Note(pitch, startTick, endTick) );
+                return notes;
+            }
+
+            // "NOTE OFF" loop: Start from current index, search until matching NOTE OFF event is found
+            for (int j = i + 1; j < size; j++) {
+
+                MidiEvent nextEvent = events.get(j);
+
+                // If this is not a NOTE OFF event, ignore it
+                if (nextEvent.getMessage().getStatus() != 0x80) {
+                    continue;
+                }
+
+                int nextPitch = ((ShortMessage) nextEvent.getMessage()).getData1();
+
+                if (nextPitch == pitch) {
+                    endTick = nextEvent.getTick();
+                    // would alter passed object
+                    // would need to call .size() everywhere
+                    //events.remove(nextEvent);
+                    break;
+                }
+            }
+
+            if (endTick == -1) {
+                throw new RuntimeException("reached end of sequence without finding matching NOTE OFF for: "
+                        + pitch + " @ " + startTick);
+            }
+
+            // Construct `Note` and add to list
+            Note note = new Note(pitch, startTick, endTick);
+            notes.add(note);
+        }
+
+        if (notes.size() != (size / 2)) {
+            System.out.println("note list / event list size mismatch");
+        }
+
+        return notes;
+    }
+
+    public static ArrayList<MidiEvent> convertNotesToEvents(ArrayList<Note> notes) throws InvalidMidiDataException {
+
+        ArrayList<MidiEvent> list = new ArrayList<>();
+
+        for (Note note : notes) {
+
+            MidiEvent noteOnEvent = new MidiEvent(
+                    new ShortMessage(ShortMessage.NOTE_ON, note.pitch_m, 64),
+                    note.start_m);
+
+            list.add(noteOnEvent);
+
+            MidiEvent noteOffEvent = new MidiEvent(
+                    new ShortMessage(ShortMessage.NOTE_ON, note.pitch_m, 0),
+                    note.end_m);
+
+            list.add(noteOffEvent);
+        }
+
+        return list;
+    }
+
+    public static void printBytes(String filePath) throws IOException {
+
+        byte[] data = Files.readAllBytes( Path.of(filePath) );
+
+        int lineCtr = 0;
+        for (int i = 0; i < data.length; i++) {
+            int b = data[i] & 0xFF;
+
+            if (b == 0xFF) {
+                System.out.println();
+                lineCtr++;
+            }
+
+            if(lineCtr > 4) {
+                if (b >= 0x90 && b <= 0x9F) {
+                    System.out.println();
+                }
+                if (b >= 0x80 && b <= 0x8F) {
+                    System.out.print("\n\t");
+                }
+            }
+
+            System.out.print(Integer.toHexString(b) + " ");
+
+        }
+
+
+    }
+
+    public static void printSequence(Sequence seq){
+        System.out.println("\n================printSequence()=======================");
+        for (Track track : seq.getTracks()) {
+            for (int i = 0; i < track.size(); i++) {
+                MidiEvent event = track.get(i);
+                MidiMessage msg = event.getMessage();
+                byte[] data = msg.getMessage();
+                for (int j = 0; j < data.length; j++) {
+                    int firstByte = data[0] & 0xFF;
+                    if (firstByte == 0x80) {
+                        System.out.print("\t");
+                    }
+                    System.out.print(Integer.toHexString(data[j] & 0xFF) + " ");
+                }
+                System.out.println("");
+            }
+        }
+        System.out.println("\n===================================================");
     }
 
 }

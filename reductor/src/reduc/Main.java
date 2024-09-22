@@ -1,4 +1,4 @@
-package com.example.reductor;
+package reduc;
 
 import javax.sound.midi.Sequence;
 
@@ -14,12 +14,11 @@ public class Main {
 
             Reductor red = new Reductor(MINUET_SB);
 
-
             Sequence seq = red.getAggregate();
             MidiUtility.write(seq, "test");
 
             MidiUtility.printSequence(seq);
-            MidiUtility.printBytes("midis/test_OUT.mid");
+            MidiUtility.play(seq);
 
         }
         catch (Exception e) {

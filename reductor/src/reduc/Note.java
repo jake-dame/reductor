@@ -1,4 +1,4 @@
-package com.example.reductor;
+package reduc;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;

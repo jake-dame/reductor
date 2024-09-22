@@ -1,4 +1,4 @@
-package com.example.reductor;
+package reduc;
 
 import javax.sound.midi.*;
 

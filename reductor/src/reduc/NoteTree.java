@@ -1,8 +1,8 @@
-package com.example.reductor;
+package reduc;
 
 import java.util.ArrayList;
 
-public class NoteTree {
+class NoteTree {
 
     private static class Node {
 
@@ -31,19 +31,15 @@ public class NoteTree {
         size = 0;
     }
 
-    NoteTree(ArrayList<Note> notes) {
-        root = null;
-        size = 0;
+    private boolean add(Note note) {
+        return false;
     }
 
-    private void add(Note note) {
-
-    }
-
-    private void addList(ArrayList<Note> notes) {
+    private boolean addList(ArrayList<Note> notes) {
         for (Note note : notes) {
             add(note);
         }
+        return false;
     }
 
 }

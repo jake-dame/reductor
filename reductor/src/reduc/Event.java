@@ -6,25 +6,21 @@ import javax.sound.midi.ShortMessage;
 import java.util.ArrayList;
 
 /*
-    Contains `Note` "struct", and two static to-from conversion methods
- */
-public class Note {
+    Represents a MidiEvent and has some static conversion functions too (from Java MidiEvent)
+*/
+public class Event implements Comparable<Event> {
 
-    int pitch_m;
-    long start_m, end_m;
+    int pitch;
+    // ticks
+    long start, end;
 
-    Note(int pitch, long start, long end) {
-        pitch_m = pitch;
-        start_m = start;
-        end_m = end;
+    Event(int pitch, long start, long end) {
+        this.pitch = pitch;
+        this.start = start;
+        this.end = end;
     }
 
-    @Override
-    public String toString() {
-        return "[" + pitch_m + ", " + start_m + ", " + end_m + "]";
-    }
-
-    private static ArrayList<Note> convertEventsToNotes(ArrayList<MidiEvent> events) {
+    public static ArrayList<Event> midiEventsToEvents(ArrayList<MidiEvent> events) {
 
         if (events.isEmpty()) {
             throw new IllegalArgumentException("note events is empty");
@@ -40,7 +36,7 @@ public class Note {
             throw new RuntimeException("sequence begins with note off or ends with note on");
         }
 
-        ArrayList<Note> notes = new ArrayList<>();
+        ArrayList<Event> notes = new ArrayList<>();
 
         int size = events.size();
 
@@ -58,10 +54,10 @@ public class Note {
             long startTick = event.getTick();
             long endTick = -1;
 
-            // If penultimate event, construct/add last `Note` and return
+            // If penultimate event, construct/add last `Event` and return
             if (i == size - 1) {
                 endTick = events.getLast().getTick();
-                notes.add( new Note(pitch, startTick, endTick) );
+                notes.add( new Event(pitch, startTick, endTick) );
                 return notes;
             }
 
@@ -91,8 +87,8 @@ public class Note {
                         + pitch + " @ " + startTick);
             }
 
-            // Construct `Note` and add to list
-            Note note = new Note(pitch, startTick, endTick);
+            // Construct `Event` and add to list
+            Event note = new Event(pitch, startTick, endTick);
             notes.add(note);
         }
 
@@ -103,21 +99,22 @@ public class Note {
         return notes;
     }
 
-    public static ArrayList<MidiEvent> convertNotesToEvents(ArrayList<Note> notes) throws InvalidMidiDataException {
+    public static ArrayList<MidiEvent> eventsToMidiEvents(ArrayList<Event> events)
+            throws InvalidMidiDataException {
 
         ArrayList<MidiEvent> list = new ArrayList<>();
 
-        for (Note note : notes) {
+        for (Event event : events) {
 
             MidiEvent noteOnEvent = new MidiEvent(
-                    new ShortMessage(ShortMessage.NOTE_ON, note.pitch_m, 64),
-                    note.start_m);
+                    new ShortMessage(ShortMessage.NOTE_ON, event.pitch, 64),
+                    event.start);
 
             list.add(noteOnEvent);
 
             MidiEvent noteOffEvent = new MidiEvent(
-                    new ShortMessage(ShortMessage.NOTE_ON, note.pitch_m, 0),
-                    note.end_m);
+                    new ShortMessage(ShortMessage.NOTE_ON, event.pitch, 0),
+                    event.end);
 
             list.add(noteOffEvent);
         }
@@ -125,5 +122,15 @@ public class Note {
         return list;
     }
 
+    @Override
+    public int compareTo(Event o) {
+        // TODO asdf
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + MidiUtility.getNote(pitch) + ", " + start + ", " + end + "]";
+    }
 
 }

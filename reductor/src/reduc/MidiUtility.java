@@ -17,19 +17,20 @@ class MidiUtility {
     static {
         mapPitches = new HashMap<>();
         for (int num = 0; num < 128; num++) {
+            String space = "";
             String pitch = switch (num % 12) {
-                case 0 -> "C " + (num/12 - 1);
-                case 1 -> "C#" + (num/12 - 1);
-                case 2 -> "D " + (num/12 - 1);
-                case 3 -> "D#" + (num/12 - 1);
-                case 4 -> "E " + (num/12 - 1);
-                case 5 -> "F " + (num/12 - 1);
-                case 6 -> "F#" + (num/12 - 1);
-                case 7 -> "G " + (num/12 - 1);
-                case 8 -> "G#" + (num/12 - 1);
-                case 9 -> "A " + (num/12 - 1);
-                case 10 -> "A#" + (num/12 - 1);
-                case 11 -> "B " + (num/12 - 1);
+                case 0 -> "C" + space + (num/12 - 1);
+                case 1 -> "C#" + space + (num/12 - 1);
+                case 2 -> "D" + space + (num/12 - 1);
+                case 3 -> "D#" + space + (num/12 - 1);
+                case 4 -> "E" + space + (num/12 - 1);
+                case 5 -> "F" + space + (num/12 - 1);
+                case 6 -> "F#" + space + (num/12 - 1);
+                case 7 -> "G" + space + (num/12 - 1);
+                case 8 -> "G#" + space + (num/12 - 1);
+                case 9 -> "A" + space + (num/12 - 1);
+                case 10 -> "A#" + space + (num/12 - 1);
+                case 11 -> "B" + space + (num/12 - 1);
                 default -> "";
             };
             mapPitches.put(num, pitch);
@@ -232,6 +233,7 @@ class MidiUtility {
         MidiSystem.write(sequence, fileType, new File("midis/" + name + "_OUT.mid") );
     }
 
+    // this is not a pretty printout, use w caution
     public static void printBytes(String filePath) throws IOException {
 
         byte[] data = Files.readAllBytes( Path.of(filePath) );

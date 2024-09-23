@@ -38,7 +38,9 @@ Check out obsidian for markdown stuff?
 
 ## Other
 
-Half a byte (4 bites) is called a nibble or quartet or just half-byte
+Half a byte (4 bites) is called a nibble or quartet or just half-byte. or nybble or nybl (according to wikipedia, to mimic byte's use of y)
+
+Inner classes in Java are members just like methods and fields. They CAN access their parents methods and fields if they are NOT static. If they are static (which members can be marked as, but not top-level classes), then they can be instantiated without needed to be tied to some instance of the parent class.
 
 Looking through the Track implementation literally looks like a 6012 assignment
 

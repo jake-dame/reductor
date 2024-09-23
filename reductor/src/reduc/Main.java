@@ -1,6 +1,6 @@
 package reduc;
 
-import javax.sound.midi.Sequence;
+import javax.sound.midi.*;
 
 public class Main {
 
@@ -14,10 +14,16 @@ public class Main {
 
             Reductor red = new Reductor(MINUET_SB);
 
-            Sequence seq = red.getAggregate();
-            MidiUtility.write(seq, "test");
+            Sequence seq = red.getSequence();
 
-            MidiUtility.printSequence(seq);
+            for(Track track : seq.getTracks()) {
+                for (int i = 0; i < track.size(); i++) {
+                    MidiEvent event = track.get(i);
+                    System.out.println(event.getTick());
+                }
+            }
+
+            //MidiUtility.printSequence(seq);
             MidiUtility.play(seq);
 
         }

@@ -10,7 +10,8 @@ public class Reductor {
 
     private final Midi midiAg;
 
-    Reductor(String filePath) throws InvalidMidiDataException {
+    Reductor(String filePath)
+            throws InvalidMidiDataException {
 
         midiIn = new Midi(filePath);
 
@@ -19,26 +20,20 @@ public class Reductor {
         midiAg = new Midi(midiIn.getName() + "_agg", aggregate);
     }
 
-    private Sequence aggregate(Sequence sequence) throws InvalidMidiDataException {
+    private Sequence aggregate(Sequence sequenceIn)
+            throws InvalidMidiDataException {
 
-        Track[] tracksIn = sequence.getTracks();
+        Sequence newSequence = new Sequence(sequenceIn.getDivisionType(), sequenceIn.getResolution(), 1);
 
-        Sequence seqOut = new Sequence(
-                sequence.getDivisionType(), sequence.getResolution());
+        for (int tr = 0; tr < sequenceIn.getTracks().length; tr++) {
+            Track track = sequenceIn.getTracks()[tr];
+            for (int ev = 0; ev < track.size(); ev++) {
+                MidiEvent event = track.get(ev);
 
-        Track trackOut = seqOut.createTrack();
-
-        for (int trackIndex = 0; trackIndex < tracksIn.length; trackIndex++) {
-
-            Track track = tracksIn[trackIndex];
-
-            for (int eventIndex = 0; eventIndex < track.size(); eventIndex++) {
-
-                MidiEvent event = track.get(eventIndex);
-                MidiMessage msg = event.getMessage();
+                MidiMessage msg = track.get(ev).getMessage();
 
                 // Avoid adding meta info needed by tracks that no longer exist
-                if (trackIndex > 0 && msg instanceof MetaMessage) {
+                if (tr > 0 && msg instanceof MetaMessage) {
                     continue;
                 }
 
@@ -46,18 +41,20 @@ public class Reductor {
                     // Avoid adding control change stuff to aggregate
                     if (shortMessage.getCommand() == CONTROL_CHANGE) {
                         continue;
-                    } else if (shortMessage.getCommand() == PROGRAM_CHANGE && trackIndex > 0) {
+                    } else if (shortMessage.getCommand() == PROGRAM_CHANGE && tr > 0) {
                         continue;
                     } else {
                         sanitizeShortMessage(shortMessage);
                     }
                 }
 
-                trackOut.add(event);
+                // this adds in increasing tick order
+                // it also prevents duplicates
+                newSequence.getTracks()[0].add(event);
             }
         }
 
-        return seqOut;
+        return newSequence;
     }
 
     private void sanitizeShortMessage(ShortMessage shortMessage)
@@ -81,14 +78,10 @@ public class Reductor {
 
     }
 
-
     public Sequence getSequence() {
         return midiIn.getSequence();
     }
 
-    public Sequence getAggregate() {
-        return midiAg.getSequence();
-    }
-
+    public Sequence getAggregate() { return midiAg.getSequence(); }
 
 }

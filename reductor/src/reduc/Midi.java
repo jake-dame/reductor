@@ -89,36 +89,7 @@ class Midi {
 
     protected String getName() { return name_m; }
 
-    // TODO: find way to expose sequence safely
-
+    // not safe
     protected Sequence getSequence() { return sequence_m; }
-
-    //public Sequence getSequence() throws InvalidMidiDataException {
-    //
-    //    Sequence copy = new Sequence(sequence_m.getResolution(),
-    //            sequence_m.getResolution(), sequence_m.getTracks().length);
-    //
-    //    for (Track track : sequence_m.getTracks()) {
-    //        Track copyTrack = copy.createTrack();
-    //        for (int j = 0; j < track.size(); j++) {
-    //
-    //            MidiEvent event = track.get(j);
-    //            MidiMessage msg = event.getMessage();
-    //
-    //            MidiMessage copyMsg = null;
-    //            switch (msg) {
-    //                case ShortMessage sh -> { copyMsg = new ShortMessage(sh.getStatus(), sh.getData1(), sh.getData2()); }
-    //                case MetaMessage meta -> { copyMsg = new MetaMessage(meta.getType(), meta.getData(), meta.getLength()); }
-    //                case SysexMessage sys -> { copyMsg = new SysexMessage(sys.getStatus(), sys.getData(), sys.getLength()); }
-    //                default -> { }
-    //            }
-    //
-    //            MidiEvent copyEvent = new MidiEvent( copyMsg, event.getTick());
-    //            copyTrack.add(copyEvent);
-    //        }
-    //    }
-    //
-    //    return copy;
-    //}
 
 }

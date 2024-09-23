@@ -35,6 +35,8 @@ This is necessary because SMF's consist of *ordered* data. Think of it as taking
 Synthesizers are responsible for taking incoming midi data (from a sequencer) and producing actual audio waves.
 + These are the sound-producing entitites
 
+Channels are mostly for creating layered sounds and different effects past just the plain
+
 ## SMF Format
 
 Standard Midi Files (SMF) are big-endian and have a `.mid` extension.
@@ -48,10 +50,13 @@ SMF's anatomy:
 
 Headers do not contain any events.
 
-The entirety of the events contained within the tracks are referred to as a "sequence".
+A "sequence" is sometimes used in the context of an SMF (but shouldn't be in my opinion). A sequence refers to all the events from all the tracks put together and put in sequential order (rather than Track 1 events followed by Track 2 events, etc.).
++ If you have one track, that one track IS the sequence
++ If you have multiple tracks, when the multiple tracks are layered on top of each other, that's the sequence
++ A sequence is just the piece of music from start to finish, over time, whose distinct components are events
 
 So, the practical "hierarchy" of an SMF is as follows:
-+ Sequences contain Tracks contain Events (contain ticks + messages/data)
++ Sequences (sort of) contain Tracks contain Events (contain Tick value + Message)
 
 
 ### Header
@@ -74,7 +79,7 @@ The data section contains important information regarding how the tick values in
   + If the MSB of the first byte is not set as in `01 78`:
     + Indicates the division type is ticks-per-beat, or in some schemes as ticks-per-quarter note
     + The first byte `01` ignored
-    + The second byte `78` indicates the resolution is `78` ticks-per-beat
+    + The second byte `78` indicates the resolution is `78` ticks-per-quarter
   + If the MSB of the first byte is set as in `F7 E0`:
     + Indicates the division type is in SMPTE units
     + The 7 LSB's `1110111` indicate the frames-per-second 
@@ -192,6 +197,84 @@ Of the beginning of an SMF file (header, track with some meta message events):
 0 ff 51 3 7 a1 20
 // ..."note" events follow
 ```
+
+## Timing
+
+The amount of time that must elapse (from the start of the sequence) before an event is executed is known as that event's tick value.
+
+The start of a piece occurs at 0, which is technically an absolute time (like 4:37:13:35...56 GMT), but, after that, all times are relative. If an event has a tick value of 100, then 100 ticks must past after the 0 point until that event is allowed to be "played". All subsequent events are defined in ticks *relative* to that initial point.
+
+Defining ticks (all the number above are arbitrary) is part of the MIDI specification.
++ They are based on microseconds, but working with microseconds is completely futile for most everybody.
++ There are 1,000,000 microseconds per second, and 60,000,000 microseconds per minute. Defining quarter notes by how many microseconds they take would be a nightmare.
+
+Instead, we do a multi-step process:
++ Define the timing type (there are two -- PPQ or SMPTE - see the [Header](#header) section)
++ Define how many ticks per beat
++ Define how many microseconds per beat (in the Set Tempo meta message)
+  + In music this is usually in beats per minute (BPM), but not in MIDI
+
+This all seems rather convoluted and almost like we came full circle but went through the weeds to get there instead of walking on the sidewalk. Below is why it is needed, and it has to do with getting computers to do things that we might take for granted when we listen to a musician.
+
+### Resolution
+
+Premise: in music, a quarter note can be subdivided into different, even sections. Most commonly it is subdivided into sixteenth notes (4 sixteenths to a quarter).
+
+In actual performance, nobody plays this perfectly (that's a big part of why MIDI sounds "worse" or less expressive than actual humans playing).
+
+What's really happening, is that the quarter note (just some unit being used to discuss things -- but also what a lot of MIDI timing is based on) in human performance is being subdivided *unevenly* -- into fractions that are both perceptible yet imperceptible. A dotted 8th gets held just ever so slightly longer than it should be in dotted 8th+16th group. So, technically, it wasn't a true dotted 1/8th (of a whole note), in robot terms -- it was something like a dotted $\frac{1}{\frac{17}{2}}$-th note or something weird like that. Computers need things represented digitally, so even the tiniest things we may want to represent need to be put into concrete terms.
+
+Instead of saying quarter notes get only 4 subdivisions (we will call ticks from now on), we would say 8, and we would double the amount of subtle control over timing we have. (Same deal as pixels and an image -- indeed, the word here is **resolution** for both pixels and timing).
+
+MIDI "defaults" (by both convention and practice) to around 480 ticks per quarter note. In terms of "fractional" labels, this translates to the following:
+
+A whole note gets 1920:
++ half note gets 960
++ 1/4 to 480
++ 1/8 to 240
++ 1/16 to 120
++ 1/32 to 60
++ 1/64 to 30
++ 1/128 to 15 
++ 1/256 to ... 7.5? No
+
+While the computer could do just fine with fractional ticks (it's all based on microseconds, which have a plenty high resolution for any human ear), the MIDI standard itself doesn't deal in fractional ticks. You must round down or up to 7 or 8. (Rounding to the nearest *logical* tick -- this can be more complicated than it sounds -- is called quantization. Basic quantization is a feature of most sequencing software).
+
+### Division Types
+
+This is not as important, the first type below is predominantly used in this context.
+
+MIDI files specify a timing/division type, and a resolution.
+1. The first type is referred to as "pulses per quarter (PPQ)", "units per beat", "ticks per beat", or any variation on that. The important thing is that its based on musical stuff like beats, quarter notes, beats, tempo, pulses, etc.
+2. The second type is less abstract, more rare, and not applicable here really
+  + Society of Motion Picture and Television Engineers (SMPTE) timing was developed by NASA to sync up clocks (no idea the connection)
+  + 24, 25, 29.97 (represented by 29), or 30
+
+### Tempo
+
+See the Set Tempo meta message in [meta messages](#meta-messages).
+
+The last piece of all this is to define how much actual time a tick gets. 
+
+If the set tempo message is `0xFF 51 03 07 A1 20`
++ `0xFF 51 03` --> this is a set tempo message with data section of length 3 bytes
++ `07 A1 20` --> the decimal value 500,000.
+
+This MIDI file has already established that:
++ Division type is PPQ
++ There are 480 ticks per quarter note
+
+The set tempo message now says each quarter note gets 500,000 usecs.
+
+So:
++ A quarter note lasts 500,000 seconds 
+  + Increase/decrease this to make faster/slower tempo
++ A quarter note gets 480 ticks
+  + This does NOT change if the tempo is increased/decreased, meaning the *resolution* stays the same
+
+Incidentally, 500,000 usecs per quarter translates to around 120 BPM, which is the default for the MIDI standard and most all MIDI devices.
+
+Add'l: A MIDI "beat clock" is used to synchronize timing across multiple devices and isn't really an important concept when just dealing with MIDI files (i.e. not playback/performance/recording).
 
 ## Java MIDI Library
 

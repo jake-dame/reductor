@@ -6,82 +6,99 @@ import static javax.sound.midi.ShortMessage.*;
 
 public class Reductor {
 
-    private final Midi midiIn;
+    final Midi midiIn;
+    final Midi midiAg;
 
-    private final Midi midiAg;
-
+    /*
+        For now, this has two member objects:
+            - A Midi object for the original/in- Sequence
+            - A Midi object for the aggregated version of the in-sequence
+     */
     Reductor(String filePath)
             throws InvalidMidiDataException {
 
         midiIn = new Midi(filePath);
+        midiAg = new Midi(midiIn.getName() + "_agg", aggregate(midiIn.getSequence()) );
 
-        Sequence seqIn = midiIn.getSequence();
-        Sequence aggregate = aggregate(seqIn);
-        midiAg = new Midi(midiIn.getName() + "_agg", aggregate);
     }
 
+    /*
+        This function accomplishes:
+            - adding all events from all tracks from a sequence to a new, single-track sequence
+                - this disallows duplicate events and sorts events by increasing tick value
+            - preserves crucial meta messages (set tempo, time signature, key signature), while
+              throwing away track-/instrument-specific meta messages
+            - "sanitizes" note events so that they are in a predictable/uniform form for later manipulation
+     */
     private Sequence aggregate(Sequence sequenceIn)
             throws InvalidMidiDataException {
 
-        Sequence newSequence = new Sequence(sequenceIn.getDivisionType(), sequenceIn.getResolution(), 1);
+        Sequence newSequence = new Sequence(
+                sequenceIn.getDivisionType(), sequenceIn.getResolution(), 1);
 
-        for (int tr = 0; tr < sequenceIn.getTracks().length; tr++) {
-            Track track = sequenceIn.getTracks()[tr];
-            for (int ev = 0; ev < track.size(); ev++) {
-                MidiEvent event = track.get(ev);
+        for (int t = 0; t < sequenceIn.getTracks().length; t++) {
 
-                MidiMessage msg = track.get(ev).getMessage();
+            Track track = sequenceIn.getTracks()[t];
 
-                // Avoid adding meta info needed by tracks that no longer exist
-                if (tr > 0 && msg instanceof MetaMessage) {
-                    continue;
-                }
+            for (int e = 0; e < track.size(); e++) {
 
+                MidiEvent event = track.get(e);
+                MidiMessage msg = track.get(e).getMessage();
+
+                // Avoid adding meta events needed by tracks that no longer exist
+                if (t > 0 && msg instanceof MetaMessage )  continue;
+
+                // Avoid adding short events for tracks that no longer exist
                 if (msg instanceof ShortMessage shortMessage) {
-                    // Avoid adding control change stuff to aggregate
-                    if (shortMessage.getCommand() == CONTROL_CHANGE) {
-                        continue;
-                    } else if (shortMessage.getCommand() == PROGRAM_CHANGE && tr > 0) {
+
+                    if ( t > 0 && (shortMessage.getCommand() == CONTROL_CHANGE
+                                || shortMessage.getCommand() == PROGRAM_CHANGE)) {
                         continue;
                     } else {
                         sanitizeShortMessage(shortMessage);
                     }
+
                 }
 
-                // this adds in increasing tick order
-                // it also prevents duplicates
-                newSequence.getTracks()[0].add(event);
+                Track newTrack = newSequence.getTracks()[0];
+
+                // This adds in increasing tick order and throws away duplicates
+                newTrack.add(event);
             }
         }
 
         return newSequence;
     }
 
+    /*
+        This function accomplishes:
+            - Change channel for passed event to channel 1 (0x0)
+            - Change scheme from any {NOTE ON, v=0} to proper NOTE OFF
+            - Set program change message to reflect piano
+     */
     private void sanitizeShortMessage(ShortMessage shortMessage)
             throws InvalidMidiDataException {
 
-        int cmd = shortMessage.getCommand();
-        int pitch = shortMessage.getData1();
-        int velocity = shortMessage.getData2();
-        int newChannel = 0;
+        final int cmd = shortMessage.getCommand();
+        final int pitch = shortMessage.getData1();
+        final int velocity = shortMessage.getData2();
+        final int channel = 0;
 
         if (cmd == NOTE_OFF) {
-            shortMessage.setMessage(cmd, newChannel, pitch, velocity);
+            shortMessage.setMessage(cmd, channel, pitch, velocity);
         } else if (cmd == NOTE_ON && velocity == 0) {
-            shortMessage.setMessage(NOTE_OFF, newChannel, pitch, 0);
+            shortMessage.setMessage(NOTE_OFF, channel, pitch, 0);
         } else if (cmd == NOTE_ON) {
-            shortMessage.setMessage(cmd, newChannel, pitch, velocity);
+            shortMessage.setMessage(cmd, channel, pitch, velocity);
         } else if (cmd == PROGRAM_CHANGE) {
             final int acousticGrandPiano = 0;
-            shortMessage.setMessage(cmd, newChannel, acousticGrandPiano, -1);
+            shortMessage.setMessage(cmd, channel, acousticGrandPiano, -1);
         }
 
     }
 
-    public Sequence getSequence() {
-        return midiIn.getSequence();
-    }
-
-    public Sequence getAggregate() { return midiAg.getSequence(); }
+    // not safe
+    public Sequence getOriginalSequence() {return midiIn.getSequence(); }
+    public Sequence getAggregatedSequence() { return midiAg.getSequence(); }
 
 }

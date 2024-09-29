@@ -21,7 +21,7 @@ class Midi {
     private final ArrayList<MidiEvent> otherShortEvents_m;
     private final ArrayList<MidiEvent> sysexEvents_m;
 
-    protected Midi(String filePath) {
+    Midi(String filePath) {
 
         name_m = filePath.substring(filePath.lastIndexOf('/') + 1).split("\\.")[0];
 
@@ -39,7 +39,7 @@ class Midi {
         sortEventsIntoLists();
     }
 
-    protected Midi(String name, Sequence sequence) {
+    Midi(String name, Sequence sequence) {
 
         name_m = name;
 
@@ -56,20 +56,25 @@ class Midi {
     private void sortEventsIntoLists() {
 
         for (Track track : sequence_m.getTracks()) {
+
             for (int j = 0; j < track.size(); j++) {
                 MidiEvent event = track.get(j);
 
                 switch (event.getMessage()) {
+
                     case ShortMessage shortMessage -> {
-                        int cmd = shortMessage.getCommand();
-                        if (cmd == NOTE_ON || cmd == NOTE_OFF) {
+
+                        if (shortMessage.getCommand() == NOTE_ON
+                            || shortMessage.getCommand() == NOTE_OFF) {
                             noteEvents_m.add(event);
                         } else {
                             otherShortEvents_m.add(event);
                         }
+
                     }
-                    case MetaMessage ignored -> metaEvents_m.add(event);
-                    case SysexMessage ignored -> sysexEvents_m.add(event);
+
+                    case MetaMessage _ -> metaEvents_m.add(event);
+                    case SysexMessage _ -> sysexEvents_m.add(event);
                     default -> throw new IllegalArgumentException(
                             "unknown event type: " + event.getMessage());
                 }
@@ -79,17 +84,17 @@ class Midi {
 
     }
 
-    protected ArrayList<MidiEvent> getNoteEvents() { return new ArrayList<>(noteEvents_m); }
+    ArrayList<MidiEvent> getNoteEvents() { return new ArrayList<>(noteEvents_m); }
 
-    protected ArrayList<MidiEvent> getMetaEvents() { return new ArrayList<>(metaEvents_m); }
+    ArrayList<MidiEvent> getMetaEvents() { return new ArrayList<>(metaEvents_m); }
 
-    protected ArrayList<MidiEvent> getOtherShortEvents() { return new ArrayList<>(otherShortEvents_m); }
+    ArrayList<MidiEvent> getOtherShortEvents() { return new ArrayList<>(otherShortEvents_m); }
 
-    protected ArrayList<MidiEvent> getSysexEvents() { return new ArrayList<>(sysexEvents_m); }
+    ArrayList<MidiEvent> getSysexEvents() { return new ArrayList<>(sysexEvents_m); }
 
-    protected String getName() { return name_m; }
+    String getName() { return name_m; }
 
     // not safe
-    protected Sequence getSequence() { return sequence_m; }
+    Sequence getSequence() { return sequence_m; }
 
 }

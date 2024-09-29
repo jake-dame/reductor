@@ -8,6 +8,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/*
+    A helper class for development, not much else.
+*/
 class MidiUtility {
 
     private final static HashMap<Integer, String> mapPitches;
@@ -83,11 +86,11 @@ class MidiUtility {
         }
     }
 
-    public static String getNote(int val) { return mapPitches.get(val); }
+    static String getNote(int val) { return mapPitches.get(val); }
 
-    public static String getNote(byte val) { return mapPitches.get(val & 0xFF); }
+    static String getNote(byte val) { return mapPitches.get(val & 0xFF); }
 
-    public static String getKeySignature(byte[] bytes) {
+    static String getKeySignature(byte[] bytes) {
 
         int accidentalCount = bytes[0];
         int mode = bytes[1];
@@ -104,7 +107,7 @@ class MidiUtility {
         return str;
     }
 
-    public static void printNoteEvents(ArrayList<MidiEvent> events) {
+    static void printNoteEvents(ArrayList<MidiEvent> events) {
 
         int currChannel = -1;
         for (MidiEvent event : events) {
@@ -138,7 +141,7 @@ class MidiUtility {
         }
     }
 
-    public static void printMetaEvents(ArrayList<MidiEvent> events) {
+    static void printMetaEvents(ArrayList<MidiEvent> events) {
 
         for (MidiEvent event : events) {
 
@@ -181,15 +184,20 @@ class MidiUtility {
 
                     case 0x51:
                         type_label = "Set tempo";
-                        dataString = data[0] + " (usecs per quarter note) ";
+                        int res = 0;
+                        for (byte b : data) {
+                            res <<= 8;
+                            res |= b & 0xFF;
+                        }
+                        dataString = res + " (usecs per quarter note) ";
                         break;
 
                     case 0x58:
                         type_label = "Time signature";
                         stringArr = new String[data.length - 1];
-                        stringArr[0] = data[0] + "/" + ((int) (Math.pow(2, data[1]))) + ", ";
-                        stringArr[1]= data[2] + " (midi clock ticks / beat), ";
-                        stringArr[2] = data[3] + " (32nd notes / beat), ";
+                        stringArr[0] = (data[0] & 0xFF) + "/" + ((int) (Math.pow(2, data[1]))) + ", ";
+                        stringArr[1]= (data[2] & 0xFF) + " (midi clock ticks / beat), ";
+                        stringArr[2] = (data[3] & 0xFF) + " (32nd notes / beat), ";
                         dataString = String.join("", stringArr);
                         break;
 
@@ -206,7 +214,7 @@ class MidiUtility {
         }
     }
 
-    public static void play(Sequence sequence) throws MidiUnavailableException, InvalidMidiDataException {
+    static void play(Sequence sequence) throws MidiUnavailableException, InvalidMidiDataException {
 
         Sequencer sequencer = MidiSystem.getSequencer();
         sequencer.setSequence(sequence);
@@ -222,7 +230,7 @@ class MidiUtility {
 
     }
 
-    public static void write(Sequence sequence, String name) throws IOException {
+    static void write(Sequence sequence, String name) throws IOException {
 
         int fileType = 0;
 
@@ -234,7 +242,7 @@ class MidiUtility {
     }
 
     // this is not a pretty printout, use w caution
-    public static void printBytes(String filePath) throws IOException {
+    static void printBytes(String filePath) throws IOException {
 
         byte[] data = Files.readAllBytes( Path.of(filePath) );
 
@@ -263,7 +271,7 @@ class MidiUtility {
 
     }
 
-    public static void printSequence(Sequence seq){
+    static void printSequence(Sequence seq){
         System.out.println("\n================printSequence()=======================");
         for (Track track : seq.getTracks()) {
             for (int i = 0; i < track.size(); i++) {

@@ -5,101 +5,101 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 import java.util.ArrayList;
 
+import static javax.sound.midi.ShortMessage.NOTE_OFF;
+import static javax.sound.midi.ShortMessage.NOTE_ON;
+
 /*
-    Represents a MidiEvent and has some static conversion functions too (from Java MidiEvent)
+    Represents a comparable MidiEvent and has some static conversion functions too (from Java MidiEvent)
 */
-public class Event implements Comparable<Event> {
+class Event {
 
+    long startTick, endTick;
     int pitch;
-    // ticks
-    long start, end;
 
-    Event(int pitch, long start, long end) {
+    Event(long start, long end, int pitch) {
         this.pitch = pitch;
-        this.start = start;
-        this.end = end;
+        this.startTick = start;
+        this.endTick = end;
     }
 
-    public static ArrayList<Event> midiEventsToEvents(ArrayList<MidiEvent> events) {
+    // this is mostly for testing
+    Event(Event event, int pitch) {
+        this.startTick = event.startTick;
+        this.endTick = event.endTick;
+        this.pitch = pitch;
+    }
 
-        if (events.isEmpty()) {
+    // Copy constructor
+    Event(Event event) {
+        this.startTick = event.startTick;
+        this.endTick = event.endTick;
+        this.pitch = event.pitch;
+    }
+
+    static ArrayList<Event> midiEventsToEvents(ArrayList<MidiEvent> midiEvents) {
+
+        if (midiEvents.isEmpty())
             throw new IllegalArgumentException("note events is empty");
-        }
 
-        if (events.size() % 2 != 0 ) {
+        if (midiEvents.size() % 2 != 0 )
             throw new IllegalArgumentException("note events length is odd");
-        }
 
-        int firstMsgStatus = events.getFirst().getMessage().getStatus();
-        int lastMsgStatus = events.getLast().getMessage().getStatus();
-        if (firstMsgStatus != 0x90 || lastMsgStatus != 0x80) {
-            throw new RuntimeException("sequence begins with note off or ends with note on");
-        }
+        if (midiEvents.getFirst().getMessage().getStatus() != NOTE_ON
+                || midiEvents.getLast().getMessage().getStatus() != NOTE_OFF)
+            throw new IllegalArgumentException("sequence begins with note off or ends with note on");
 
-        ArrayList<Event> notes = new ArrayList<>();
+        ArrayList<Event> newList = new ArrayList<>();
+        int numEvents = midiEvents.size();
 
-        int size = events.size();
-
-        // NOTE ON loop
-        for (int i = 0; i < size; i++) {
-
-            MidiEvent event = events.get(i);
+        /* NOTE ON loop */
+        for (int i = 0; i < numEvents; i++) {
+            MidiEvent event = midiEvents.get(i);
+            ShortMessage msg = (ShortMessage) event.getMessage();
 
             // Skip NOTE OFFs for outer loop
-            if (event.getMessage().getStatus() != 0x90) {
-                continue;
-            }
+            if (msg.getCommand() != NOTE_ON)  continue;
 
-            int pitch = ((ShortMessage) event.getMessage()).getData1();
+            int pitch = msg.getData1();
             long startTick = event.getTick();
             long endTick = -1;
 
-            // If penultimate event, construct/add last `Event` and return
-            if (i == size - 1) {
-                endTick = events.getLast().getTick();
-                notes.add( new Event(pitch, startTick, endTick) );
-                return notes;
+            // If penultimate event, construct/add last Event and return
+            if (i == numEvents - 1) {
+                endTick = midiEvents.getLast().getTick();
+                newList.add( new Event(startTick, endTick, pitch) );
+                return newList;
             }
 
-            // "NOTE OFF" loop: Start from current index, search until matching NOTE OFF event is found
-            for (int j = i + 1; j < size; j++) {
+            /* NOTE OFF loop */
+            for (int j = i + 1; j < numEvents; j++) {
+                MidiEvent nextEvent = midiEvents.get(j);
+                ShortMessage nextMsg = (ShortMessage) nextEvent.getMessage();
 
-                MidiEvent nextEvent = events.get(j);
-
-                // If this is not a NOTE OFF event, ignore it
-                if (nextEvent.getMessage().getStatus() != 0x80) {
-                    continue;
-                }
+                // Skip NOTE ONs for inner loop
+                if (nextMsg.getCommand() != NOTE_OFF)  continue;
 
                 int nextPitch = ((ShortMessage) nextEvent.getMessage()).getData1();
 
                 if (nextPitch == pitch) {
                     endTick = nextEvent.getTick();
-                    // would alter passed object
-                    // would need to call .size() everywhere
-                    //events.remove(nextEvent);
                     break;
                 }
             }
 
-            if (endTick == -1) {
-                throw new RuntimeException("reached end of sequence without finding matching NOTE OFF for: "
-                        + pitch + " @ " + startTick);
-            }
+            if (endTick == -1)
+                throw new RuntimeException("no match, reached end of sequence");
 
-            // Construct `Event` and add to list
-            Event note = new Event(pitch, startTick, endTick);
-            notes.add(note);
+            // Construct Event and add to list
+            newList.add( new Event(startTick, endTick, pitch) );
         }
 
-        if (notes.size() != (size / 2)) {
-            System.out.println("note list / event list size mismatch");
-        }
+        if ( newList.size() != numEvents/2 )
+            throw new RuntimeException("note list / event list size mismatch");
 
-        return notes;
+        return newList;
     }
 
-    public static ArrayList<MidiEvent> eventsToMidiEvents(ArrayList<Event> events)
+    static ArrayList<MidiEvent> eventsToMidiEvents(ArrayList<Event> events)
             throws InvalidMidiDataException {
 
         ArrayList<MidiEvent> list = new ArrayList<>();
@@ -107,14 +107,14 @@ public class Event implements Comparable<Event> {
         for (Event event : events) {
 
             MidiEvent noteOnEvent = new MidiEvent(
-                    new ShortMessage(ShortMessage.NOTE_ON, event.pitch, 64),
-                    event.start);
+                    new ShortMessage(NOTE_ON, event.pitch, 64),
+                    event.startTick);
 
             list.add(noteOnEvent);
 
             MidiEvent noteOffEvent = new MidiEvent(
-                    new ShortMessage(ShortMessage.NOTE_ON, event.pitch, 0),
-                    event.end);
+                    new ShortMessage(NOTE_OFF, event.pitch, 0),
+                    event.endTick);
 
             list.add(noteOffEvent);
         }
@@ -122,15 +122,22 @@ public class Event implements Comparable<Event> {
         return list;
     }
 
-    @Override
-    public int compareTo(Event o) {
-        // TODO asdf
-        return 0;
-    }
+    //@Override
+    //public int compareTo(Event e) {
+    //
+    //    if (this.a != e.a) {
+    //        return Long.compare(this.a, e.a);
+    //    } else if (this.b != e.b) {
+    //        return Long.compare(this.b, e.b);
+    //    } else {
+    //        return Integer.compare(this.pitch, e.pitch);
+    //    }
+    //
+    //}
 
     @Override
     public String toString() {
-        return "[" + MidiUtility.getNote(pitch) + ", " + start + ", " + end + "]";
+        return "[" + MidiUtility.getNote(pitch) + ", " + startTick + ", " + endTick + "]";
     }
 
 }

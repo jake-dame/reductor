@@ -9,37 +9,44 @@ import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static javax.sound.midi.ShortMessage.NOTE_ON;
 
 /*
-    Represents a comparable MidiEvent and has some static conversion functions too (from Java MidiEvent)
+    Purpose: Represent, but not manipulate, Midi NOTE events.
 */
-class Event {
+public class Note {
 
     long startTick, endTick;
     int pitch;
 
-    Event(long start, long end, int pitch) {
+    Note(long start, long end, int pitch) {
         this.pitch = pitch;
         this.startTick = start;
         this.endTick = end;
     }
 
+    // Copy constructor
+    Note(Note note) {
+        this.startTick = note.startTick;
+        this.endTick = note.endTick;
+        this.pitch = note.pitch;
+    }
+
     // this is mostly for testing
-    Event(Event event, int pitch) {
-        this.startTick = event.startTick;
-        this.endTick = event.endTick;
+    Note(Note note, int pitch) {
+        this.startTick = note.startTick;
+        this.endTick = note.endTick;
         this.pitch = pitch;
     }
 
-    // Copy constructor
-    Event(Event event) {
-        this.startTick = event.startTick;
-        this.endTick = event.endTick;
-        this.pitch = event.pitch;
+    // this is mostly for testing
+    Note() {
+        this.pitch = -1;
+        this.startTick = -1;
+        this.endTick = -1;
     }
 
-    static ArrayList<Event> midiEventsToEvents(ArrayList<MidiEvent> midiEvents) {
+    static ArrayList<Note> eventsToNotes(ArrayList<MidiEvent> midiEvents) {
 
-        if (midiEvents.isEmpty())
-            throw new IllegalArgumentException("note events is empty");
+        if (midiEvents == null || midiEvents.isEmpty())
+            throw new IllegalArgumentException("note events is null or empty");
 
         if (midiEvents.size() % 2 != 0 )
             throw new IllegalArgumentException("note events length is odd");
@@ -48,7 +55,7 @@ class Event {
                 || midiEvents.getLast().getMessage().getStatus() != NOTE_OFF)
             throw new IllegalArgumentException("sequence begins with note off or ends with note on");
 
-        ArrayList<Event> newList = new ArrayList<>();
+        ArrayList<Note> newList = new ArrayList<>();
         int numEvents = midiEvents.size();
 
         /* NOTE ON loop */
@@ -63,10 +70,10 @@ class Event {
             long startTick = event.getTick();
             long endTick = -1;
 
-            // If penultimate event, construct/add last Event and return
+            // If penultimate note, construct/add last Note and return
             if (i == numEvents - 1) {
                 endTick = midiEvents.getLast().getTick();
-                newList.add( new Event(startTick, endTick, pitch) );
+                newList.add( new Note(startTick, endTick, pitch) );
                 return newList;
             }
 
@@ -89,41 +96,43 @@ class Event {
             if (endTick == -1)
                 throw new RuntimeException("no match, reached end of sequence");
 
-            // Construct Event and add to list
-            newList.add( new Event(startTick, endTick, pitch) );
+            // Construct Note and add to list
+            newList.add( new Note(startTick, endTick, pitch) );
         }
 
         if ( newList.size() != numEvents/2 )
-            throw new RuntimeException("note list / event list size mismatch");
+            throw new RuntimeException("note list / note list size mismatch");
 
         return newList;
     }
 
-    static ArrayList<MidiEvent> eventsToMidiEvents(ArrayList<Event> events)
-            throws InvalidMidiDataException {
+    static ArrayList<MidiEvent> notesToEvents(ArrayList<Note> notes) {
 
         ArrayList<MidiEvent> list = new ArrayList<>();
+        try {
+            for (Note note : notes) {
 
-        for (Event event : events) {
+                MidiEvent noteOnEvent = new MidiEvent(
+                        new ShortMessage(NOTE_ON, note.pitch, 64),
+                        note.startTick);
 
-            MidiEvent noteOnEvent = new MidiEvent(
-                    new ShortMessage(NOTE_ON, event.pitch, 64),
-                    event.startTick);
+                list.add(noteOnEvent);
 
-            list.add(noteOnEvent);
+                MidiEvent noteOffEvent = new MidiEvent(
+                        new ShortMessage(NOTE_OFF, note.pitch, 0),
+                        note.endTick);
 
-            MidiEvent noteOffEvent = new MidiEvent(
-                    new ShortMessage(NOTE_OFF, event.pitch, 0),
-                    event.endTick);
-
-            list.add(noteOffEvent);
+                list.add(noteOffEvent);
+            }
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
         }
 
         return list;
     }
 
     //@Override
-    //public int compareTo(Event e) {
+    //public int compareTo(Note e) {
     //
     //    if (this.a != e.a) {
     //        return Long.compare(this.a, e.a);
@@ -137,7 +146,7 @@ class Event {
 
     @Override
     public String toString() {
-        return "[" + MidiUtility.getNote(pitch) + ", " + startTick + ", " + endTick + "]";
+        return String.format("[%d,%d: %s]", startTick, endTick, pitch);
     }
 
 }

@@ -16,51 +16,51 @@ class IntervalTreeTest {
     static final int D = 0x3E;
 
     // Can be used for xAll() tests
-    private ArrayList<Event> events;
-    private ArrayList<Event> quasiDups;
-    private ArrayList<Event> dups;
+    private ArrayList<Note> notes;
+    private ArrayList<Note> quasiDups;
+    private ArrayList<Note> dups;
 
     // Blank-slate tree
     private IntervalTree tree;
 
     // Test "nodes" (9)
-    Event root;
-    Event l;
-    Event r;
-    Event ll;
-    Event lr;
-    Event rl;
-    Event rr;
-    Event llr;
-    Event rrl;
+    Note root;
+    Note l;
+    Note r;
+    Note ll;
+    Note lr;
+    Note rl;
+    Note rr;
+    Note llr;
+    Note rrl;
 
     // Initialized with same range, different associated data as namesake (9)
-    Event root_sameRange;
-    Event l_sameRange;
-    Event r_sameRange;
-    Event ll_sameRange;
-    Event lr_sameRange;
-    Event rl_sameRange;
-    Event rr_sameRange;
-    Event llr_sameRange;
-    Event rrl_sameRange;
+    Note root_sameRange;
+    Note l_sameRange;
+    Note r_sameRange;
+    Note ll_sameRange;
+    Note lr_sameRange;
+    Note rl_sameRange;
+    Note rr_sameRange;
+    Note llr_sameRange;
+    Note rrl_sameRange;
 
     // Initialized with identical data as namesake (9)
-    Event root_dup;
-    Event l_dup;
-    Event r_dup;
-    Event ll_dup;
-    Event lr_dup;
-    Event rl_dup;
-    Event rr_dup;
-    Event llr_dup;
-    Event rrl_dup;
+    Note root_dup;
+    Note l_dup;
+    Note r_dup;
+    Note ll_dup;
+    Note lr_dup;
+    Note rl_dup;
+    Note rr_dup;
+    Note llr_dup;
+    Note rrl_dup;
 
     @BeforeEach
     void setup() {
 
         /*
-         If the member events are inserted in breadth-first order (according to their name), the
+         If the member notes are inserted in breadth-first order (according to their name), the
              template tree should look like this:
         */
 
@@ -74,46 +74,46 @@ class IntervalTreeTest {
                  07,20                        12,20
          */
 
-        root = new Event(10,20,C);
-        l = new Event(10,15,C);
-        r = new Event(10,25,C);
-        ll = new Event(5,20,C);
-        lr = new Event(10,17,C);
-        rl = new Event(10,22,C);
-        rr = new Event(15,20,C);
-        llr = new Event(7,20,C);
-        rrl = new Event(12,20,C);
+        root = new Note(10,20,C);
+        l = new Note(10,15,C);
+        r = new Note(10,25,C);
+        ll = new Note(5,20,C);
+        lr = new Note(10,17,C);
+        rl = new Note(10,22,C);
+        rr = new Note(15,20,C);
+        llr = new Note(7,20,C);
+        rrl = new Note(12,20,C);
 
-        root_sameRange = new Event(root,D);
-        l_sameRange = new Event(l,D);
-        r_sameRange = new Event(r,D);
-        ll_sameRange = new Event(ll,D);
-        lr_sameRange = new Event(lr,D);
-        rl_sameRange = new Event(rl,D);
-        rr_sameRange = new Event(rr,D);
-        llr_sameRange = new Event(llr,D);
-        rrl_sameRange = new Event(rrl,D);
+        root_sameRange = new Note(root,D);
+        l_sameRange = new Note(l,D);
+        r_sameRange = new Note(r,D);
+        ll_sameRange = new Note(ll,D);
+        lr_sameRange = new Note(lr,D);
+        rl_sameRange = new Note(rl,D);
+        rr_sameRange = new Note(rr,D);
+        llr_sameRange = new Note(llr,D);
+        rrl_sameRange = new Note(rrl,D);
 
-        root_dup = new Event(root);
-        l_dup = new Event(l);
-        r_dup = new Event(r);
-        ll_dup = new Event(ll);
-        lr_dup = new Event(lr);
-        rl_dup = new Event(rl);
-        rr_dup = new Event(rr);
-        llr_dup = new Event(llr);
-        rrl_dup = new Event(rrl);
+        root_dup = new Note(root);
+        l_dup = new Note(l);
+        r_dup = new Note(r);
+        ll_dup = new Note(ll);
+        lr_dup = new Note(lr);
+        rl_dup = new Note(rl);
+        rr_dup = new Note(rr);
+        llr_dup = new Note(llr);
+        rrl_dup = new Note(rrl);
 
-        events = new ArrayList<>();
-        events.add(root);
-        events.add(l);
-        events.add(r);
-        events.add(ll);
-        events.add(lr);
-        events.add(rl);
-        events.add(rr);
-        events.add(llr);
-        events.add(rrl);
+        notes = new ArrayList<>();
+        notes.add(root);
+        notes.add(l);
+        notes.add(r);
+        notes.add(ll);
+        notes.add(lr);
+        notes.add(rl);
+        notes.add(rr);
+        notes.add(llr);
+        notes.add(rrl);
 
         quasiDups = new ArrayList<>();
         quasiDups.add(root_sameRange);
@@ -147,15 +147,15 @@ class IntervalTreeTest {
     @Test
     void TestEmptyTree() {
 
-        Event event = new Event(0,480,C);
+        Note note = new Note(0,480,C);
 
         // Test: remove on empty tree should always return false
-        assertFalse(tree.remove(event));
-        assertFalse(tree.removeAll(events));
+        assertFalse(tree.remove(note));
+        assertFalse(tree.removeAll(notes));
 
         // Test: query on empty tree should always return an empty list
-        assert(tree.query(event) != null  &&  tree.query(event).isEmpty());
-        assert(tree.queryAll(events) != null  &&  tree.queryAll(events).isEmpty());
+        assert(tree.query(note) != null  &&  tree.query(note).isEmpty());
+        assert(tree.queryAll(notes) != null  &&  tree.queryAll(notes).isEmpty());
 
         // Test: toArrayList on empty tree should always return an empty list
         assert(tree.toArrayList().isEmpty());
@@ -166,10 +166,10 @@ class IntervalTreeTest {
     void TestAdd() {
 
         /*
-         Test: Add novel events
+         Test: Add novel notes
              - Should always return true
              - Should always increase nodes
-             - Should always increase events
+             - Should always increase notes
         */
 
         int eventsCount = 0;
@@ -177,6 +177,7 @@ class IntervalTreeTest {
         // Add root
         assert(tree.add(root));
         assertNotNull(tree.root);
+        assertEquals(tree.root.max, root.endTick);
         eventsCount++;
 
         assert(tree.nodes == eventsCount); // Checks related to IntervalTree
@@ -337,7 +338,7 @@ class IntervalTreeTest {
         Test: Add identical ranges but different associated data
             - Should always return true
             - Should not affect nodes eventsCount
-            - Should increment events eventsCount
+            - Should increment notes eventsCount
             - Should increment node's individual size
         */
 
@@ -432,41 +433,41 @@ class IntervalTreeTest {
     @Test
     void TestAddAll() {
 
-        assert(tree.addAll(events));
-        assert(tree.nodes == events.size());
-        assert(tree.events == events.size());
+        assert(tree.addAll(notes));
+        assert(tree.nodes == notes.size());
+        assert(tree.events == notes.size());
 
         assert(tree.addAll(quasiDups));
-        assert(tree.nodes == events.size());
-        assert(tree.events == events.size() * 2);
+        assert(tree.nodes == notes.size());
+        assert(tree.events == notes.size() * 2);
 
         assert(!tree.addAll(dups));
-        assert(tree.nodes == events.size());
-        assert(tree.events == events.size() * 2);
+        assert(tree.nodes == notes.size());
+        assert(tree.events == notes.size() * 2);
 
     }
 
     @Test
     void TestRemoveFromNodeListsOnly() {
 
-        tree.addAll(events);
+        tree.addAll(notes);
         tree.addAll(quasiDups);
 
         final int NODES_COUNT = tree.nodes;
         final int EVENTS_COUNT = tree.events;
 
-        ArrayList<Event> currentTree = tree.toArrayList();
+        ArrayList<Note> currentTree = tree.toArrayList();
 
         int removals = 0;
         int element = 0;
 
         while(element < quasiDups.size()) {
-            Event event = quasiDups.get(element);
-            assert (currentTree.contains(event));
-            tree.remove(event);
+            Note note = quasiDups.get(element);
+            assert (currentTree.contains(note));
+            tree.remove(note);
             removals++;
             currentTree = tree.toArrayList();
-            assert (!currentTree.contains(event));
+            assert (!currentTree.contains(note));
             assert (tree.events == EVENTS_COUNT - removals);
             element++;
         }
@@ -479,7 +480,7 @@ class IntervalTreeTest {
     @Test
     void TestRemoveLeaf() {
 
-        tree.addAll(events);
+        tree.addAll(notes);
         final int NODES_COUNT = tree.nodes;
         final int EVENTS_COUNT = tree.events;
         int removals = 0;
@@ -505,10 +506,10 @@ class IntervalTreeTest {
     @Test
     void TestRemoveInternalNode() {
 
-        tree.addAll(events);
+        tree.addAll(notes);
 
-        int count = events.size();
-        for (Event e : events) {
+        int count = notes.size();
+        for (Note e : notes) {
             tree.remove(e);
             assert(orderIsMaintained(tree));
             count--;
@@ -524,7 +525,7 @@ class IntervalTreeTest {
     @Test
     void TestRemoveFromRoot() {
 
-        tree.addAll(events);
+        tree.addAll(notes);
         final int NODES_COUNT = tree.nodes;
         final int EVENTS_COUNT = tree.events;
         int removals = 0;
@@ -561,34 +562,34 @@ class IntervalTreeTest {
     @Test
     void TestRemoveAll() {
 
-        tree.addAll(events);
+        tree.addAll(notes);
         tree.addAll(quasiDups);
-        assert(tree.nodes == events.size());
-        assert(tree.events == events.size() + quasiDups.size());
+        assertEquals(tree.nodes, notes.size(), "Tree is not same size");
+        assert(tree.events == notes.size() + quasiDups.size());
 
         assert(tree.removeAll(quasiDups));
-        assert(tree.nodes == events.size());
-        assert(tree.events == (events.size() + quasiDups.size()) - quasiDups.size());
+        assert(tree.nodes == notes.size());
+        assert(tree.events == (notes.size() + quasiDups.size()) - quasiDups.size());
 
-        assert(tree.removeAll(events));
+        assert(tree.removeAll(notes));
         assert(tree.nodes == 0);
         assert(tree.events == 0);
         assert(tree.root == null);
 
         /* Test falses */
 
-        Event event1 = new Event(0,10,C);
-        Event event2 = new Event(10,20,C);
-        tree.add(event1);
-        tree.add(event2);
+        Note note1 = new Note(0,10,C);
+        Note note2 = new Note(10,20,C);
+        tree.add(note1);
+        tree.add(note2);
 
-        Event neverAdded1 = new Event(100,200,C);
-        Event neverAdded2 = new Event(100,200,D);
-        var neverAddedList = new ArrayList<Event>();
+        Note neverAdded1 = new Note(100,200,C);
+        Note neverAdded2 = new Note(100,200,D);
+        var neverAddedList = new ArrayList<Note>();
 
         assertFalse(tree.removeAll(neverAddedList));
 
-        neverAddedList.add(event1);
+        neverAddedList.add(note1);
 
         // This now has at least one match in it so the set should change still.
         assert(tree.removeAll(neverAddedList));
@@ -632,13 +633,16 @@ class IntervalTreeTest {
 
         Interval fullyRight = new Interval(0,99);
         assertFalse(fullyRight.overlaps(target));
+
+        assertThrows(IllegalArgumentException.class, () -> new Interval(10, 9));
+        assertThrows(IllegalArgumentException.class, () -> new Interval(10, 10));
     }
 
     // Helper for removals
     boolean orderIsMaintained(IntervalTree tree) {
 
-        var comp = new Comparator<Event>() {
-            @Override public int compare(Event e1, Event e2) {
+        var comp = new Comparator<Note>() {
+            @Override public int compare(Note e1, Note e2) {
                 if (e1.startTick != e2.startTick) {
                     return Long.compare(e1.startTick, e2.startTick);
                 }
@@ -648,8 +652,8 @@ class IntervalTreeTest {
             }
         };
 
-        ArrayList<Event> inOrderList = tree.toArrayList();
-        Event prev, curr;
+        ArrayList<Note> inOrderList = tree.toArrayList();
+        Note prev, curr;
         for (int i = 0, j = 1; i < inOrderList.size() - 1; i++, j++) {
             prev = inOrderList.get(i);
             curr = inOrderList.get(j);

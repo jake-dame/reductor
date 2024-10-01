@@ -1,6 +1,5 @@
 package reduc;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /*
@@ -22,31 +21,36 @@ public class IntervalTree {
     public static class Interval implements Comparable<Interval> {
         long low;
         long high;
-        Event event;
+        Note note;
 
-        Interval(Event event) {
-            this.low = event.startTick;
-            this.high = event.endTick;
-            this.event = event;
+        Interval(Note note) {
+            this.low = note.startTick;
+            this.high = note.endTick;
+            this.note = note;
         }
 
         Interval() {
             this.low = -1;
             this.high = -1;
-            this.event = null;
+            this.note = null;
         }
 
         Interval(long low, long high) {
+
+            if (low >= high) {
+                throw new IllegalArgumentException("invalid interval");
+            }
+
             this.low = low;
             this.high = high;
-            this.event = null;
+            this.note = null;
         }
 
         boolean overlaps(Interval other) {
             return !(other.low > this.high || other.high < this.low);
         }
 
-        // Compare first by low endpoint, then by high endpoint; both at longs
+        // Compare first by low endpoint, then by high endpoint
         @Override public int compareTo(Interval other) {
             if(this.low == other.low) {
                 return Long.compare(this.high, other.high);
@@ -56,7 +60,7 @@ public class IntervalTree {
         }
 
         @Override public String toString() {
-            return String.format("[%d,%d: %s]", this.low, this.high, MidiUtility.getNote(this.event.pitch));
+            return String.format("[%d,%d: %s]", this.low, this.high, ReductorUtil.getNote(this.note.pitch));
         }
     }
 
@@ -108,7 +112,7 @@ public class IntervalTree {
 
             Interval intervalToRemove = new Interval();
             for(Interval i : this.list) {
-                if (interval.compareTo(i) == 0 && interval.event.pitch == i.event.pitch) {
+                if (interval.compareTo(i) == 0 && interval.note.pitch == i.note.pitch) {
                     intervalToRemove = i;
                     break;
                 }
@@ -136,8 +140,8 @@ public class IntervalTree {
         return query(root, query, list);
     }
 
-    ArrayList<Interval> query (Event event) {
-        return query(event.startTick, event.endTick);
+    ArrayList<Interval> query (Note note) {
+        return query(note.startTick, note.endTick);
     }
 
     private ArrayList<Interval> query (Node node, Interval query, ArrayList<Interval> list) {
@@ -165,11 +169,11 @@ public class IntervalTree {
     }
 
     // this is mostly for testing purposes
-    ArrayList<Interval> queryAll (ArrayList<Event> events) {
+    ArrayList<Interval> queryAll (ArrayList<Note> notes) {
         var list = new ArrayList<Interval>();
 
-        for (Event event : events) {
-            var sublist = query(event.startTick, event.endTick);
+        for (Note note : notes) {
+            var sublist = query(note.startTick, note.endTick);
             if (sublist == null) {
                 continue;
             }
@@ -179,8 +183,8 @@ public class IntervalTree {
         return list;
     }
 
-    boolean add(Event event) {
-        return add(new Interval(event));
+    boolean add(Note note) {
+        return add(new Interval(note));
     }
 
     private boolean add(Interval interval) {
@@ -202,7 +206,7 @@ public class IntervalTree {
         // Handles case 2
         if(interval.compareTo(node.interval) == 0) {
 
-            if(interval.event.pitch == node.interval.event.pitch) {
+            if(interval.note.pitch == node.interval.note.pitch) {
                 return false;
             }
 
@@ -255,9 +259,9 @@ public class IntervalTree {
         return true;
     }
 
-    boolean remove(Event event) {
-        if(event == null || root == null)  return false;
-        return remove(root, new Interval(event));
+    boolean remove(Note note) {
+        if(note == null || root == null)  return false;
+        return remove(root, new Interval(note));
     }
 
     private boolean remove(Interval interval) {
@@ -393,17 +397,17 @@ public class IntervalTree {
         return node;
     }
 
-    boolean addAll(ArrayList<Event> events) {
-        if (events == null || events.isEmpty())  { return false; }
+    boolean addAll(ArrayList<Note> notes) {
+        if (notes == null || notes.isEmpty())  { return false; }
         boolean changed = false;
-        for (Event event : events) { changed = add( new Interval(event) ); }
+        for (Note note : notes) { changed = add( new Interval(note) ); }
         return changed;
     }
 
-    boolean removeAll(ArrayList<Event> events) {
-        if (events == null || events.isEmpty())  { return false; }
+    boolean removeAll(ArrayList<Note> notes) {
+        if (notes == null || notes.isEmpty())  { return false; }
         boolean changed = false;
-        for (Event event : events) { changed = remove(event); }
+        for (Note note : notes) { changed = remove(note); }
         return changed;
     }
 
@@ -419,23 +423,23 @@ public class IntervalTree {
         if (node.right != null)  print(node.right);
     }
 
-    ArrayList<Event> toArrayList() {
-        ArrayList<Event> list = new ArrayList<>();
+    ArrayList<Note> toArrayList() {
+        ArrayList<Note> list = new ArrayList<>();
         arrayListTraversal(root, list);
         return list;
     }
 
-    private void arrayListTraversal(Node node, ArrayList<Event> list) {
+    private void arrayListTraversal(Node node, ArrayList<Note> list) {
 
         if ( node == null ) { return; }
 
         arrayListTraversal(node.left, list);
 
-        ArrayList<Event> events = new ArrayList<>();
+        ArrayList<Note> notes = new ArrayList<>();
         for (Interval I : node.list) {
-            events.add(I.event);
+            notes.add(I.note);
         }
-        list.addAll(events);
+        list.addAll(notes);
 
         arrayListTraversal(node.right, list);
 

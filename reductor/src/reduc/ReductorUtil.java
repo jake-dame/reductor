@@ -413,7 +413,7 @@ public class ReductorUtil {
     static File write(Sequence sequence, String name) {
 
         // Attach a prefix if it doesn't already have one to prevent overwriting original midi
-        File outFile = new File(MIDIS_DIR, "OUT_" + name);
+        File outFile = new File(MIDIS_DIR + "/out/", "OUT_" + name);
 
         int underscoreIndex = name.indexOf('_');
         if (underscoreIndex != -1) {

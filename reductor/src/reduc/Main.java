@@ -24,7 +24,7 @@ public class Main {
             events.addAll(chord.toMidiEvents());
         }
         Sequence seq = eventsToSequence(new ArrayList[]{events}, red.resolution);
-        openWithGarageBand( write(seq, "name.mid") );
+        openWithGarageBand( write(seq, "beans.mid") );
 
     }
 

@@ -7,8 +7,8 @@ import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static javax.sound.midi.ShortMessage.NOTE_ON;
-import static reduc.ReductorUtil.MESSAGE_TYPE_NOTE_OFF;
-import static reduc.ReductorUtil.MESSAGE_TYPE_NOTE_ON;
+import static reduc.ReductorUtil.*;
+import reduc.IntervalTree.Interval;
 
 /*
     Purpose: Represent, but not manipulate, Midi NOTE events.
@@ -32,6 +32,11 @@ public class Note implements Comparable<Note> {
     }
 
     // this is mostly for testing
+    Note (Interval interval) {
+        this(interval.note);
+    }
+
+    // this is mostly for testing
     Note(Note note, int pitch) {
         this.startTick = note.startTick;
         this.endTick = note.endTick;
@@ -44,6 +49,31 @@ public class Note implements Comparable<Note> {
         this.startTick = -1;
         this.endTick = -1;
     }
+
+    Note(String string, int register) {
+
+        int semitone = stringPitchToNumber(string);
+        if (register < -1 || register > 9) {
+            throw new IllegalArgumentException("valid registers are between -1 and 9");
+        }
+
+        if (semitone > 7 && register == 9) {
+            throw new IllegalArgumentException("G is the highest possible pitch in register 9");
+        }
+
+        // believe it or not this is the best way to do this
+        int pitch = semitone;
+        while (register > -1) {
+            pitch += 12;
+            register--;
+        }
+
+        this.pitch = pitch;
+        this.startTick = -1;
+        this.endTick = -1;
+    }
+
+
 
 
     static ArrayList<Note> eventsToNotes(ArrayList<MidiEvent> midiEvents) {
@@ -169,7 +199,7 @@ public class Note implements Comparable<Note> {
 
     @Override
     public String toString() {
-        return String.format("[%d,%d: %s]", startTick, endTick, ReductorUtil.getNote(pitch) );
+        return String.format("[%d,%d: %s]", startTick, endTick, ReductorUtil.getPitchAndRegister(pitch) );
     }
 
 }

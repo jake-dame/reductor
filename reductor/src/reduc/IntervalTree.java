@@ -16,22 +16,21 @@ import java.util.ArrayList;
 
 public class IntervalTree {
 
-
     public static class Interval implements Comparable<Interval> {
 
-        long low;
-        long high;
+        long begin;
+        long end;
         Note note;
 
         Interval(Note note) {
-            this.low = note.startTick;
-            this.high = note.endTick;
+            this.begin = note.startTick;
+            this.end = note.endTick;
             this.note = note;
         }
 
         Interval() {
-            this.low = -1;
-            this.high = -1;
+            this.begin = -1;
+            this.end = -1;
             this.note = null;
         }
 
@@ -41,26 +40,26 @@ public class IntervalTree {
                 throw new IllegalArgumentException("invalid interval");
             }
 
-            this.low = low;
-            this.high = high;
+            this.begin = low;
+            this.end = high;
             this.note = null;
         }
 
         boolean overlaps(Interval other) {
-            return !(other.low > this.high || other.high < this.low);
+            return !(other.begin > this.end || other.end < this.begin);
         }
 
         // Compare first by low endpoint, then by high endpoint
         @Override public int compareTo(Interval other) {
-            if(this.low == other.low) {
-                return Long.compare(this.high, other.high);
+            if(this.begin == other.begin) {
+                return Long.compare(this.end, other.end);
             } else {
-                return Long.compare(this.low, other.low);
+                return Long.compare(this.begin, other.begin);
             }
         }
 
         @Override public String toString() {
-            return String.format("[%d,%d: %s]", this.low, this.high, ReductorUtil.getNote(this.note.pitch));
+            return String.format("[%d,%d: %s]", this.begin, this.end, ReductorUtil.getPitchAndRegister(this.note.pitch));
         }
     }
 
@@ -87,7 +86,7 @@ public class IntervalTree {
         Node(Interval interval) {
             this.interval = interval;
             // This node's max is equivalent to the interval.high it was just created with, at this point in time.
-            this.max = this.interval.high;
+            this.max = this.interval.end;
             this.left = null;
             this.right = null;
             this.parent = null;
@@ -141,7 +140,12 @@ public class IntervalTree {
     }
 
     ArrayList<Interval> query (Note note) {
-        return query(note.startTick, note.endTick);
+        Interval interval = new Interval(note);
+        return query(interval);
+    }
+
+    ArrayList<Interval> query (Interval interval) {
+        return query(interval.begin, interval.end);
     }
 
     private ArrayList<Interval> query (Node node, Interval query, ArrayList<Interval> list) {
@@ -156,7 +160,7 @@ public class IntervalTree {
         }
 
         // Use max of left subtree to potentially ignore left subtree
-        if (node.left != null  &&  query.low <= node.left.max) {
+        if (node.left != null  &&  query.begin <= node.left.max) {
             query(node.left, query, list);
         }
 
@@ -216,8 +220,8 @@ public class IntervalTree {
         }
 
         // Update the max at every node visited, if applicable
-        if (node.max < interval.high) {
-            node.max = interval.high;
+        if (node.max < interval.end) {
+            node.max = interval.end;
         }
 
         // Handles cases 1.1, 1.2

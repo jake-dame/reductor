@@ -1,5 +1,6 @@
 package reduc;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static reduc.ReductorUtil.stringPitchToNumber;
 
 class UtilTest {
 
@@ -94,6 +96,19 @@ class UtilTest {
             assertInstanceOf(SysexMessage.class, sysexMessageCopy);
             assertArrayEquals(sysexMessageIn.getData(), sysexMessageCopy.getData());
         }
+    }
+
+    @Test
+    void TestGetPitchStringToNumber() {
+
+        assertEquals(stringPitchToNumber("C"), 0);
+        assertEquals(stringPitchToNumber("A"), 9);
+        assertEquals(stringPitchToNumber("A#"), 10);
+        assertEquals(stringPitchToNumber("Bb"), 10);
+        assertEquals(stringPitchToNumber("B"), 11);
+        assertThrows(IllegalArgumentException.class, () -> stringPitchToNumber("h"));
+        assertThrows(IllegalArgumentException.class, () -> stringPitchToNumber("1"));
+
     }
 
 }

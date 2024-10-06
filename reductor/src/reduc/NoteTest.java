@@ -135,6 +135,22 @@ class NoteTest {
 
     }
 
+    @Test
+    void TestCoolConstructor() {
+
+        assertEquals(new Note("C", -1).pitch, 0);
+        assertEquals(new Note("C", 0).pitch, 12);
+        assertEquals(new Note("C", 1).pitch, 24);
+        assertEquals(new Note("C", 2).pitch, 36);
+
+        assertNotNull(new Note("G", 9));
+        assertThrows(IllegalArgumentException.class, () -> new Note("G#", 9));
+        assertThrows(IllegalArgumentException.class, () -> new Note("G", -2));
+        assertThrows(IllegalArgumentException.class, () -> new Note("G", 10));
+
+
+    }
+
 
     @Test
     void TestCompareTo() {

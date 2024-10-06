@@ -55,7 +55,6 @@ class ReductorTest {
     @BeforeEach
     void setUp() {
 
-        reductor.reduce(1);
 
     }
 

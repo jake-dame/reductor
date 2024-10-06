@@ -5,6 +5,7 @@ import javax.sound.midi.*;
 import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.*;
+import reduc.IntervalTree.Interval;
 
 /** Contains and controls all aspects of the Reductor operations (sanitization, aggregation, reduction) */
 public class Reductor {
@@ -135,20 +136,41 @@ public class Reductor {
 
     }
 
-    public Midi reduce(int reductionLevel) {
+    // REDUCTION ********************************************************************************************************/
 
-        if (reductionLevel < 0 || reductionLevel > 3) {
-            throw new RuntimeException("valid reduction values are 0-3; 0 returns the aggregate");
+    ArrayList<Chord> levelOne() {
+
+        if(this.aggregate.getResolution() != 480) {
+            throw new RuntimeException("non-480 resolution");
         }
 
-        switch(reductionLevel) {
-            case 0 -> { return aggregate; }
-            case 1 -> { return Reduction.levelOne(aggregate); }
-            case 2 -> { return Reduction.levelTwo(aggregate); }
-            case 3 -> { return Reduction.levelThree(aggregate); }
-            default -> { return null; }
+        ArrayList<Chord> chords = new ArrayList<>();
+        int windowSize = this.aggregate.NOTE_128TH;
+        long length = this.aggregate.getLengthInTicks();
+        System.out.println("LENGTH: " + length + "ticks");
+        for (long windowMin = 0, windowMax = windowSize; windowMax < length; windowMin += windowSize, windowMax += windowSize) {
+            Interval window = new Interval(windowMin, windowMax);
+            System.out.println("min: " + windowMin + ", max: " + windowMax);
+            Chord chord = treeQueryToChord( this.tree.query(window) );
+            chords.add(chord);
         }
 
+        for(Chord chord : chords) {
+            System.out.println(chord);
+        }
+
+        return chords;
+    }
+
+    static Chord treeQueryToChord(ArrayList<IntervalTree.Interval> intervals) {
+
+        ArrayList<Note> notes = new ArrayList<>();
+
+        for (IntervalTree.Interval interval : intervals) {
+            notes.add(interval.note);
+        }
+
+        return new Chord(notes);
     }
 
     // GETTERS ********************************************************************************************************/
@@ -156,71 +178,5 @@ public class Reductor {
     public Midi getOriginal() { return original; }
 
     public Midi getAggregate() { return aggregate; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private Midi convertListOfListsToMidiObject(ArrayList<ArrayList<Note>> listOfLists) {
-
-        Sequence seq;
-        try {
-            seq = new Sequence(
-                    aggregate.getSequence().getDivisionType(),
-                    aggregate.getSequence().getResolution()
-            );
-        } catch (InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
-
-
-
-        Track track = seq.createTrack();
-        ArrayList<MidiEvent> metas = original.getMetaEvents();
-        for(MidiEvent e : metas ) {
-            track.add(e);
-        }
-
-        for (int L = 0; L < listOfLists.size(); L++) {
-            ArrayList<Note> list = listOfLists.get(L);
-            ArrayList<MidiEvent> midiEvents = Note.notesToEvents(list);
-
-
-            for (MidiEvent e : midiEvents) {
-                track.add(e);
-            }
-
-        }
-
-        return new Midi(seq, "RED_" + original.getName());
-    }
 
 }

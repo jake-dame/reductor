@@ -1,26 +1,30 @@
 package reduc;
 
 import javax.sound.midi.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static reduc.Files.BEETHOVEN_5_IV;
-import static reduc.Files.BEETHOVEN_MOONLIGHT;
-import static reduc.ReductorUtil.play;
+import static reduc.Files.*;
+import static reduc.ReductorUtil.*;
 
 public class Main {
 
     public static void main(String[] args) throws InvalidMidiDataException, IOException {
 
-        Midi midi = new Midi(BEETHOVEN_MOONLIGHT);
+        ArrayList<MidiEvent> events = new ArrayList<>();
 
-        Sequence seqIn = MidiSystem.getSequence(new File(BEETHOVEN_5_IV));
-        play(seqIn);
-        Sequence copy = ReductorUtil.copySequence(seqIn);
-        //ReductorUtil.play(copy);
+        Reductor red = new Reductor(LEVEL_1_TEST);
+        ArrayList<Chord> chords = red.levelOne();
+
+        for (Chord chord : chords) {
+            events.addAll(chord.toMidiEvents());
+        }
+        Sequence seq = eventsToSequence(new ArrayList[]{events}, red.resolution);
+        openWithGarageBand( write(seq, "name.mid") );
 
     }
 

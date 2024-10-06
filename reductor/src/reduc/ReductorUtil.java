@@ -25,11 +25,34 @@ public class ReductorUtil {
     public static final int MESSAGE_TYPE_NOTE_ON = 0x90;
 
     private static final HashMap<Integer, String> mapPitches;
+    private static final HashMap<Integer, String> mapPitchesAndRegister;
     private static final HashMap<Integer, String> mapMajor;
     private static final HashMap<Integer, String> mapMinor;
 
     static {
+
         mapPitches = new HashMap<>();
+        for (int num = 0; num < 128; num++) {
+            String space = "";
+            String pitch = switch (num % 12) {
+                case 0 -> "C";
+                case 1 -> "C#";
+                case 2 -> "D";
+                case 3 -> "D#";
+                case 4 -> "E";
+                case 5 -> "F";
+                case 6 -> "F#";
+                case 7 -> "G";
+                case 8 -> "G#";
+                case 9 -> "A";
+                case 10 -> "A#";
+                case 11 -> "B";
+                default -> "";
+            };
+            mapPitches.put(num, pitch);
+        }
+
+        mapPitchesAndRegister = new HashMap<>();
         for (int num = 0; num < 128; num++) {
             String space = "";
             String pitch = switch (num % 12) {
@@ -47,7 +70,7 @@ public class ReductorUtil {
                 case 11 -> "B" + space + (num/12 - 1);
                 default -> "";
             };
-            mapPitches.put(num, pitch);
+            mapPitchesAndRegister.put(num, pitch);
         }
 
         mapMajor = new HashMap<>();
@@ -98,9 +121,67 @@ public class ReductorUtil {
 
     }
 
-    public static String getNote(int val) { return mapPitches.get(val); }
+    /* Number works with any numerical primitive. */
+    public static String numericalPitchToString(Number val) {
 
-    public static String getNote(byte val) { return mapPitches.get(val & 0xFF); }
+        if (val.intValue() < 0 || val.intValue() > 127) {
+            throw new IllegalArgumentException("pitch values must be between 0 and 127");
+        }
+
+        return mapPitches.get(val.intValue() & 0xFF);
+    }
+
+    public static int stringPitchToNumber(String str) {
+
+        str = str.trim();
+        str = str.toLowerCase();
+        int res = -1;
+
+        boolean invalidString = false;
+
+        if (str.isEmpty()) {
+            invalidString = true;
+        }
+
+        if (str.length() > 2) {
+            invalidString = true;
+        }
+
+        char pitch = str.charAt(0);
+
+        if ( ! (pitch >= 'a' && pitch <= 'g' || pitch >= 'A' && pitch <= 'G' ) ) {
+            invalidString = true;
+        }
+
+        if (pitch == 'c')  res = 0;
+        if (pitch == 'd')  res = 2;
+        if (pitch == 'e')  res = 4;
+        if (pitch == 'f')  res = 5;
+        if (pitch == 'g')  res = 7;
+        if (pitch == 'a')  res = 9;
+        if (pitch == 'b')  res = 11;
+
+        if (str.length() == 2) {
+            char accidental = str.charAt(1);
+            if (accidental == '#') {
+                res++;
+            } else if (accidental == 'b') {
+                res--;
+            } else {
+                invalidString = true;
+            }
+        }
+
+        if (invalidString) {
+            throw new IllegalArgumentException("invalid pitch; valid pitch examples: \"A\", \"A#\", \"Ab\" ");
+        }
+
+        return res;
+    }
+
+    public static String getPitchAndRegister(Number val) {
+        return mapPitchesAndRegister.get(val.intValue() & 0xFF);
+    }
 
     static String getKeySignature(byte[] bytes) {
 
@@ -201,7 +282,7 @@ public class ReductorUtil {
 
     }
 
-    static Sequence makeSequence(ArrayList<MidiEvent>[] lists, int resolution) {
+    static Sequence eventsToSequence(ArrayList<MidiEvent>[] lists, int resolution) {
 
         Sequence out;
         try {
@@ -398,7 +479,7 @@ public class ReductorUtil {
             System.out.printf("\t%-5d\t%-5s\t%s \n",
                     event.getTick(),
                     col_tab,
-                    ReductorUtil.getNote(pitch)
+                    ReductorUtil.getPitchAndRegister(pitch)
             );
         }
 

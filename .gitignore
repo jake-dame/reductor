@@ -1,3 +1,19 @@
+##### reductor #####
+
+# VSC
+.vscode/
+
+# Intellij
+.idea/
+out/
+
+# Misc
+.DS_Store
+scratch.md
+
+
+##### GitHub (Java Template) #####
+
 # Compiled class file
 *.class
 
@@ -22,8 +38,3 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
-
-.DS_Store
-
-# scratch file
-scratch.md

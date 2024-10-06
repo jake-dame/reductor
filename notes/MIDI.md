@@ -27,8 +27,11 @@ There are two protocols specified by the standard:
 
 SMF is a different concept than the wire protocol. SMF is a static representation of note+timing+meta data. Wire protocol is about sending/receiving (i.e. streaming/responding).
 
+NOTE: "Streaming" refers to responding to bytes over time, as they are received, and is distinct from sequenced data (which is sent all at once, before anything can be done with it -- it is *static* in this sense). So wire protocol deals with streaming MIDI data, and the SMF deals with how that data is stored for later use.
+
 Sequencers parse MIDI files and are responsible for playback of MIDI data, minus the actual sound production. They are responsible for separating out tracks in such a way that MIDI events across multiple tracks are streamed at the right times. They basically orchestrate the static representation of the musical performance in the SMF and synchronize it all.
 + These are the parsers/organizers and give to playback devices, such as synthesizers.
+
 
 This is necessary because SMF's consist of *ordered* data. Think of it as taking a bunch of 1D arrays (what tracks essentially are) and making them into 2D arrays where one of the dimensions is time.
 
@@ -101,6 +104,24 @@ Data section (variable-length):
 
 A MIDI event consists of a tick value byte, followed by some amount of data bytes.
 
+Messages consist of a status byte (MSB always set to 1) and some number of data bytes, depending on the type of message.
+
+NOTE: The only bytes in MIDI that have the MSB set are status bytes.
+
+The upper nibble of the byte is the status "type", and the lower always indicates the channel number.
++ NOTE: Channels are referred to as "1, 2, 3, ..." except in MIDI/hex they are offset by one. So, channel 1 is referred to by the nibble `0x0`, channel 2 is `0x1`, and so on.
++ `0x91` is the NOTE OFF command for channel 2 (`0x9_ plus 0x_1`)
+
+If a series of messages that are all of the same type of message (i.e. the same status byte), the status byte can be omitted. This is called "running" status. Each subsequent message is interpreted as being in the same status as the last status byte that was sent, and it only changes if a new status byte is sent.
++ Example: Instead of using NOTE ON, NOTE OFF, NOTE ON, NOTE OFF, it is common to simply send a series of NOTE ON messages where a velocity of 0 is used to turn a note "off". This is in the MIDI spec and sequencing software treats NOTE_ON+velocity=0 as equivalent to NOTE_OFF messages.
++ The two sequences of events below turn a C4 on over and over again. They are interpreted/executed exactly the same, except one takes advantage of running status and uses 1/3 the bytes of the other (omits status bytes):
+  + Different status every time to turn on/off: 
+    + `0x90 0x3C 0x40   0x80 0x3C 0x00  0x90 0x3C 0x40   0x80 0x3C 0x00   ...`
+  + Running status (utilizing velocity zero for off) to turn on/off: 
+    + `0x90 0x3C 0x40        0x3C 0x00       0x3C 0x40        0x3C 0x00   ...`
+
+If you wanted to give OFF notes specific "release velocities", this obviously wouldn't work.
+
 #### Meta Messages
 
 These are never sent over cable, to a sequencer, or to a device, and only exist in the SMF.
@@ -116,33 +137,27 @@ FF 58 ==> time signature
 04 ==> length of message is always 4
 04 ==> beats per measure
 02 ==> 2^x gives us what gets the beat
-18 ==> metronome pulse in MIDI clock ticks per click
-08 ==> number of 32nd notes per beat (usually 8 if 4/4 and 60 bpm)
+18 ==> metronome pulse in MIDI clock ticks per click (this has to do with the midi beat clock)
+08 ==> number of 32nd notes per beat (usually 8 if 4/4 and 60 bpm) 
 
 FF 59 ==> key signature
 02 ==> length of message is always 2
 xx ==> number of flats/sharps (-7 to 7)
 xx ==> major/minor (0 or 1, respectively)
 
-FF 58 ==> set tempo
+FF 51 ==> set tempo
 03 ==> length of message is always 3
-vv vv vv ==> microseconds-per-quarter note (in the mid 100,000s usually; 0x7a120 == 500,000)
+vv vv vv ==> microseconds-per-quarter note (in the mid 100,000s usually; 0x07a120 == 500,000)
 
 FF 2F ==> end of track
 
 
 #### Voice Messages
 
-
 NOTE ON/OFF Messages:
 
 NOTE OFF messages: 3 bytes ==> 0x8_ (channel 1-16 or 0-F) | pitch | velocity
 NOTE ON  messages: 3 bytes ==> 0x9_ (channel 1-16 or 0-F) | pitch | velocity 
-
-"Running" status: if the subsequent message is of the same type, status will be omitted ==> 2 bytes
-+ This is why people use NOTE ON with velocity 0
-  + It's equivalent to NOTE OFF and prevents switching back and forth over and over again to turn notes off. You can avoid note off entirely and just have running status the whole time becuase 0x90 is the only status byte and then you just send note off messages by sending the pitch to signal but with a velocity of 0
-  + Saves 1/3 of bytes (probably not consequential though)
 
 In binary: 1000 cccc + 0ppppppp (0-127) + 0vvvvvvv (note off)
            1001 "                                " (note on)
@@ -150,7 +165,19 @@ In binary: 1000 cccc + 0ppppppp (0-127) + 0vvvvvvv (note off)
 Pitches:
 + Values go by half-steps from 0-127
 + +/- 12 for octave relationships
-+ Middle C (C4) is 60 (0x3C)
++ Ranges:
+  + C-1 is 0
+  + C0 is 12
+  + C1 is 24
+  + C2 is 36
+  + C3 is 48
+  + C4 (middle) is 60 (0x3C)
+  + C5 is 72
+  + C6 is 84
+  + C7 is 96
+  + C8 is 108
+  + C9 is 120
+  + G9 is 127
 + This means some notes will not exist on actual pianos (like C-1)
 
 Velocity:
@@ -158,7 +185,10 @@ Velocity:
 + Mezzo forte would be about a 64
 + 127 is loudest
 + Note on with velocity 0 is equal to note off
-+ Note offs can have a velocity other than 0, but is rare and only applicable to certain instruments/sounds
++ Note offs can have a velocity other than 0, but is rare and only applicable to certain instruments/sounds. This is referred to as release velocity (see the explanation below)
+
+[A good explanation of release velocity:](https://www.kvraudio.com/forum/viewtopic.php?t=523847)
+"That's actually meant as a convention for the receiver to implement, rather than the sender. It's for the situation when you're "actually" only sending note pitch and velocity, and you use velocity zero to mean you muted that pitch. Think of striking a tubular bell. The "note off" isn't really relevant - the bell will just ring out. If you do want to mute it, you'd have to say to the bell "you were hit with no velocity - sound like it!" - it's still a "note on" event in MIDI terms, and the instrument decides how to handle it. Note off is for instruments with "external" sustain, like wind instruments -- note on means you start blowing, note off means you stop blowing. The velocity of the note off could be used for something, too."
 
 MIDI VOICE MESSAGES
 
@@ -175,10 +205,9 @@ This will take advantage of running status at the beginning of tracks usually (a
 PROGRAM CHANGE MESSAGES
 0xCn ii
 n == channel
-ii == instrument (google table)
-*Channel 9 is always drums
+ii == instrument (google table; 0 is acoustic grand piano; 34 is "Choir aahs"; etc.)
 
-34 is Choir aahs
+NOTE: Channel 9 is always drums in the MIDI spec
 
 #### Sysex Messages
 
@@ -308,6 +337,11 @@ A `MidiEvent` object consists of a tick value (a `long`) and a `MidiMessage` obj
 + `MetaMessage`
 + `SysexMessage`
 
+From Oracle:
+"The MIDI standard expresses MIDI data in bytes. However, because JavaTM uses signed bytes, the Java Sound API uses integers instead of bytes when expressing MIDI data. For example, the getStatus() method of MidiMessage returns MIDI status bytes as integers. If you are processing MIDI data that originated outside Java Sound and now is encoded as signed bytes, the bytes can can be converted to integers using this conversion:
+
+int i = (int)(byte & 0xFF)"
+
 ## Resources
 
 [insanely high quality "wiki"](https://www.recordingblogs.com/wiki/musical-instrument-digital-interface-midi)
@@ -315,5 +349,3 @@ A `MidiEvent` object consists of a tick value (a `long`) and a `MidiMessage` obj
 [reintech.io tutorial](https://reintech.io/blog/java-midi-programming-creating-manipulating-midi-data)
 
 All the official specs (though some are members only??): [midi.org ](midi.org)
-
-

@@ -1,61 +1,55 @@
+1. Toronto: The "span" rule (minimal spanning is where we store an interval); key (separator) of elementary intervals; same Interval stored no more than 2 times on each level of tree
+   1. Each node contains up to 2 intervals
+   2. Seems more like typical and efficient binary search recursion
+2. CMU: "Two-Step" search Each node stores one's it intersects, and then splits fully left/right subtrees
+   1. Can eliminate left/right subtree, but always have to search current node which stores:
+      1. Endpoints, but split into two lists
+   2. 2n endpoints are sorted at beginning and those determine the medians of trees/subtrees (for each internal node)
+   3. Median stored with every node
+3. G4G:
+   1. Explicit interval + MAX of subtree (furthest right descedenant's b)
+   2. nlgn IF self-balancing only
+
+**TORONTO**:
+Separate the number line into elementary intervals (intervals created by each and every endpoint of each and every interval)
++ Leaf nodes span 1 elementary interval each
++ Internal nodes span the union of its descendants
+
+This leads to 2n + 1 elementary intervals *assuming* none share endpoints.
+
+Every interval can be expressed as an aggregate of the sub-intervals that it spans.
+
+Each internal node stores a key that separates the elementary intervals it spans
+
+An interval [a,b] is stored in a node x if and only if
+
+1)
+span(x) is completely contained within [a,b] and
+2)
+span(parent(x)) is not completely contained in [a,b].
+
+So basically intervals are stored with the node when they are minimally overlapping (their span min is greater than or equal to the interval min AND less then or equal to the interval max) AND that condition is not also true for their parent
+
+Each interval can be stored in many nodes of the tree. However, the conditions (1) and (2) ensure that any particular interval is stored in at most two nodes on each level of the tree. 2nlgn storage
+
+
+CMU one says O(n) storage
+
+
+
 ## Questions
 
-```java
-// Event class
-class Event {
-  int value;
-  long start, end;
-  //...
-}
-
-// Easier for readability and maintability, but tree method logic may be more verbose in accessing things *through* the Event object. Is this also a performance/space concern?
-class Node {
-  Event data;
-  Node left, right;
-  //...
-}
-
-// this uses only primitives
-class Node {
-  int pitch;
-  long start, end;
-  Node left, right;
-  //...
-}
-```
+Is it worth it to make a read-only wrapper for a Sequence? How else to expose safely.  "Java is not what I reach for." 
++ You either need to make decisions about what you want to expose or re-design your class structure so that stuff that is needed by this or that class is correct (just move MIDI class into Reductor?)
+  1. read-only stuff Or
+  2. move into class (re-design)
 
 If I can't have the median element from the outset, I need the tree to be self-balancing. That won't really be a problem in this case though? The other classes kind of make sure that I will always have a full set prior to tree construction...
++ "Don't anticipate that you are appending a bunch to the end each time, and that insertions and deletions will be more-or-less pretty net zero"
 
-Self-balancing... AVL vs. Red-Black?
-+ Construction will add most everything that is going to be added HOWEVER
-+ Insertions/Deletions:
-  + The custom algorithm will be looking to re-arrange "chords", thin them out, and perhaps look a number of chords behind/ahead to make decisions about how to re-arrange
-  + I imagine this will be a process of deleting stuff that doesn't belong, and then re-inserting the "re-arranged" stuff
-
-The java midi library helps in giving us a SET of midi events (no duplicates, and in increasing order by starting tick value).
-+ When building the tree, I am targeting by:
-  + Start value
-  + If start values are equal, then end value
-  + If end values are equal, then by pitch (low to high is left to right)
-  + This means if the target was (C4, 0 480) and the item was (E4, 0, 480), the latter would become the right child. We are guaranteed there will not be more than one (C4, 0, 480).
-    + Side-note: There may, however, be a (C4, 0, 479) hypothetically... so the custom algorithm might have to deal with "pseudo-duplicates" although I don't think this will be a huge problem
-
-This introduces a lot of if-else stuff, and I though about just saying "sort by start value and placement after that is just arbitrary -- whatever child is not null, put it there." But, the whole point of making the binary search efficient is that the data is perfectly ordered (it is predictable where something will be). I may have a need to know exactly where a certain pitch is?
-
-Operation stuff that return booleans?
-
-
-
-
++ use quickselect or median function to get median from list in java
 -------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
+Is it generally common to omit visibility specifiers during early- to mid-development, and have everything just be package-private, EXCEPT for internal helpers and stuff you know will ALWAYS need to be private (which you then mark private)? I find myself overdoing it in terms of conservative encapsulation and marking tons of stuff as private, but it ends up making testing and refactoring more difficult, even if those things should be private in the end anyway. Or is this a habit/mentality that I shouldn't be fighting
 
 Best practice for constructors:
 + What should/shouldn't be in constructor logic
@@ -73,32 +67,4 @@ Overall design of a program/project:
 + I have changed overall structure like 15 times so far because as things develop over time, certain pieces of code go in different places, certain encapsulation barriers no longer make sense, or inversely become sensible, etc.
 + Is this just poor planning on my part, something that takes years of practice to avoid, context-dependent, a little bit of both, or neither
 
-    // TODO: find way to expose sequence safely
-
-    //public Sequence getSequence() throws InvalidMidiDataException {
-    //
-    //    Sequence copy = new Sequence(sequence_m.getResolution(),
-    //            sequence_m.getResolution(), sequence_m.getTracks().length);
-    //
-    //    for (Track track : sequence_m.getTracks()) {
-    //        Track copyTrack = copy.createTrack();
-    //        for (int j = 0; j < track.size(); j++) {
-    //
-    //            MidiEvent event = track.get(j);
-    //            MidiMessage msg = event.getMessage();
-    //
-    //            MidiMessage copyMsg = null;
-    //            switch (msg) {
-    //                case ShortMessage sh -> { copyMsg = new ShortMessage(sh.getStatus(), sh.getData1(), sh.getData2()); }
-    //                case MetaMessage meta -> { copyMsg = new MetaMessage(meta.getType(), meta.getData(), meta.getLength()); }
-    //                case SysexMessage sys -> { copyMsg = new SysexMessage(sys.getStatus(), sys.getData(), sys.getLength()); }
-    //                default -> { }
-    //            }
-    //
-    //            MidiEvent copyEvent = new MidiEvent( copyMsg, event.getTick());
-    //            copyTrack.add(copyEvent);
-    //        }
-    //    }
-    //
-    //    return copy;
-    //}
+Balance between making small amounts of data into small classes vs. not

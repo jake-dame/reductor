@@ -69,6 +69,18 @@ javax.sound.midi.MetaMessage
     }
 ```
 
+Comparables can be really nice but the whole this.compareTo(else) >/< 0 scheme never sits well in my brain. Unless it's complex enough, I just avoid using them. Especially when there is structured/hierarchical ordering, I want to see what I'm doing in the actual code
+
+"This class/function, in the scope of this package/application, really won't ever need to expect, and therefore handle, xyz (e.g. the item is null, the list is empty, etc., etc.)" this worked fine until I refactored, and all of the sudden unexpected behavior EVERYWHERE. Moral of the story: there is never a good excuse for leaving stuff out simply because you "aren't really ever expecting it to happen". That may be true *today*, but it won't be in a week or two when you refactor, and debugging at the point will not be a fun process. Always include these checks in data structures, file I/O, etc.
+
+When reviewing code (like in a review/evaluate everything as a whole, like when considering design), don't refactor/change stuff as you go, because it ruins thought process. Just write TODOS wherever you see something you want to change, then, when you've gotten through the whole program, starting going through and changing
+
+Varargs in java use `...` ellipsis operator after the type declaration. Except they don't work so well with parameterized types (allegedly)
+
+If something implements clone() in Java (that's an Object or Cloneable method), that does NOT mean it is a deep copy. It varies with the implementation.
+
+In Java, classes can belong to the same package even if they are located in different physical directories, as long as those directories share the same parent directory structure.
+
 ## Pieces
 
 **Orchestral**:

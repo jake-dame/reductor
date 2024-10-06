@@ -6,16 +6,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.*;
+import static reduc.ReductorUtil.*;
 
-// TODO: I don't know how to make this class's constructors not be so duplicate codey
+// TODO: I would like to rename this. MIDInterface doesn't really describe this class.
+//  Really it should be named "Sequence" but that is the same as the javax.midi one...
 
-/*
-    Purpose: Represent, but not manipulate, a Java/Midi Sequence
-
-    This is essentially a wrapper class for a Java Sequence that, while providing info
-    already mostly provided by the vanilla Sequence class, provides extras and handles
-    access more specific to this application's needs.
-*/
+/**
+ * Represents a Java/Midi Sequence.
+ * <p>
+ * This is essentially a wrapper class for a Java {@link javax.sound.midi.Sequence Sequence} that, while providing
+ * read-only info already mostly provided by the vanilla {@link javax.sound.midi.Sequence Sequence} class, is objectively
+ * cooler (i.e. provides extra features and handles data accesses more specific to this application's needs).
+ * </p>
+ * */
 public class Midi {
 
     private final File file;
@@ -26,7 +29,6 @@ public class Midi {
     private final Sequence sequence;
     private final Track[] tracks;
 
-    private final int resolution;
     final int NOTE_WHOLE;
     final int NOTE_HALF;
     final int NOTE_QUARTER;
@@ -36,19 +38,22 @@ public class Midi {
     final int NOTE_64TH;
     final int NOTE_128TH;
 
-    private int bpm;
+    private final ArrayList<Integer> bpmList = new ArrayList<>();
 
-    private final ArrayList<MidiEvent> textEvents;
-    private final ArrayList<MidiEvent> trackNameEvents;
-    private final ArrayList<MidiEvent> setTempoEvents;
-    private final ArrayList<MidiEvent> keySignatureEvents;
-    private final ArrayList<MidiEvent> timeSignatureEvents;
+    // TODO: Adding a measure indexing/count would be a cool feature in the end;
+    //  would need to take advantage of timeSignatureEvents. Pickup measures (musicxml vis-a-vis MIDI)?
 
-    private final ArrayList<MidiEvent> allEvents;
-    private final ArrayList<MidiEvent> metaEvents;
-    private final ArrayList<MidiEvent> noteEvents;
-    private final ArrayList<MidiEvent> otherShortEvents;
-    private final ArrayList<MidiEvent> sysexEvents;
+    private final ArrayList<MidiEvent> textEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> trackNameEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> setTempoEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> keySignatureEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> timeSignatureEvents = new ArrayList<>();
+
+    private final ArrayList<MidiEvent> allEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> metaEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> noteEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> otherShortEvents = new ArrayList<>();
+    private final ArrayList<MidiEvent> sysexEvents = new ArrayList<>();
 
     private final ArrayList<Note> notes;
 
@@ -58,19 +63,22 @@ public class Midi {
 
         try {
             this.sequence = MidiSystem.getSequence(this.file);
+
             if (this.sequence.getDivisionType() != Sequence.PPQ) {
                 throw new RuntimeException("This program does not currently support SMPTE timing");
             }
+
             this.fileFormat = MidiSystem.getMidiFileFormat(this.file);
-            this.fileType = fileFormat.getType();
         }
         catch (InvalidMidiDataException | IOException e) {
             throw new RuntimeException(e);
         }
 
+        this.fileType = fileFormat.getType();
+
         this.tracks = sequence.getTracks();
 
-        this.resolution = sequence.getResolution();
+        int resolution = sequence.getResolution();
         NOTE_WHOLE = resolution * 4;
         NOTE_HALF = resolution * 2;
         NOTE_QUARTER = resolution;
@@ -80,17 +88,6 @@ public class Midi {
         NOTE_64TH = resolution / 16;
         NOTE_128TH = resolution / 32;
 
-        this.setTempoEvents = new ArrayList<>();
-        this.keySignatureEvents = new ArrayList<>();
-        this.timeSignatureEvents = new ArrayList<>();
-        this.trackNameEvents = new ArrayList<>();
-        this.textEvents = new ArrayList<>();
-
-        this.allEvents = new ArrayList<>();
-        this.metaEvents = new ArrayList<>();
-        this.noteEvents = new ArrayList<>();
-        this.otherShortEvents = new ArrayList<>();
-        this.sysexEvents = new ArrayList<>();
         sortEventsIntoLists();
 
         // TODO: either sanitize in here or make notes not a part of
@@ -106,20 +103,23 @@ public class Midi {
             throw new IllegalArgumentException(
                     "name should just be a unique identifier, not in filename form"
             );
-        } else {
-            this.file = new File(name + ".mid");
         }
+        this.file = new File(name + ".mid");
 
-        this.sequence = sequence; // TODO: find workaround
+        this.sequence = copySequence(sequence);
         if (this.sequence.getDivisionType() != Sequence.PPQ) {
             throw new RuntimeException("This program does not currently support SMPTE timing");
         }
+
         this.fileFormat = null;
         this.fileType = null;
 
         this.tracks = sequence.getTracks();
-        this.resolution = sequence.getResolution();
-        NOTE_WHOLE = resolution * 4; // TODO: quarter == 120 in bach inv, meaning integer division on bottom two
+        int resolution = sequence.getResolution();
+        // TODO: quarter == 120 in bach inv, meaning integer division on bottom two,
+        //  so this all needs to be fixed OR research how fractional tick values are
+        //  handled in MIDI and allow them here too
+        NOTE_WHOLE = resolution * 4;
         NOTE_HALF = resolution * 2;
         NOTE_QUARTER = resolution;
         NOTE_8TH = resolution / 2;
@@ -128,17 +128,6 @@ public class Midi {
         NOTE_64TH = resolution / 16;
         NOTE_128TH = resolution / 32;
 
-        this.setTempoEvents = new ArrayList<>();
-        this.keySignatureEvents = new ArrayList<>();
-        this.timeSignatureEvents = new ArrayList<>();
-        this.trackNameEvents = new ArrayList<>();
-        this.textEvents = new ArrayList<>();
-
-        this.allEvents = new ArrayList<>();
-        this.metaEvents = new ArrayList<>();
-        this.noteEvents = new ArrayList<>();
-        this.otherShortEvents = new ArrayList<>();
-        this.sysexEvents = new ArrayList<>();
         sortEventsIntoLists();
 
         this.notes = Note.eventsToNotes(getNoteEvents());
@@ -146,6 +135,7 @@ public class Midi {
 
     private void sortEventsIntoLists() {
 
+        // TODO: I could just do Note construction here? But would make this a really heavy loop/set of functions.
         for (Track track : sequence.getTracks()) {
             for (int eventIndex = 0; eventIndex < track.size(); eventIndex++) {
                 MidiEvent event = track.get(eventIndex);
@@ -153,7 +143,7 @@ public class Midi {
                 switch (event.getMessage()) {
                     case ShortMessage shortMessage -> {
                         if (shortMessage.getCommand() == NOTE_ON
-                            || shortMessage.getCommand() == NOTE_OFF) {
+                                || shortMessage.getCommand() == NOTE_OFF) {
                             noteEvents.add(event);
                         } else {
                             otherShortEvents.add(event);
@@ -181,7 +171,8 @@ public class Midi {
         int metaMessageType = message.getType();
         byte[] data = message.getData();
 
-        if (metaMessageType >= 0x20 && metaMessageType < 0x2F) { // Channel prefix
+        // Channel prefix
+        if (metaMessageType >= 0x20 && metaMessageType < 0x2F) {
             // DO NOT DELETE: channel 1 (0x20 + 0x01) is the only channel I've seen so far?
             if (metaMessageType != 0x21) {
                 System.out.println("metaMessageType value: "
@@ -190,25 +181,24 @@ public class Midi {
             }
         }
         else {
-            // DO NOT REMOVE THE BRACKET STRUCTURE FROM ANY OF THESE you will probably add more later
             switch (metaMessageType) {
-                case ReductorUtil.MESSAGE_TYPE_TEXT -> {
+                case MESSAGE_TYPE_TEXT -> {
                     this.textEvents.add(event);
                 }
-                case ReductorUtil.MESSAGE_TYPE_TRACK_NAME -> {
+                case MESSAGE_TYPE_TRACK_NAME -> {
                     this.trackNameEvents.add(event);
                 }
-                case ReductorUtil.MESSAGE_TYPE_END_OF_TRACK -> {
-                    // DO NOT DELETE I won't do anything with this message but the default needs it
+                case MESSAGE_TYPE_END_OF_TRACK -> {
+                    // DO NOT DELETE
                 }
-                case ReductorUtil.MESSAGE_TYPE_SET_TEMPO -> {
+                case MESSAGE_TYPE_SET_TEMPO -> {
                     this.setTempoEvents.add(event);
-                    this.bpm = ReductorUtil.convertMicrosecondsToBPM(event);
+                    this.bpmList.add( convertMicrosecondsToBPM(event) );
                 }
-                case ReductorUtil.MESSAGE_TYPE_TIME_SIGNATURE -> {
+                case MESSAGE_TYPE_TIME_SIGNATURE -> {
                     this.timeSignatureEvents.add(event);
                 }
-                case ReductorUtil.MESSAGE_TYPE_KEY_SIGNATURE -> {
+                case MESSAGE_TYPE_KEY_SIGNATURE -> {
                     this.keySignatureEvents.add(event);
                 }
                 default -> {
@@ -218,59 +208,127 @@ public class Midi {
         }
     }
 
-    public void play() { ReductorUtil.play(sequence); }
+    public void playSequence() {
+        play(sequence);
+    }
 
-    public File writeOut() { return ReductorUtil.write(sequence, file.getName()); }
+    public File writeOut() {
+        return write(sequence, file.getName());
+    }
 
     // * SETTERS ******************************************************************************************************/
 
-    /*
-        Sets the tempo for THE ENTIRE SEQUENCE (overwriting interspersed tempo messages).
-    */
-    public void setTempo(int bpm) {
+    /** Allows the user to scale the tempo up/down. */
+    public void setTempo(int scale) {
 
-        final int setTempoMetaMessageType = 0x51;
-        byte[] data = ReductorUtil.convertBPMToMicroseconds(bpm);
         final int setTempoMetaMessageLength = 3;
 
         for (MidiEvent event : this.setTempoEvents) {
             MetaMessage msg  = (MetaMessage) event.getMessage();
-            if(msg.getStatus() != ReductorUtil.MESSAGE_TYPE_SET_TEMPO) { // this if can probably be deleted later
+            int bpm = convertMicrosecondsToBPM(event);
+            byte[] scaledData = convertBPMToMicroseconds(bpm * scale);
+            if (msg.getStatus() == MESSAGE_TYPE_SET_TEMPO) {
                 try {
-                    msg.setMessage(setTempoMetaMessageType, data, setTempoMetaMessageLength);
+                    msg.setMessage(MESSAGE_TYPE_SET_TEMPO, scaledData, setTempoMetaMessageLength);
                 } catch (InvalidMidiDataException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
+
+    }
+
+    /** Sets the tempo for the entire sequence, regardless of the message's position. */
+    public void setTempoGlobal(int bpm) {
+
+        byte[] data = convertBPMToMicroseconds(bpm);
+        final int setTempoMetaMessageLength = 3;
+
+        for (MidiEvent event : this.setTempoEvents) {
+            MetaMessage msg  = (MetaMessage) event.getMessage();
+            if (msg.getStatus() == MESSAGE_TYPE_SET_TEMPO) {
+                try {
+                    msg.setMessage(MESSAGE_TYPE_SET_TEMPO, data, setTempoMetaMessageLength);
+                } catch (InvalidMidiDataException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
     }
 
     // * GETTERS ******************************************************************************************************/
 
-    public String getName() { return file.getName().split("\\.")[0]; }
+    Sequence getSequence() {
+        return copySequence(sequence);
+    }
 
-    public int getResolution() { return resolution; }
+    /** Returns the vanilla name (not in filename form) */
+    public String getName() {
+        return file.getName().split("\\.")[0];
+    }
 
-    public long getLengthInTicks() { return sequence.getTickLength(); }
+    public int getResolution() {
+        return sequence.getResolution();
+    }
 
-    public long getLengthInMicroseconds() { return sequence.getMicrosecondLength(); }
+    public long getLengthInTicks() {
+        return sequence.getTickLength();
+    }
 
-    public float getDivisionType() { return sequence.getDivisionType(); }
+    public long getLengthInMicroseconds() {
+        return sequence.getMicrosecondLength();
+    }
 
-    /* To set tempo, you can get the bpm here, NOT the actual events. setTempo() takes an int bpm as well. */
-    public int getTempo() { return this.bpm; }
+    public float getDivisionType() {
+        return sequence.getDivisionType();
+    }
 
-    ArrayList<MidiEvent> getAllEvents() { return new ArrayList<>(allEvents); }
+    // for development
+    public void getActuallyPrintBpms() {
+        for(Integer marking : bpmList) {
+            System.out.println("BPM: " + marking);
+        }
+    }
 
-    ArrayList<MidiEvent> getNoteEvents() { return new ArrayList<>(noteEvents); }
+    ArrayList<MidiEvent> getAllEvents() {
+        return copyEvents(allEvents);
+    }
 
-    ArrayList<MidiEvent> getMetaEvents() { return new ArrayList<>(metaEvents); }
+    ArrayList<MidiEvent> getNoteEvents() {
+        return copyEvents(noteEvents);
+    }
 
-    ArrayList<MidiEvent> getOtherShortEvents() { return new ArrayList<>(otherShortEvents); }
+    ArrayList<MidiEvent> getMetaEvents() {
+        return copyEvents(metaEvents);
+    }
 
-    ArrayList<MidiEvent> getSysexEvents() { return new ArrayList<>(sysexEvents); }
+    ArrayList<MidiEvent> getOtherShortEvents() {
+        return copyEvents(otherShortEvents);
+    }
 
-    // NOT SAFE
-    Sequence getSequence() { return sequence; }
+    ArrayList<MidiEvent> getSysexEvents() {
+        return copyEvents(sysexEvents);
+    }
+
+    ArrayList<MidiEvent> getSetTempoEvents() {
+        return copyEvents(setTempoEvents);
+    }
+
+    ArrayList<MidiEvent> getTimeSignatureEvents() {
+        return copyEvents(timeSignatureEvents);
+    }
+
+    ArrayList<MidiEvent> getKeySignatureEvents() {
+        return copyEvents(keySignatureEvents);
+    }
+    
+    ArrayList<MidiEvent> getTextEvents() {
+        return copyEvents(textEvents);
+    }
+    
+    ArrayList<MidiEvent> getTrackEvents() {
+        return copyEvents(trackNameEvents);
+    }
 
 }

@@ -6,7 +6,6 @@ import java.util.ArrayList;
     Primary ordering:   by low value
     Secondary ordering: by high value
 
-    Case 1 concerns equal low values:
               Current Node   Interval to add      Action:
     Case 1.1:   [10,20]          [10,15]          Look left
     Case 1.2:   [10,20]          [5,20]           Look left
@@ -19,6 +18,7 @@ public class IntervalTree {
 
 
     public static class Interval implements Comparable<Interval> {
+
         long low;
         long high;
         Note note;

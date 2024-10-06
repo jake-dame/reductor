@@ -6,32 +6,39 @@ import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.*;
 
-/*
-    Purpose: Encapsulate the data (midi-In --> reduction) manipulation stuff. Sanitization, aggregation, and reduction.
-    It does not handle file I/O, play, etc. Those are all functions of the three `Midi` members, which all have getters.
-*/
+/** Contains and controls all aspects of the Reductor operations (sanitization, aggregation, reduction) */
 public class Reductor {
 
     final int resolution;
 
-    final Midi original; // midi-In
-    final Midi aggregate; // aggregate (stepping stone to reduction)
-    final Midi reduction; // reduction
+    /** The original MIDI data (unaltered) */
+    final Midi original;
 
-    final int reductionLevel;
+    /** The in-MIDI data, but all on one track and (lightly) sanitized */
+    final Midi aggregate;
 
+    /** Interval tree that stores NOTE events */
     final IntervalTree tree;
 
-    Reductor(String filePath, int reductionLevel) {
+    Reductor(String filePath) {
 
         original = new Midi(filePath);
         aggregate = aggregate();
-        reduction = reduce();
 
-        if (reductionLevel < 0 || reductionLevel > 3) {
-            throw new RuntimeException("valid reduction values are 0-3; 0 returns the aggregate");
-        }
-        this.reductionLevel = reductionLevel;
+        resolution = original.getResolution();
+
+        tree = new IntervalTree();
+
+        var notes = Note.eventsToNotes(aggregate.getNoteEvents());
+
+        tree.addAll(notes);
+
+    }
+
+    Reductor(Midi midi) {
+
+        original = midi;
+        aggregate = aggregate();
 
         resolution = original.getResolution();
 
@@ -128,27 +135,59 @@ public class Reductor {
 
     }
 
+    public Midi reduce(int reductionLevel) {
+
+        if (reductionLevel < 0 || reductionLevel > 3) {
+            throw new RuntimeException("valid reduction values are 0-3; 0 returns the aggregate");
+        }
+
+        switch(reductionLevel) {
+            case 0 -> { return aggregate; }
+            case 1 -> { return Reduction.levelOne(aggregate); }
+            case 2 -> { return Reduction.levelTwo(aggregate); }
+            case 3 -> { return Reduction.levelThree(aggregate); }
+            default -> { return null; }
+        }
+
+    }
+
+    // GETTERS ********************************************************************************************************/
+
     public Midi getOriginal() { return original; }
 
     public Midi getAggregate() { return aggregate; }
 
-    public Midi getReduction() { return reduction; }
 
-    /////////////////////////////////// everything below this line is quick and dirty, just to test stuff
 
-    private Midi reduce() {
 
-        ArrayList<ArrayList<Note>> resultOfQueryChunking = new ArrayList<>();
 
-        switch(reductionLevel) {
-            case 0 -> { return aggregate; }
-            case 1 -> { resultOfQueryChunking = levelOne(); }
-            case 2 -> { resultOfQueryChunking = levelTwo(); }
-            case 3 -> { resultOfQueryChunking = levelThree(); }
-        }
 
-        return convertListOfListsToMidiObject(resultOfQueryChunking);
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private Midi convertListOfListsToMidiObject(ArrayList<ArrayList<Note>> listOfLists) {
 
@@ -183,32 +222,5 @@ public class Reductor {
 
         return new Midi(seq, "RED_" + original.getName());
     }
-
-
-    private ArrayList<ArrayList<Note>> levelOne() {
-
-        ArrayList<ArrayList<Note>> listOfLists = new ArrayList<>();
-
-        long len = aggregate.getSequence().getTickLength();
-
-        long resolution = aggregate.NOTE_QUARTER; // resolution == quarter note length
-        ArrayList<Note> temp;
-        for (long chunk = resolution; chunk < len; chunk+=resolution) {
-
-            ArrayList<IntervalTree.Interval> res = tree.query(chunk - resolution, chunk);
-            temp = new ArrayList<>();
-            for(IntervalTree.Interval I : res) {
-                Note note = new Note(I.low, I.high, I.note.pitch);
-                temp.add(note);
-            }
-            listOfLists.add(temp);
-        }
-
-        return listOfLists;
-    }
-
-    private ArrayList<ArrayList<Note>> levelTwo() { return null; }
-
-    private ArrayList<ArrayList<Note>> levelThree() { return null; }
 
 }

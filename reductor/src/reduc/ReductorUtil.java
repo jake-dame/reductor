@@ -3,14 +3,11 @@ package reduc;
 import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/*
-    Purpose: It's a utility class. Some of this will stay, some of this will be development specific and go
-*/
+/** Utility class. Some of this will stay, some of this will be development-specific and go */
 public class ReductorUtil {
 
     public static final String MIDIS_DIR = "/Users/u0858882/Desktop/Capstone/reductor/midis/";
@@ -23,6 +20,9 @@ public class ReductorUtil {
     public static final int MESSAGE_TYPE_SET_TEMPO = 0x51;
     public static final int MESSAGE_TYPE_TIME_SIGNATURE = 0x58;
     public static final int MESSAGE_TYPE_KEY_SIGNATURE = 0x59;
+
+    public static final int MESSAGE_TYPE_NOTE_OFF = 0x80;
+    public static final int MESSAGE_TYPE_NOTE_ON = 0x90;
 
     private static final HashMap<Integer, String> mapPitches;
     private static final HashMap<Integer, String> mapMajor;
@@ -125,17 +125,17 @@ public class ReductorUtil {
     */
     static byte[] convertBPMToMicroseconds(int bpm) {
 
-        /*
-         8,355,711 translates to 0x7F7F7F, or the highest possible value MIDI set tempo message data
-         sections (which are always 3 bytes long) can accommodate (data bytes cannot go to 0xFF because
-         in MIDI, the only bytes allowed to have a set MSB are status bytes (or the "Reset" SysEx message).
+            /*
+             8,355,711 translates to 0x7F7F7F, or the highest possible value MIDI set tempo message data
+             sections (which are always 3 bytes long) can accommodate (data bytes cannot go to 0xFF because
+             in MIDI, the only bytes allowed to have a set MSB are status bytes (or the "Reset" SysEx message).
 
-         The higher the microseconds-per-quarter-note, the slower the tempo.
+             The higher the microseconds-per-quarter-note, the slower the tempo.
 
-         The reverse formula is bpm = 60,000,000 usecs-per-min / usecs-per-quarter-note
+             The reverse formula is bpm = 60,000,000 usecs-per-min / usecs-per-quarter-note
 
-         Lowest valid is actually 7.18071747575, but int is the safer type here since dealing with division.
-        */
+             Lowest valid is actually 7.18071747575, but int is the safer type here since dealing with division.
+            */
         if (bpm < 8 || bpm > 60_000_000) {
             throw new IllegalArgumentException("lowest valid bpm is 8; highest is 60,000,000");
         }
@@ -157,7 +157,7 @@ public class ReductorUtil {
         MetaMessage msg = (MetaMessage) setTempoEvent.getMessage();
 
         // this check can probably be deleted later
-        if (msg.getType() != ReductorUtil.MESSAGE_TYPE_SET_TEMPO ) {
+        if (msg.getType() != ReductorUtil.MESSAGE_TYPE_SET_TEMPO) {
             throw new IllegalArgumentException("this is not a set tempo message");
         }
 
@@ -201,20 +201,110 @@ public class ReductorUtil {
 
     }
 
-    // * EASE FUNCTIONS ***********************************************************************************************/
+    static Sequence makeSequence(ArrayList<MidiEvent>[] lists, int resolution) {
 
-    static Sequence getSequence(String filePath) {
-
+        Sequence out;
         try {
-            return MidiSystem.getSequence( new File(filePath) );
-        }
-        catch (InvalidMidiDataException | IOException e) {
+            out = new Sequence(Sequence.PPQ, resolution, 1);
+        } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
 
+        Track track = out.getTracks()[0];
+
+        for(ArrayList<MidiEvent> list : lists) {
+            for (MidiEvent event : list) {
+                track.add(event);
+            }
+        }
+
+        return out;
     }
 
-    static void play(Sequence sequence) {
+    public static Sequence copySequence(Sequence sequenceIn) {
+
+        Sequence sequenceOut;
+        try {
+            sequenceOut = new Sequence(
+                    sequenceIn.getDivisionType(),
+                    sequenceIn.getResolution(),
+                    sequenceIn.getTracks().length
+            );
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (int t = 0; t < sequenceIn.getTracks().length; t++) {
+            Track trackIn = sequenceIn.getTracks()[t];
+            Track trackOut = sequenceOut.getTracks()[t];
+            for (int e = 0; e < trackIn.size(); e++){
+                MidiEvent eventIn = trackIn.get(e);
+                MidiEvent eventOut = copyEvent(eventIn);
+                trackOut.add(eventOut);
+            }
+        }
+
+        return sequenceOut;
+    }
+
+    static MidiEvent copyEvent(MidiEvent eventIn) {
+        MidiMessage messageOut = copyMessage(eventIn.getMessage());
+        return new MidiEvent(messageOut, eventIn.getTick());
+    }
+
+    static MidiMessage copyMessage(MidiMessage messageIn) {
+
+        MidiMessage messageOut;
+
+        try {
+
+            switch (messageIn) {
+                case ShortMessage shortMessage -> {
+                    int command = shortMessage.getCommand();
+                    int channel = shortMessage.getChannel();
+                    int data1 = shortMessage.getData1();
+                    int data2 = shortMessage.getData2();
+                    messageOut = new ShortMessage(command, channel, data1, data2);
+                }
+                case MetaMessage metaMessage -> {
+                    int type = metaMessage.getType();
+                    byte[] data = metaMessage.getData();
+                    int length = data.length;
+                    messageOut = new MetaMessage(type, data.clone(), length);
+                }
+                case SysexMessage sysexMessage -> {
+                    int status = sysexMessage.getStatus();
+                    byte[] data = sysexMessage.getData();
+                    int length = data.length;
+                    messageOut = new SysexMessage(status, data.clone(), length);
+                }
+                default -> {
+                    throw new InvalidMidiDataException("unknown message type: " + messageIn.getStatus());
+                }
+            }
+
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
+
+        return messageOut;
+    }
+
+    static ArrayList<MidiEvent> copyEvents(ArrayList<MidiEvent> eventsIn) {
+
+        ArrayList<MidiEvent> eventsOut = new ArrayList<>();
+
+        for (MidiEvent event : eventsIn) {
+            MidiEvent copy = copyEvent(event);
+            eventsOut.add(copy);
+        }
+
+        return eventsOut;
+    }
+
+    // * EASE FUNCTIONS ***********************************************************************************************/
+
+    protected static void play(Sequence sequence) {
 
         Sequencer sequencer;
         try {
@@ -241,21 +331,36 @@ public class ReductorUtil {
     */
     static File write(Sequence sequence, String name) {
 
-        /*
-         "OUT_" is included to prevent overwriting the original files in the scenario where
-         the name passed is the same as the original file.
-        */
-        final File outFile = new File("midis/" + "OUT_" + name);
-        // TODO: why doesn't this work?
-        //final File outFile = new File(MIDIS_DIR + "OUT_" + name);
+        // Attach a prefix if it doesn't already have one to prevent overwriting original midi
+        File outFile = new File(MIDIS_DIR, "OUT_" + name);
+
+        int underscoreIndex = name.indexOf('_');
+        if (underscoreIndex != -1) {
+            String prefix = name.substring(0, underscoreIndex);
+            if (prefix.equals("AGG") || prefix.equals("RED")) {
+                // If it already had a valid prefix, make a new one to not have "OUT_" too
+                outFile = new File(MIDIS_DIR, name);
+            }
+        }
 
         // File type: 0 ==> single track; 1 ==> multiple tracks; 2 ==> multiple songs (not used in this program).
         final int fileType = sequence.getTracks().length < 1 ? 0 : 1;
-
         try {
             MidiSystem.write(sequence, fileType, outFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+
+        if (!outFile.exists()) {
+            throw new RuntimeException("out file does not exist");
+        }
+
+        // Check extension (this is mostly for me during development because I need to be protected from myself)
+        String outFileName = outFile.getName();
+        int periodIndex = outFileName.lastIndexOf('.');
+        if (periodIndex == -1
+                || !outFileName.substring(periodIndex + 1).equals("mid") ) {
+            throw new RuntimeException("out file does not have '.mid' extension JAKE");
         }
 
         return outFile;
@@ -398,7 +503,7 @@ public class ReductorUtil {
     /* This is not a pretty printout, use w caution */
     static void printBytesSeparatedByMessageType(String filePath) throws IOException {
 
-        byte[] data = Files.readAllBytes( Path.of(filePath) );
+        byte[] data = java.nio.file.Files.readAllBytes( Path.of(filePath) );
 
         int lineCtr = 0;
         for (int i = 0; i < data.length; i++) {

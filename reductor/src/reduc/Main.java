@@ -1,34 +1,44 @@
 package reduc;
 
+import javax.sound.midi.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import static reduc.Files.BEETHOVEN_5_IV;
+import static reduc.Files.BEETHOVEN_MOONLIGHT;
+import static reduc.ReductorUtil.play;
+
 public class Main {
 
-    static final String MOZART_40 = "midis/mozart_40_i.mid";
-    static final String BEETHOVEN_MOONLIGHT = "midis/beethoven_moonlight.mid";
-    static final String BEETHOVEN_5_IV = "midis/beethoven_5_iv.mid"; // at 69.2 clarinets have erroneous g's
-    static final String BACH_INV_1 = "midis/bach_inv_1.mid";
-    static final String BACH_PREL_1 = "midis/bach_prel_1.mid";
+    public static void main(String[] args) throws InvalidMidiDataException, IOException {
 
-    static final String MINUET_SB = "midis/minuet_SB.mid";
-    static final String MINUET_PIANO = "midis/minuet_piano.mid";
+        Midi midi = new Midi(BEETHOVEN_MOONLIGHT);
 
-    static final String LEVEL_1_TEST = "midis/level_1_test.mid";
+        Sequence seqIn = MidiSystem.getSequence(new File(BEETHOVEN_5_IV));
+        play(seqIn);
+        Sequence copy = ReductorUtil.copySequence(seqIn);
+        //ReductorUtil.play(copy);
 
-
-    public static void main(String[] args) {
-
-        Reductor reductor = new Reductor(MOZART_40, 1);
-        Midi original = reductor.getOriginal();
-        Midi aggregate = reductor.getAggregate();
-        Midi reduction = reductor.getReduction();
-
-        Midi midi = reduction;
-
-        System.out.println(reduction.getName());
-
-        // Bach inv: set tempo message: [0xFF, 0x59, 0x3, 0xD, 0x14, 0x37] --> 0xD1437 --> 857_143 --> 75 bpm
-        //int bpm = (int) (midi.getTempo() * 1.5);
-        //midi.setTempo(bpm);
-        //ReductorUtil.openWithGarageBand(midi.writeOut());
     }
+
+    //public static void main(String[] args) {
+    //
+    //    Midi midi = new Midi(LEVEL_1_TEST);
+    //
+    //    Reductor red = new Reductor(midi);
+    //
+    //    File file = midi.writeOut();
+    //    ReductorUtil.openWithGarageBand(file);
+    //
+    //    //ReductorUtil.openWithGarageBand( red.getOriginal().writeOut() );
+    //
+    //    //File outFile = ReductorUtil.write(seq, "allEvents.mid");
+    //    //ArrayList<MidiEvent>[] lists = new ArrayList[]{ midi.getAllEvents() };
+    //    //var seq = ReductorUtil.makeSequence(lists, midi.getResolution());
+    //
+    //}
 
 }

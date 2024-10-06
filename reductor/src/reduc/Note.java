@@ -7,11 +7,13 @@ import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static javax.sound.midi.ShortMessage.NOTE_ON;
+import static reduc.ReductorUtil.MESSAGE_TYPE_NOTE_OFF;
+import static reduc.ReductorUtil.MESSAGE_TYPE_NOTE_ON;
 
 /*
     Purpose: Represent, but not manipulate, Midi NOTE events.
 */
-public class Note {
+public class Note implements Comparable<Note> {
 
     long startTick, endTick;
     int pitch;
@@ -43,23 +45,20 @@ public class Note {
         this.endTick = -1;
     }
 
+
     static ArrayList<Note> eventsToNotes(ArrayList<MidiEvent> midiEvents) {
 
-        if (midiEvents == null || midiEvents.isEmpty())
-            throw new IllegalArgumentException("note events is null or empty");
-
-        if (midiEvents.size() % 2 != 0 )
-            throw new IllegalArgumentException("note events length is odd");
-
-        if (midiEvents.getFirst().getMessage().getStatus() != NOTE_ON
-                || midiEvents.getLast().getMessage().getStatus() != NOTE_OFF)
-            throw new IllegalArgumentException("sequence begins with note off or ends with note on");
+        checkMidiEventsIsValid(midiEvents);
+        // TODO: sort events explicitly to not rely on java midi library.
+        //  Could create two lists ONs and OFFs and pluck out stuff like that (could also remove and
+        //  check both lists are empty at the end, but probably unnecessary and would be low performance)
 
         ArrayList<Note> newList = new ArrayList<>();
         int numEvents = midiEvents.size();
 
         /* NOTE ON loop */
         for (int i = 0; i < numEvents; i++) {
+
             MidiEvent event = midiEvents.get(i);
             ShortMessage msg = (ShortMessage) event.getMessage();
 
@@ -79,50 +78,82 @@ public class Note {
 
             /* NOTE OFF loop */
             for (int j = i + 1; j < numEvents; j++) {
+
                 MidiEvent nextEvent = midiEvents.get(j);
                 ShortMessage nextMsg = (ShortMessage) nextEvent.getMessage();
 
                 // Skip NOTE ONs for inner loop
                 if (nextMsg.getCommand() != NOTE_OFF)  continue;
 
-                int nextPitch = ((ShortMessage) nextEvent.getMessage()).getData1();
-
+                int nextPitch = nextMsg.getData1();
                 if (nextPitch == pitch) {
                     endTick = nextEvent.getTick();
                     break;
                 }
+
+            } // end inner loop
+
+            if (endTick == -1) {
+                // Reached end of sequence and endTick is still -1
+                throw new RuntimeException("missing note off");
+            } else {
+                newList.add( new Note(startTick, endTick, pitch) );
             }
 
-            if (endTick == -1)
-                throw new RuntimeException("no match, reached end of sequence");
+        } // end outer loop
 
-            // Construct Note and add to list
-            newList.add( new Note(startTick, endTick, pitch) );
+        if ( newList.size() != numEvents / 2 ) {
+            // A missing note off would have been caught above
+            // If we are here, it's because 1+ note offs are remaining (i.e. missing a note on)
+            throw new RuntimeException("missing note on");
         }
 
-        if ( newList.size() != numEvents/2 )
-            throw new RuntimeException("note list / note list size mismatch");
-
         return newList;
+    }
+
+
+    private static void checkMidiEventsIsValid(ArrayList<MidiEvent> midiEvents) {
+
+        if (midiEvents == null) {
+            throw new NullPointerException("note events is null");
+        }
+
+        if (midiEvents.isEmpty()) {
+            throw new IllegalArgumentException("note events is empty");
+        }
+
+        if (midiEvents.size() % 2 != 0 ) {
+            throw new IllegalStateException("note events length is odd");
+        }
+
+        if (midiEvents.getFirst().getMessage().getStatus() != NOTE_ON
+                || midiEvents.getLast().getMessage().getStatus() != NOTE_OFF) {
+            throw new IllegalStateException("sequence begins with note off or ends with note on");
+        }
+
     }
 
     static ArrayList<MidiEvent> notesToEvents(ArrayList<Note> notes) {
 
         ArrayList<MidiEvent> list = new ArrayList<>();
         try {
+
             for (Note note : notes) {
 
                 MidiEvent noteOnEvent = new MidiEvent(
-                        new ShortMessage(NOTE_ON, note.pitch, 64),
-                        note.startTick);
+                        new ShortMessage(MESSAGE_TYPE_NOTE_ON, note.pitch, 64),
+                        note.startTick
+                );
 
                 list.add(noteOnEvent);
 
                 MidiEvent noteOffEvent = new MidiEvent(
-                        new ShortMessage(NOTE_OFF, note.pitch, 0),
-                        note.endTick);
+                        new ShortMessage(MESSAGE_TYPE_NOTE_OFF, note.pitch, 0),
+                        note.endTick
+                );
 
                 list.add(noteOffEvent);
+
             }
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
@@ -131,22 +162,14 @@ public class Note {
         return list;
     }
 
-    //@Override
-    //public int compareTo(Note e) {
-    //
-    //    if (this.a != e.a) {
-    //        return Long.compare(this.a, e.a);
-    //    } else if (this.b != e.b) {
-    //        return Long.compare(this.b, e.b);
-    //    } else {
-    //        return Integer.compare(this.pitch, e.pitch);
-    //    }
-    //
-    //}
+    @Override
+    public int compareTo(Note other) {
+        return Integer.compare(this.pitch, other.pitch);
+    }
 
     @Override
     public String toString() {
-        return String.format("[%d,%d: %s]", startTick, endTick, pitch);
+        return String.format("[%d,%d: %s]", startTick, endTick, ReductorUtil.getNote(pitch) );
     }
 
 }

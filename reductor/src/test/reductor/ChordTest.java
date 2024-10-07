@@ -1,4 +1,4 @@
-package reduc;
+package reductor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,12 +27,12 @@ class ChordTest {
     }
 
     @Test
-    void testConstruction() {
+    void TestConstruction() {
 
         Chord chord = new Chord( list_CDFGB );
-        assertEquals(chord.low, new Note("C", 4).pitch );
-        assertEquals(chord.high, new Note("B", 4).pitch );
-        assertEquals(chord.notes.size(), 5);
+        assertEquals(list_CDFGB.getFirst().pitch, chord.low.pitch);
+        assertEquals(list_CDFGB.getLast().pitch, chord.high.pitch);
+        assertEquals(5, chord.notes.size());
 
     }
 

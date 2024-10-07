@@ -1,4 +1,4 @@
-package reduc;
+package reductor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,9 +8,9 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 import java.util.ArrayList;
 
-import static reduc.Note.eventsToNotes;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static reductor.Note.midiEventsToNotes;
+
 
 class NoteTest {
 
@@ -92,6 +92,10 @@ class NoteTest {
         events.add(g_on);
         events.add(g_off);
 
+        events_oddLength = new ArrayList<>();
+        events_oddLength.addAll(events);
+        events_oddLength.remove(e_on);
+
         events_startWithOff = new ArrayList<>();
         events_startWithOff.addAll(events);
         events_startWithOff.remove(c_on);
@@ -101,24 +105,18 @@ class NoteTest {
         events_endWithOn = new ArrayList<>();
         events_endWithOn.addAll(events);
         events_endWithOn.remove(g_off);
-        // removed in order to avoid "odd-length" check
+        // "     "
         events_endWithOn.remove(f_off);
 
         events_missingOnEvent = new ArrayList<>();
         events_missingOnEvent.addAll(events);
         events_missingOnEvent.remove(e_on);
-        // removed in order to avoid "odd-length" check
         events_missingOnEvent.remove(f_on);
 
         events_missingOffEvent = new ArrayList<>();
         events_missingOffEvent.addAll(events);
         events_missingOffEvent.remove(e_off);
-        // removed in order to avoid "odd-length" check
         events_missingOffEvent.remove(f_off);
-
-        events_oddLength = new ArrayList<>();
-        events_oddLength.addAll(events);
-        events_oddLength.remove(e_on);
 
     }
 
@@ -129,25 +127,9 @@ class NoteTest {
         Note original = new Note(0, 480, C);
         Note copy = new Note(original);
 
-        assertEquals(original.startTick, copy.startTick);
-        assertEquals(original.endTick, copy.endTick);
+        assertEquals(original.begin, copy.begin);
+        assertEquals(original.end, copy.end);
         assertEquals(original.pitch, copy.pitch);
-
-    }
-
-    @Test
-    void TestCoolConstructor() {
-
-        assertEquals(new Note("C", -1).pitch, 0);
-        assertEquals(new Note("C", 0).pitch, 12);
-        assertEquals(new Note("C", 1).pitch, 24);
-        assertEquals(new Note("C", 2).pitch, 36);
-
-        assertNotNull(new Note("G", 9));
-        assertThrows(IllegalArgumentException.class, () -> new Note("G#", 9));
-        assertThrows(IllegalArgumentException.class, () -> new Note("G", -2));
-        assertThrows(IllegalArgumentException.class, () -> new Note("G", 10));
-
 
     }
 
@@ -172,7 +154,7 @@ class NoteTest {
     void TestNullList() {
 
         ArrayList<MidiEvent> nullList = null;
-        assertThrows(NullPointerException.class, () -> eventsToNotes(nullList));
+        assertThrows(NullPointerException.class, () -> midiEventsToNotes(nullList));
 
     }
 
@@ -181,30 +163,31 @@ class NoteTest {
     void TestInvalidLists() {
 
         ArrayList<MidiEvent> emptyList = new ArrayList<>();
-        assertThrows(IllegalArgumentException.class, () -> eventsToNotes(emptyList));
+        assertThrows(IllegalArgumentException.class, () -> midiEventsToNotes(emptyList));
 
-        assertThrows(IllegalStateException.class, () -> eventsToNotes(events_startWithOff));
-        assertThrows(IllegalStateException.class, () -> eventsToNotes(events_endWithOn));
+        assertThrows(IllegalStateException.class, () -> midiEventsToNotes(events_startWithOff));
+        assertThrows(IllegalStateException.class, () -> midiEventsToNotes(events_endWithOn));
 
-        assertThrows(IllegalStateException.class, () -> eventsToNotes(events_oddLength));
+        assertThrows(IllegalStateException.class, () -> midiEventsToNotes(events_oddLength));
 
         RuntimeException exception1 =
                 assertThrows(RuntimeException.class,
-                        () -> eventsToNotes(events_missingOnEvent)
+                        () -> midiEventsToNotes(events_missingOnEvent)
                 );
         assertEquals(exception1.getMessage(), "missing note on");
 
         RuntimeException exception2 =
                 assertThrows(RuntimeException.class,
-                        () -> eventsToNotes(events_missingOffEvent)
+                        () -> midiEventsToNotes(events_missingOffEvent)
                 );
         assertEquals(exception2.getMessage(), "missing note off");
 
     }
 
+
     // This test is entirely dependent on the insertion order of the events list
     @Test
-    void TestEventsToNotesExplicitly() {
+    void TestMidiEventsToNotesExplicitly() {
 
     /*
         i = 0
@@ -222,16 +205,16 @@ class NoteTest {
         note end = 500 event = 9
     */
 
-        ArrayList<Note> notes = eventsToNotes(events);
+        ArrayList<Note> notes = midiEventsToNotes(events);
 
         for (int i = 0, j = 0; i < notes.size(); i++) {
-            Note      note  = notes.get(i);
+            Note note = notes.get(i);
             MidiEvent event = events.get(j);
 
             assertEquals(note.pitch, ((ShortMessage) events.get(j).getMessage()).getData1());
 
-            assertEquals(note.startTick, events.get(j++).getTick());
-            assertEquals(note.endTick, events.get(j++).getTick());
+            assertEquals(note.begin, events.get(j++).getTick());
+            assertEquals(note.end, events.get(j++).getTick());
         }
 
     }

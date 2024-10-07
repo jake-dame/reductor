@@ -1,9 +1,7 @@
-package reduc;
+package reductor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /*
 LEVEL 1 TEST:
@@ -48,13 +46,14 @@ Scheme: "Semi-tones (Absolute Interval,Relative Interval*)"
 
 class ReductorTest {
 
-    static final String LEVEL_1_TEST = "midis/level_1_test.mid";
+    static final String LEVEL_1_TEST = "midis/in/level_1_test.mid";
 
-    final Reductor reductor = new Reductor(LEVEL_1_TEST);
+    Reductor reductor;
 
     @BeforeEach
     void setUp() {
 
+        reductor = new Reductor(LEVEL_1_TEST);
 
     }
 

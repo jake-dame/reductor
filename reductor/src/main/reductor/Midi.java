@@ -1,12 +1,13 @@
-package reduc;
+package reductor;
 
 import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static javax.sound.midi.ShortMessage.*;
-import static reduc.ReductorUtil.*;
+import static reductor.DeepCopy.copyEvents;
+import static reductor.DeepCopy.copySequence;
+import static reductor.ReductorUtil.*;
 
 // TODO: I would like to rename this. MIDInterface doesn't really describe this class.
 //  Really it should be named "Sequence" but that is the same as the javax.midi one...
@@ -130,7 +131,7 @@ public class Midi {
 
         sortEventsIntoLists();
 
-        this.notes = Note.eventsToNotes(getNoteEvents());
+        this.notes = Note.midiEventsToNotes(getNoteEvents());
     }
 
     private void sortEventsIntoLists() {
@@ -142,8 +143,8 @@ public class Midi {
                 allEvents.add(event);
                 switch (event.getMessage()) {
                     case ShortMessage shortMessage -> {
-                        if (shortMessage.getCommand() == NOTE_ON
-                                || shortMessage.getCommand() == NOTE_OFF) {
+                        if (shortMessage.getCommand() == MessageType.NOTE_ON
+                                || shortMessage.getCommand() == MessageType.NOTE_OFF) {
                             noteEvents.add(event);
                         } else {
                             otherShortEvents.add(event);
@@ -182,23 +183,24 @@ public class Midi {
         }
         else {
             switch (metaMessageType) {
-                case MESSAGE_TYPE_TEXT -> {
+                case MessageType.TEXT -> {
                     this.textEvents.add(event);
                 }
-                case MESSAGE_TYPE_TRACK_NAME -> {
+                case MessageType.TRACK_NAME -> {
                     this.trackNameEvents.add(event);
                 }
-                case MESSAGE_TYPE_END_OF_TRACK -> {
+                case MessageType.END_OF_TRACK -> {
                     // DO NOT DELETE
                 }
-                case MESSAGE_TYPE_SET_TEMPO -> {
+                case MessageType.SET_TEMPO -> {
                     this.setTempoEvents.add(event);
-                    this.bpmList.add( convertMicrosecondsToBPM(event) );
+                    byte[] tempoArray = ((MetaMessage) event.getMessage()).getData();
+                    this.bpmList.add( convertMicrosecondsToBPM(tempoArray) );
                 }
-                case MESSAGE_TYPE_TIME_SIGNATURE -> {
+                case MessageType.TIME_SIGNATURE -> {
                     this.timeSignatureEvents.add(event);
                 }
-                case MESSAGE_TYPE_KEY_SIGNATURE -> {
+                case MessageType.KEY_SIGNATURE -> {
                     this.keySignatureEvents.add(event);
                 }
                 default -> {
@@ -216,7 +218,7 @@ public class Midi {
         return write(sequence, file.getName());
     }
 
-    // * SETTERS ******************************************************************************************************/
+    //region <Setters>
 
     /** Allows the user to scale the tempo up/down. */
     public void setTempo(int scale) {
@@ -225,11 +227,11 @@ public class Midi {
 
         for (MidiEvent event : this.setTempoEvents) {
             MetaMessage msg  = (MetaMessage) event.getMessage();
-            int bpm = convertMicrosecondsToBPM(event);
+            int bpm = convertMicrosecondsToBPM(msg.getData());
             byte[] scaledData = convertBPMToMicroseconds(bpm * scale);
-            if (msg.getStatus() == MESSAGE_TYPE_SET_TEMPO) {
+            if (msg.getStatus() == MessageType.SET_TEMPO) {
                 try {
-                    msg.setMessage(MESSAGE_TYPE_SET_TEMPO, scaledData, setTempoMetaMessageLength);
+                    msg.setMessage(MessageType.SET_TEMPO, scaledData, setTempoMetaMessageLength);
                 } catch (InvalidMidiDataException e) {
                     throw new RuntimeException(e);
                 }
@@ -238,7 +240,9 @@ public class Midi {
 
     }
 
-    /** Sets the tempo for the entire sequence, regardless of the message's position. */
+    /**
+     * Sets the tempo for the entire sequence, regardless of any set tempo message's position.
+     * */
     public void setTempoGlobal(int bpm) {
 
         byte[] data = convertBPMToMicroseconds(bpm);
@@ -246,9 +250,9 @@ public class Midi {
 
         for (MidiEvent event : this.setTempoEvents) {
             MetaMessage msg  = (MetaMessage) event.getMessage();
-            if (msg.getStatus() == MESSAGE_TYPE_SET_TEMPO) {
+            if (msg.getStatus() == MessageType.SET_TEMPO) {
                 try {
-                    msg.setMessage(MESSAGE_TYPE_SET_TEMPO, data, setTempoMetaMessageLength);
+                    msg.setMessage(MessageType.SET_TEMPO, data, setTempoMetaMessageLength);
                 } catch (InvalidMidiDataException e) {
                     throw new RuntimeException(e);
                 }
@@ -257,7 +261,9 @@ public class Midi {
 
     }
 
-    // * GETTERS ******************************************************************************************************/
+    //endregion
+
+    //region <Getters>
 
     Sequence getSequence() {
         return copySequence(sequence);
@@ -330,5 +336,7 @@ public class Midi {
     ArrayList<MidiEvent> getTrackEvents() {
         return copyEvents(trackNameEvents);
     }
+
+    //endregion
 
 }

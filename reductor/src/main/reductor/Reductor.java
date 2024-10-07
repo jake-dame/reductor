@@ -1,11 +1,11 @@
-package reduc;
+package reductor;
+
+import reductor.IntervalTree.Interval;
 
 import javax.sound.midi.*;
-
 import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.*;
-import reduc.IntervalTree.Interval;
 
 /** Contains and controls all aspects of the Reductor operations (sanitization, aggregation, reduction) */
 public class Reductor {
@@ -30,7 +30,7 @@ public class Reductor {
 
         tree = new IntervalTree();
 
-        var notes = Note.eventsToNotes(aggregate.getNoteEvents());
+        var notes = Note.midiEventsToNotes(aggregate.getNoteEvents());
 
         tree.addAll(notes);
 
@@ -45,7 +45,7 @@ public class Reductor {
 
         tree = new IntervalTree();
 
-        var notes = Note.eventsToNotes(aggregate.getNoteEvents());
+        var notes = Note.midiEventsToNotes(aggregate.getNoteEvents());
 
         tree.addAll(notes);
 

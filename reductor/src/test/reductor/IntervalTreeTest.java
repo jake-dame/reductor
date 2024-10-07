@@ -1,8 +1,11 @@
-package reduc;
+package reductor;
+
+import reductor.IntervalTree;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reduc.IntervalTree.*;
+import reductor.IntervalTree.Interval;
+import reductor.IntervalTree.Node;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -177,7 +180,7 @@ class IntervalTreeTest {
         // Add root
         assert(tree.add(root));
         assertNotNull(tree.root);
-        assertEquals(tree.root.max, root.endTick);
+        assertEquals(tree.root.max, root.end);
         eventsCount++;
 
         assert(tree.nodes == eventsCount); // Checks related to IntervalTree
@@ -643,11 +646,11 @@ class IntervalTreeTest {
 
         var comp = new Comparator<Note>() {
             @Override public int compare(Note e1, Note e2) {
-                if (e1.startTick != e2.startTick) {
-                    return Long.compare(e1.startTick, e2.startTick);
+                if (e1.begin != e2.begin) {
+                    return Long.compare(e1.begin, e2.begin);
                 }
                 else {
-                    return Long.compare(e1.endTick, e2.endTick);
+                    return Long.compare(e1.end, e2.end);
                 }
             }
         };

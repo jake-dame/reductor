@@ -1,6 +1,9 @@
-package reduc;
+package reductor;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
+
+import static reductor.Pitch.numericalPitchToString;
 
 /*
     Primary ordering:   by low value
@@ -14,6 +17,9 @@ import java.util.ArrayList;
     Case 3.2:   [10,20]          [15,20]          Look right
 */
 
+/**
+ * Yes.
+ */
 public class IntervalTree {
 
     public static class Interval implements Comparable<Interval> {
@@ -23,8 +29,8 @@ public class IntervalTree {
         Note note;
 
         Interval(Note note) {
-            this.begin = note.startTick;
-            this.end = note.endTick;
+            this.begin = note.begin;
+            this.end = note.end;
             this.note = note;
         }
 
@@ -59,7 +65,7 @@ public class IntervalTree {
         }
 
         @Override public String toString() {
-            return String.format("[%d,%d: %s]", this.begin, this.end, ReductorUtil.getPitchAndRegister(this.note.pitch));
+            return String.format("[%d,%d: %s]", this.begin, this.end, numericalPitchToString(this.note.pitch, true));
         }
     }
 
@@ -177,7 +183,7 @@ public class IntervalTree {
         var list = new ArrayList<Interval>();
 
         for (Note note : notes) {
-            var sublist = query(note.startTick, note.endTick);
+            var sublist = query(note.begin, note.end);
             if (sublist == null) {
                 continue;
             }

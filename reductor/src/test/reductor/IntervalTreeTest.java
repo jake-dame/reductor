@@ -1,11 +1,7 @@
 package reductor;
 
-import reductor.IntervalTree;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reductor.IntervalTree.Interval;
-import reductor.IntervalTree.Node;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -151,13 +147,14 @@ class IntervalTreeTest {
     void TestEmptyTree() {
 
         Note note = new Note(0,480,C);
+        Interval interval = new Interval(note);
 
         // Test: remove on empty tree should always return false
         assertFalse(tree.remove(note));
         assertFalse(tree.removeAll(notes));
 
         // Test: query on empty tree should always return an empty list
-        assert(tree.query(note) != null  &&  tree.query(note).isEmpty());
+        assert(tree.query(interval) != null  &&  tree.query(interval).isEmpty());
         assert(tree.queryAll(notes) != null  &&  tree.queryAll(notes).isEmpty());
 
         // Test: toArrayList on empty tree should always return an empty list

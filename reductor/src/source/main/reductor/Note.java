@@ -1,7 +1,5 @@
 package reductor;
 
-import reductor.IntervalTree.Interval;
-
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
@@ -11,7 +9,6 @@ import java.util.Comparator;
 import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static reductor.Pitch.numericalPitchToString;
 import static reductor.Pitch.stringPitchToNumber;
-import reductor.MessageType;
 
 /**
  * Can represent a pitch, or a pair of MIDI events (ON + OFF) as a single entity.

@@ -1,7 +1,5 @@
 package reductor;
 
-import reductor.IntervalTree.Interval;
-
 import javax.sound.midi.*;
 import java.util.ArrayList;
 
@@ -162,11 +160,11 @@ public class Reductor {
         return chords;
     }
 
-    static Chord treeQueryToChord(ArrayList<IntervalTree.Interval> intervals) {
+    static Chord treeQueryToChord(ArrayList<Interval> intervals) {
 
         ArrayList<Note> notes = new ArrayList<>();
 
-        for (IntervalTree.Interval interval : intervals) {
+        for (Interval interval : intervals) {
             notes.add(interval.note);
         }
 

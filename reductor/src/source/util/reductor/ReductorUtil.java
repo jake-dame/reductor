@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 import static reductor.Files.MIDI_FILES_IN_DIR;
 import static reductor.Pitch.getKeySignature;

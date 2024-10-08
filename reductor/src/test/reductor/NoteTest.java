@@ -1,223 +1,114 @@
 package reductor;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.ShortMessage;
-import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static reductor.Note.midiEventsToNotes;
+import static org.junit.jupiter.api.Assertions.*;
 
 
+/**
+ * Unit tests for the {@linkplain reductor.Note} class.
+ *
+ * @see reductor.PitchTest
+ * @see reductor.RangeTest
+ *
+ */
 class NoteTest {
 
-    // constants
-    final int on = 0x90;
-    final int off = 0x80;
 
-    final int v = 64;
+    @Test
+    void constructionWithNullRange() {
 
-    final int C = 0x3c;
-    final int D = 0x3e;
-    final int E = 0x40;
-    final int F = 0x41;
-    final int G = 0x43;
+        Note note = new Note(60, null);
+        assertEquals(60, note.pitch());
+        assertNull(note.range());
 
-    // events
-    MidiEvent c_on;
-    MidiEvent c_off;
+        assertThrows(NullPointerException.class, note::start);
+        assertThrows(NullPointerException.class, note::stop);
 
-    MidiEvent d_on;
-    MidiEvent d_off;
+    }
 
-    MidiEvent e_on;
-    MidiEvent e_off;
+    @Test
+    void setPitch() {
 
-    MidiEvent f_on;
-    MidiEvent f_off;
+        Note note = new Note(60, new Range(0, 1));
+        assertEquals(60, note.pitch());
 
-    MidiEvent g_on;
-    MidiEvent g_off;
+        note.setPitch(0);
+        assertEquals(0, note.pitch());
 
-    // lists
-    ArrayList<MidiEvent> events;
+        note.setPitch(127);
+        assertEquals(127, note.pitch());
 
-    ArrayList<MidiEvent> events_startWithOff;
-    ArrayList<MidiEvent> events_endWithOn;
-
-    ArrayList<MidiEvent> events_oddLength;
-
-    ArrayList<MidiEvent> events_missingOnEvent;
-    ArrayList<MidiEvent> events_missingOffEvent;
-
-
-    @BeforeEach
-    void buildLists() {
-
-        final int quarter = 480;
-
-        try {
-
-            c_on = new MidiEvent(new ShortMessage(on, C, v), 0);
-            c_off = new MidiEvent(new ShortMessage(off, C, v), 100);
-
-            d_on = new MidiEvent(new ShortMessage(on, D, v), 100);
-            d_off = new MidiEvent(new ShortMessage(off, D, v), 200);
-
-            e_on = new MidiEvent(new ShortMessage(on, E, v), 200);
-            e_off = new MidiEvent(new ShortMessage(off, E, v), 300);
-
-            f_on = new MidiEvent(new ShortMessage(on, F, v), 300);
-            f_off = new MidiEvent(new ShortMessage(off, F, v), 400);
-
-            g_on = new MidiEvent(new ShortMessage(on, G, v), 400);
-            g_off = new MidiEvent(new ShortMessage(off, G, v), 500);
-
-        } catch (InvalidMidiDataException e) {
-            e.printStackTrace();
-        }
-
-        events = new ArrayList<>();
-        events.add(c_on);
-        events.add(c_off);
-        events.add(d_on);
-        events.add(d_off);
-        events.add(e_on);
-        events.add(e_off);
-        events.add(f_on);
-        events.add(f_off);
-        events.add(g_on);
-        events.add(g_off);
-
-        events_oddLength = new ArrayList<>();
-        events_oddLength.addAll(events);
-        events_oddLength.remove(e_on);
-
-        events_startWithOff = new ArrayList<>();
-        events_startWithOff.addAll(events);
-        events_startWithOff.remove(c_on);
-        // removed in order to avoid "odd-length" check
-        events_startWithOff.remove(d_on);
-
-        events_endWithOn = new ArrayList<>();
-        events_endWithOn.addAll(events);
-        events_endWithOn.remove(g_off);
-        // "     "
-        events_endWithOn.remove(f_off);
-
-        events_missingOnEvent = new ArrayList<>();
-        events_missingOnEvent.addAll(events);
-        events_missingOnEvent.remove(e_on);
-        events_missingOnEvent.remove(f_on);
-
-        events_missingOffEvent = new ArrayList<>();
-        events_missingOffEvent.addAll(events);
-        events_missingOffEvent.remove(e_off);
-        events_missingOffEvent.remove(f_off);
+        assertThrows(IllegalArgumentException.class, () -> note.setPitch(-1));
+        assertThrows(IllegalArgumentException.class, () -> note.setPitch(128));
 
     }
 
 
     @Test
-    void TestCopyConstructor() {
+    void copyConstruction() {
 
-        Note original = new Note(0, 480, C);
-        Note copy = new Note(original);
+        Note note = new Note(60, new Range(0, 1));
+        Note copy = new Note(note);
+        assertEquals(note, copy);
 
-        assertEquals(original.begin, copy.begin);
-        assertEquals(original.end, copy.end);
-        assertEquals(original.pitch, copy.pitch);
+    }
+
+    @Test
+    void stringIntConstruction() {
+
+        Note note = new Note("C#", 4);
+        assertEquals(Pitch.stringPitchToNumber("C#", 4), note.pitch());
 
     }
 
 
     @Test
-    void TestCompareTo() {
+    void equals() {
 
-        Note noteLow = new Note(0, 480, C);
-        Note noteMid = new Note(0, 480, D);
-        Note other = new Note(480, 960, D);
-        Note noteHigh = new Note(0, 480, E);
+        Note note = new Note(60, new Range(0, 1));
 
-        assertEquals(noteMid.compareTo(noteLow), 1);
-        assertEquals(noteMid.compareTo(other), 0);
-        assertEquals(noteMid.compareTo(noteHigh), -1);
+        assertEquals(note, new Note(60, new Range(0, 1)));
+        assertNotEquals(note, new Note(61, new Range(0, 1)));
+        assertNotEquals(note, new Note(60, new Range(0, 2)));
 
     }
 
 
     @Test
-    @SuppressWarnings("ConstantConditions")
-    void TestNullList() {
+    void range() {
 
-        ArrayList<MidiEvent> nullList = null;
-        assertThrows(NullPointerException.class, () -> midiEventsToNotes(nullList));
+        Note note = new Note(60, new Range(0, 1));
+        assertEquals(new Range(0, 1), note.range());
 
     }
 
 
     @Test
-    void TestInvalidLists() {
+    void pitch() {
 
-        ArrayList<MidiEvent> emptyList = new ArrayList<>();
-        assertThrows(IllegalArgumentException.class, () -> midiEventsToNotes(emptyList));
-
-        assertThrows(IllegalStateException.class, () -> midiEventsToNotes(events_startWithOff));
-        assertThrows(IllegalStateException.class, () -> midiEventsToNotes(events_endWithOn));
-
-        assertThrows(IllegalStateException.class, () -> midiEventsToNotes(events_oddLength));
-
-        RuntimeException exception1 =
-                assertThrows(RuntimeException.class,
-                        () -> midiEventsToNotes(events_missingOnEvent)
-                );
-        assertEquals(exception1.getMessage(), "missing note on");
-
-        RuntimeException exception2 =
-                assertThrows(RuntimeException.class,
-                        () -> midiEventsToNotes(events_missingOffEvent)
-                );
-        assertEquals(exception2.getMessage(), "missing note off");
+        Note note = new Note(60, new Range(0, 1));
+        assertEquals(60, note.pitch());
 
     }
 
 
-    // This test is entirely dependent on the insertion order of the events list
     @Test
-    void TestMidiEventsToNotesExplicitly() {
+    void start() {
 
-    /*
-        i = 0
-        note start = 0 event = 0
-        note end = 100 event 1
-
-        i = 1
-        note start = 100 event = 2
-        note end = 200 = event = 3
-
-        ...
-
-        i = 4
-        note start = 400 event = 8
-        note end = 500 event = 9
-    */
-
-        ArrayList<Note> notes = midiEventsToNotes(events);
-
-        for (int i = 0, j = 0; i < notes.size(); i++) {
-            Note note = notes.get(i);
-            MidiEvent event = events.get(j);
-
-            assertEquals(note.pitch, ((ShortMessage) events.get(j).getMessage()).getData1());
-
-            assertEquals(note.begin, events.get(j++).getTick());
-            assertEquals(note.end, events.get(j++).getTick());
-        }
+        Note note = new Note(60, new Range(0, 1));
+        assertEquals(0, note.start());
 
     }
+
+
+    @Test
+    void stop() {
+
+        Note note = new Note(60, new Range(0, 1));
+        assertEquals(1, note.stop());
+
+    }
+
 
 }

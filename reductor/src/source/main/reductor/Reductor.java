@@ -1,7 +1,6 @@
 package reductor;
 
 import javax.sound.midi.*;
-import java.util.ArrayList;
 
 import static javax.sound.midi.ShortMessage.*;
 
@@ -28,9 +27,9 @@ public class Reductor {
 
         tree = new IntervalTree();
 
-        var notes = Note.midiEventsToNotes(aggregate.getNoteEvents());
+        var notes = ReductorUtil.midiEventsToNotes(aggregate.getNoteEvents());
 
-        tree.addAll(notes);
+        //tree.addAll(notes);
 
     }
 
@@ -43,9 +42,9 @@ public class Reductor {
 
         tree = new IntervalTree();
 
-        var notes = Note.midiEventsToNotes(aggregate.getNoteEvents());
+        var notes = ReductorUtil.midiEventsToNotes(aggregate.getNoteEvents());
 
-        tree.addAll(notes);
+        //tree.addAll(notes);
 
     }
 
@@ -136,40 +135,40 @@ public class Reductor {
 
     // REDUCTION ********************************************************************************************************/
 
-    ArrayList<Chord> levelOne() {
-
-        if(this.aggregate.getResolution() != 480) {
-            throw new RuntimeException("non-480 resolution");
-        }
-
-        ArrayList<Chord> chords = new ArrayList<>();
-        int windowSize = this.aggregate.NOTE_128TH;
-        long length = this.aggregate.getLengthInTicks();
-        System.out.println("LENGTH: " + length + "ticks");
-        for (long windowMin = 0, windowMax = windowSize; windowMax < length; windowMin += windowSize, windowMax += windowSize) {
-            Interval window = new Interval(windowMin, windowMax);
-            System.out.println("min: " + windowMin + ", max: " + windowMax);
-            Chord chord = treeQueryToChord( this.tree.query(window) );
-            chords.add(chord);
-        }
-
-        for(Chord chord : chords) {
-            System.out.println(chord);
-        }
-
-        return chords;
-    }
-
-    static Chord treeQueryToChord(ArrayList<Interval> intervals) {
-
-        ArrayList<Note> notes = new ArrayList<>();
-
-        for (Interval interval : intervals) {
-            notes.add(interval.note);
-        }
-
-        return new Chord(notes);
-    }
+    //ArrayList<Chord> levelOne() {
+    //
+    //    if(this.aggregate.getResolution() != 480) {
+    //        throw new RuntimeException("non-480 resolution");
+    //    }
+    //
+    //    ArrayList<Chord> chords = new ArrayList<>();
+    //    int windowSize = this.aggregate.NOTE_128TH;
+    //    long length = this.aggregate.getLengthInTicks();
+    //    System.out.println("LENGTH: " + length + "ticks");
+    //    for (long windowMin = 0, windowMax = windowSize; windowMax < length; windowMin += windowSize, windowMax += windowSize) {
+    //        Interval window = new Interval(windowMin, windowMax);
+    //        System.out.println("min: " + windowMin + ", max: " + windowMax);
+    //        Chord chord = treeQueryToChord( this.tree.query(window) );
+    //        chords.add(chord);
+    //    }
+    //
+    //    for(Chord chord : chords) {
+    //        System.out.println(chord);
+    //    }
+    //
+    //    return chords;
+    //}
+    //
+    //static Chord treeQueryToChord(ArrayList<Interval> intervals) {
+    //
+    //    ArrayList<Note> notes = new ArrayList<>();
+    //
+    //    for (Interval interval : intervals) {
+    //        notes.add(interval.note);
+    //    }
+    //
+    //    return new Chord(notes);
+    //}
 
     // GETTERS ********************************************************************************************************/
 

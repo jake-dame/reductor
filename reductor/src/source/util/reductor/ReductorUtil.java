@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 
+import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static reductor.Files.MIDI_FILES_IN_DIR;
 import static reductor.Pitch.getKeySignature;
 
@@ -228,6 +230,8 @@ public class ReductorUtil {
 
 
     //region Printing
+
+
     /// You must provide note events, this just parses and prints them.
     static void printNoteEvents(ArrayList<MidiEvent> events) {
 
@@ -386,6 +390,156 @@ public class ReductorUtil {
             System.out.print(Integer.toHexString(b) + " ");
         }
 
+    }
+
+    static ArrayList<Note> midiEventsToNotes(ArrayList<MidiEvent> midiEvents) {
+
+        checkMidiEventsIsValid(midiEvents);
+
+        final var outList = new ArrayList<Note>();
+
+        final int numEvents = midiEvents.size();
+
+        // NOTE ON loop (outer loop)
+        for (int i = 0; i < numEvents; i++) {
+
+            MidiEvent event = midiEvents.get(i);
+            assert event.getMessage() instanceof ShortMessage;
+
+            ShortMessage msg = (ShortMessage) event.getMessage();
+
+            if (msg.getCommand() != MessageType.NOTE_ON) {
+                // Skip over NOTE OFF or other events
+                continue;
+            }
+
+            int pitch = msg.getData1();
+            assert pitch >= 0 && pitch <= 127;
+
+            long startTick = event.getTick();
+            assert startTick >= 0;
+
+            long endTick = -1;
+
+            // If penultimate note, construct/add last Note and return
+            if (i == numEvents - 1) {
+                endTick = midiEvents.getLast().getTick();
+
+                if (((ShortMessage) midiEvents.getLast().getMessage()).getData1() != pitch) {
+                    throw new IllegalArgumentException("last note off was a mismatch");
+                }
+
+                outList.add( new Note( pitch, new Range(startTick, endTick) ) );
+                return outList;
+            }
+
+            /* NOTE OFF loop */
+            for (int j = i + 1; j < numEvents; j++) {
+
+                MidiEvent nextEvent = midiEvents.get(j);
+                assert event.getMessage() instanceof ShortMessage;
+
+                ShortMessage nextMsg = (ShortMessage) nextEvent.getMessage();
+
+                if (nextMsg.getCommand() != NOTE_OFF) {
+                    // Skip over NOTE ON or other events
+                    continue;
+                }
+
+                int nextPitch = nextMsg.getData1();
+                if (nextPitch == pitch) {
+                    endTick = nextEvent.getTick();
+                    assert endTick > startTick;
+                    break;
+                }
+
+            } // end inner loop
+
+            if (endTick == -1) {
+                // Reached end of sequence and endTick is still -1
+                throw new RuntimeException("missing note off");
+            } else {
+                outList.add( new Note( pitch, new Range(startTick, endTick) ) );
+            }
+
+        } // end outer loop
+
+        if ( outList.size() != numEvents / 2 ) {
+            // A missing note off would have been caught above
+            // If we are here, it's because 1+ note offs are remaining (i.e. missing a note on)
+            throw new RuntimeException("missing note on");
+        }
+
+        return outList;
+    }
+
+    /**
+     * Does a bunch of preliminary checks and sorts a list of {@link MidiEvent}s
+     * in preparation for conversion to {@code Note}s.
+     *
+     * @param midiEvents
+     */
+    private static void checkMidiEventsIsValid(ArrayList<MidiEvent> midiEvents) {
+
+        if (midiEvents == null) {
+            throw new NullPointerException("list of midi events is null");
+        }
+
+        if (midiEvents.isEmpty()) {
+            throw new IllegalArgumentException("list of midi events is empty");
+        }
+
+        if (midiEvents.size() % 2 != 0 ) {
+            throw new IllegalStateException(
+                    "unpaired events are present in the list of midi events"
+            );
+        }
+
+        Comparator<MidiEvent> comparator = new Comparator<>() {
+            @Override
+            public int compare(MidiEvent event1, MidiEvent event2) {
+                return Long.compare(event1.getTick(), event2.getTick());
+            }
+        };
+
+        midiEvents.sort(comparator);
+
+        int firstMessageType = midiEvents.getFirst().getMessage().getStatus();
+        int lastMessageType = midiEvents.getLast().getMessage().getStatus();
+
+        if (firstMessageType != MessageType.NOTE_ON
+                || lastMessageType != MessageType.NOTE_OFF) {
+            throw new IllegalStateException(
+                    "sequence of midi events begins with a NOTE OFF or ends with a NOTE ON"
+            );
+        }
+
+    }
+
+    static ArrayList<MidiEvent> notesToMidiEvents(ArrayList<Note> notes) {
+
+        final var outList = new ArrayList<MidiEvent>();
+        final int mezzoForte = 64;
+
+        try {
+
+            for (Note note : notes) {
+
+                ShortMessage onMessage = new ShortMessage(MessageType.NOTE_ON, note.pitch(), mezzoForte);
+                MidiEvent noteOnEvent = new MidiEvent(onMessage, note.start());
+                outList.add(noteOnEvent);
+
+                ShortMessage offMessage = new ShortMessage(MessageType.NOTE_OFF, note.pitch(), 0);
+                MidiEvent noteOffEvent = new MidiEvent(offMessage, note.stop());
+                outList.add(noteOffEvent);
+
+            }
+
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
+
+        return outList;
     }
     //endregion
 

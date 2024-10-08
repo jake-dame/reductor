@@ -1,0 +1,104 @@
+package reductor;
+
+import java.util.Objects;
+
+public class Range implements Comparable<Range> {
+
+
+    private final long low;
+    private final long high;
+
+
+    Range(long low, long high) {
+
+        if (high <= low) {
+            throw new IllegalArgumentException("invalid range (low >= high)");
+        }
+
+        if (low < 0) {
+            throw new IllegalArgumentException("range cannot be constructed with negative numbers");
+        }
+
+        this.low = low;
+        this.high = high;
+
+    }
+
+
+    Range(Range other) {
+
+        this(other.low, other.high);
+
+    }
+
+
+    public long low() {
+
+        return low;
+
+    }
+
+
+    public long high() {
+
+        return high;
+
+    }
+
+
+    public boolean overlaps(Range other) {
+
+        if (other.low > this.high) {
+            return false;
+        }
+
+        if (other.high < this.low) {
+            return false;
+        }
+
+        return true;
+
+    }
+
+
+    @Override
+    public int compareTo(Range other) {
+
+        if (other.low != this.low) {
+            return Long.compare(this.low, other.low);
+        } else {
+            return Long.compare(this.high, other.high);
+        }
+
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (this == o) {
+            return true;
+        }
+
+        if ( ! (o instanceof Range range) ) {
+            return false;
+        }
+
+        return low == range.low && high == range.high;
+
+    }
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(low, high);
+    }
+
+
+    @Override
+    public String toString() {
+        return "[" + low + ", " + high + "]";
+    }
+
+
+}

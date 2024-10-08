@@ -131,7 +131,7 @@ public class Midi {
 
         sortEventsIntoLists();
 
-        this.notes = Note.midiEventsToNotes(getNoteEvents());
+        this.notes = midiEventsToNotes(getNoteEvents());
     }
 
     private void sortEventsIntoLists() {

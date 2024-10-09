@@ -8,7 +8,7 @@ import static reductor.Pitch.stringPitchToNumber;
 /**
  * Can represent a pitch, or a pair of MIDI events (ON + OFF) as a single entity.
  */
-public class Note {
+public class Note implements Comparable<Note> {
 
 
     private final Range range;
@@ -63,6 +63,13 @@ public class Note {
 
     }
 
+    @Override
+    public int compareTo(Note other) {
+
+        return Integer.compare(this.pitch, other.pitch());
+
+    }
+
 
     @Override
     public int hashCode() {
@@ -79,8 +86,8 @@ public class Note {
     public String toString() {
 
         return this.range == null
-                ? numericalPitchToString(this.pitch, false)
-                : numericalPitchToString(this.pitch, false) + " " + this.range;
+                ? numericalPitchToString(this.pitch, true)
+                : numericalPitchToString(this.pitch, true) + ": " + this.range;
 
     }
 

@@ -46,6 +46,7 @@ public class Midi {
 
     private final ArrayList<MidiEvent> textEvents = new ArrayList<>();
     private final ArrayList<MidiEvent> trackNameEvents = new ArrayList<>();
+    private final ArrayList<TrackName> trackNames = new ArrayList<>();
     private final ArrayList<MidiEvent> setTempoEvents = new ArrayList<>();
     private final ArrayList<MidiEvent> keySignatureEvents = new ArrayList<>();
     private final ArrayList<MidiEvent> timeSignatureEvents = new ArrayList<>();
@@ -188,6 +189,7 @@ public class Midi {
                 }
                 case MessageType.TRACK_NAME -> {
                     this.trackNameEvents.add(event);
+                    this.trackNames.add( new TrackName(event) );
                 }
                 case MessageType.END_OF_TRACK -> {
                     // DO NOT DELETE
@@ -332,7 +334,33 @@ public class Midi {
     ArrayList<MidiEvent> getTextEvents() {
         return copyEvents(textEvents);
     }
-    
+
+    static class TrackName {
+
+        String name;
+        int tracksIndex;
+
+        TrackName(MidiEvent event) {
+            this.name = convertBytesToTrackName((MetaMessage) event.getMessage());
+        }
+
+        static String convertBytesToTrackName(MetaMessage message) {
+
+            byte[] data = message.getData();
+            String[] stringArr = new String[data.length];
+
+            for (int i = 0; i < data.length; i++) {
+
+                stringArr[i] = String.valueOf( (char) data[i] );
+
+            }
+
+            return String.join("", stringArr);
+
+        }
+
+    }
+
     ArrayList<MidiEvent> getTrackEvents() {
         return copyEvents(trackNameEvents);
     }

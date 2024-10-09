@@ -15,6 +15,8 @@
 //    - 11-12: 32 32nds
 //    - 13-14: 64 64ths
 //
+// (1*2) + (2*2) + (4*2) + (8*2) + (16*2) + (32*2) + (64*2) = 254 chords
+//
 //NOTES / NOTE EVENTS: 127 per voice / 254 per voice --> 508 total / 1,016 total
 //
 //- Soprano (C6 / 84 / 0x54)

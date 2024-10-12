@@ -112,6 +112,21 @@ public class Note implements Comparable<Note> {
             throw new IllegalArgumentException("invalid MIDI pitch for note; must be in [0,127]");
         }
 
+        // These two checks bring notes out of piano range into piano range [21,108]
+        // I would rather this than throw an exception
+        if (val < 21) {
+            while(val < 21) {
+                val+=12;
+            }
+        }
+
+        if (val > 108) {
+            while(val > 108) {
+                val-=12;
+            }
+        }
+
+
         this.pitch = val;
 
     }

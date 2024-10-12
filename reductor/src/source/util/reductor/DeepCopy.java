@@ -8,7 +8,10 @@ import java.util.ArrayList;
  * The {@link javax.sound.midi} library includes no method to make a deep copy of any of
  * its major component objects. Perhaps there is a reason for this. I implement anyway.
  */
-class DeepCopy {
+public class DeepCopy {
+
+
+    private DeepCopy() { }
 
 
     /**

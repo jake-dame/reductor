@@ -6,6 +6,7 @@ import java.util.Map;
 
 public class Pitch {
 
+
     private static final Map<String, Integer> semitonesMap;
     private static final Map<String, Integer> accidentalsMap;
     private static final Map<Integer, String> mapPitches;
@@ -40,19 +41,19 @@ public class Pitch {
         mapMinor = Map.ofEntries(
                 Map.entry(-7, "Ab"),
                 Map.entry(-6, "Eb"),
-                Map.entry(-5, "d"),
-                Map.entry(-4, "f"),
-                Map.entry(-3, "g"),
-                Map.entry(-2, "h"),
-                Map.entry(-1, "u"),
-                Map.entry(0, "i"),
-                Map.entry(1, "o"),
-                Map.entry(2, "p"),
-                Map.entry(3, "xz"),
-                Map.entry(4, "c"),
-                Map.entry(5, "v"),
-                Map.entry(6, "b"),
-                Map.entry(7, "n")
+                Map.entry(-5, "Bb"),
+                Map.entry(-4, "F"),
+                Map.entry(-3, "C"),
+                Map.entry(-2, "G"),
+                Map.entry(-1, "D"),
+                Map.entry(0, "A"),
+                Map.entry(1, "E"),
+                Map.entry(2, "B"),
+                Map.entry(3, "F#"),
+                Map.entry(4, "C#"),
+                Map.entry(5, "G#"),
+                Map.entry(6, "D#"),
+                Map.entry(7, "A#")
         );
 
         mapPitches = new HashMap<>();
@@ -101,13 +102,16 @@ public class Pitch {
     }
 
 
+    private Pitch() { }
+
+
     /**
-     * Given a numerical value for a pitch (valid in Midi are in [0,127]),
+     * Given a numerical value for a pitch (valid in Piece are in [0,127]),
      * returns the string value (name) of the pitch. Because it is near impossible to know
      * the precise spelling without broad context, all accidentals are sharps, and the mode
      * is C Major.
      *
-     * @param val A numerical value representing a Midi pitch
+     * @param val A numerical value representing a Piece pitch
      * @return The input value as its String representation
      */
     static String numericalPitchToString(Number val, boolean showRegister) {

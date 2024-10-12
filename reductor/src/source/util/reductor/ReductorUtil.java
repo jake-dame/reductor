@@ -5,11 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 
-import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static reductor.Files.MIDI_FILES_IN_DIR;
-import static reductor.Pitch.getKeySignature;
 
 
 /**
@@ -20,68 +17,7 @@ import static reductor.Pitch.getKeySignature;
 public class ReductorUtil {
 
 
-    /**
-     * Given a beats-per-minute (bpm) value (1 <= x <= 60,000,000),
-     * converts to microseconds per quarter note, which is what MIDI spec uses to control tempo.
-     * Returns a byte array of length 3, which is how that information is transmitted over the wire.
-     *
-     * @param bpm The tempo in beats-per-minute
-     * @return The same tempo in microseconds per quarter note
-     */
-    static byte[] convertBPMToMicroseconds(int bpm) {
-
-        /*
-         8,355,711 translates to 0x7F7F7F, or the highest possible value MIDI set tempo message data
-         sections (which are always 3 bytes long) can accommodate (data bytes cannot go to 0xFF because
-         in MIDI, the only bytes allowed to have a set MSB are status bytes (or the "Reset" SysEx message).
-
-         The higher the microseconds-per-quarter-note, the slower the tempo.
-
-         The reverse formula is bpm = 60,000,000 usecs-per-min / usecs-per-quarter-note
-
-         *Lowest valid is actually 7.18071747575, but int is the safer type here since dealing with division.
-        */
-        if (bpm < 8 || bpm > 60_000_000) {
-            throw new IllegalArgumentException("lowest valid bpm is 8; highest is 60,000,000");
-        }
-
-        final int microsecondsPerMinute = 60_000_000;
-        final int microsecondsPerQuarterNote = microsecondsPerMinute / bpm;
-
-        byte[] data = new byte[3];
-
-        data[0] = (byte) ((microsecondsPerQuarterNote & 0xFF0000) >> 16);
-        data[1] = (byte) ((microsecondsPerQuarterNote & 0x00FF00) >> 8);
-        data[2] = (byte) (microsecondsPerQuarterNote & 0x0000FF);
-
-        return data;
-    }
-
-
-    /**
-     * Given a value in microseconds (per quarter note), converts to beats-per-minute (bpm),
-     * which is what humans use to specify tempo. Easily retrieved with getData() on set tempo
-     * messages from (Java) MetaMessage class.
-     *
-     * @param data The tempo as a number split into three LTR bytes
-     * @return The same tempo in beats-per-minute
-     */
-    static int convertMicrosecondsToBPM(byte[] data) {
-
-        int byteIndex = 0;
-        long microsecondsPerQuarterNote = 0;
-        while (byteIndex < data.length) {
-            microsecondsPerQuarterNote <<= 8;
-            microsecondsPerQuarterNote |= (data[byteIndex] & 0xFF);
-            byteIndex++;
-        }
-
-        final int microsecondsPerMinute = 60_000_000;
-
-        // This cast is fine because none of the numbers here, if valid MIDI spec,
-        //     will never get remotely near INTEGER_MAX.
-        return microsecondsPerMinute / (int) microsecondsPerQuarterNote;
-    }
+    private ReductorUtil() { }
 
 
     /**
@@ -229,162 +165,6 @@ public class ReductorUtil {
     }
 
 
-    static ArrayList<Note> midiEventsToNotes(ArrayList<MidiEvent> midiEvents) {
-
-        checkMidiEventsIsValid(midiEvents);
-
-        final var outList = new ArrayList<Note>();
-
-        final int numEvents = midiEvents.size();
-
-        // NOTE ON loop (outer loop)
-        for (int i = 0; i < numEvents; i++) {
-
-            MidiEvent event = midiEvents.get(i);
-            assert event.getMessage() instanceof ShortMessage;
-
-            ShortMessage msg = (ShortMessage) event.getMessage();
-
-            if (msg.getCommand() != MessageType.NOTE_ON) {
-                // Skip over NOTE OFF or other events
-                continue;
-            }
-
-            int pitch = msg.getData1();
-            assert pitch >= 0 && pitch <= 127;
-
-            long startTick = event.getTick();
-            assert startTick >= 0;
-
-            long endTick = -1;
-
-            // If penultimate note, construct/add last Note and return
-            if (i == numEvents - 1) {
-                endTick = midiEvents.getLast().getTick();
-
-                if (((ShortMessage) midiEvents.getLast().getMessage()).getData1() != pitch) {
-                    throw new IllegalArgumentException("last note off was a mismatch");
-                }
-
-                outList.add( new Note( pitch, new Range(startTick, endTick) ) );
-                return outList;
-            }
-
-            /* NOTE OFF loop */
-            for (int j = i + 1; j < numEvents; j++) {
-
-                MidiEvent nextEvent = midiEvents.get(j);
-                assert event.getMessage() instanceof ShortMessage;
-
-                ShortMessage nextMsg = (ShortMessage) nextEvent.getMessage();
-
-                if (nextMsg.getCommand() != NOTE_OFF) {
-                    // Skip over NOTE ON or other events
-                    continue;
-                }
-
-                int nextPitch = nextMsg.getData1();
-                if (nextPitch == pitch) {
-                    endTick = nextEvent.getTick();
-                    assert endTick > startTick;
-                    break;
-                }
-
-            } // end inner loop
-
-            if (endTick == -1) {
-                // Reached end of sequence and endTick is still -1
-                throw new RuntimeException("missing note off");
-            } else {
-                outList.add( new Note( pitch, new Range(startTick, endTick) ) );
-            }
-
-        } // end outer loop
-
-        if ( outList.size() != numEvents / 2 ) {
-            // A missing note off would have been caught above
-            // If we are here, it's because 1+ note offs are remaining (i.e. missing a note on)
-            throw new RuntimeException("missing note on");
-        }
-
-        return outList;
-    }
-
-
-    /**
-     * Does a bunch of preliminary checks and sorts a list of {@link MidiEvent}s
-     * in preparation for conversion to {@code Note}s.
-     *
-     * @param midiEvents The list of MidiEvent objects
-     */
-    private static void checkMidiEventsIsValid(ArrayList<MidiEvent> midiEvents) {
-
-        if (midiEvents == null) {
-            throw new NullPointerException("list of midi events is null");
-        }
-
-        if (midiEvents.isEmpty()) {
-            throw new IllegalArgumentException("list of midi events is empty");
-        }
-
-        if (midiEvents.size() % 2 != 0 ) {
-            throw new IllegalStateException(
-                    "unpaired events are present in the list of midi events"
-            );
-        }
-
-        Comparator<MidiEvent> comparator = new Comparator<>() {
-            @Override
-            public int compare(MidiEvent event1, MidiEvent event2) {
-                return Long.compare(event1.getTick(), event2.getTick());
-            }
-        };
-
-        midiEvents.sort(comparator);
-
-        int firstMessageType = midiEvents.getFirst().getMessage().getStatus();
-        int lastMessageType = midiEvents.getLast().getMessage().getStatus();
-
-        if (firstMessageType != MessageType.NOTE_ON
-                || lastMessageType != MessageType.NOTE_OFF) {
-            throw new IllegalStateException(
-                    "sequence of midi events begins with a NOTE OFF or ends with a NOTE ON"
-            );
-        }
-
-    }
-
-
-    static ArrayList<MidiEvent> notesToMidiEvents(ArrayList<Note> notes) {
-
-        final var outList = new ArrayList<MidiEvent>();
-        final int mezzoForte = 64;
-
-        try {
-
-            for (Note note : notes) {
-
-                ShortMessage onMessage = new ShortMessage(MessageType.NOTE_ON, note.pitch(), mezzoForte);
-                MidiEvent noteOnEvent = new MidiEvent(onMessage, note.start());
-                outList.add(noteOnEvent);
-
-                ShortMessage offMessage = new ShortMessage(MessageType.NOTE_OFF, note.pitch(), 0);
-                MidiEvent noteOffEvent = new MidiEvent(offMessage, note.stop());
-                outList.add(noteOffEvent);
-
-            }
-
-        } catch (InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
-
-        return outList;
-    }
-
-
-    //region Printing
-
-
     /// You must provide note events, this just parses and prints them.
     static void printNoteEvents(ArrayList<MidiEvent> events) {
 
@@ -411,94 +191,25 @@ public class ReductorUtil {
                 col_tab = "";
             }
 
-            int pitch = message.getData1();
+            String pitchStr;
+            if (command == ShortMessage.NOTE_ON || command == ShortMessage.NOTE_OFF) {
+                pitchStr = reductor.Pitch.numericalPitchToString(message.getData1(), true);
+            } else {
+                pitchStr = "n/a";
+            }
+
             System.out.printf("\t%-5d\t%-5s\t%s \n",
                     event.getTick(),
                     col_tab,
-                    reductor.Pitch.numericalPitchToString(pitch, true)
+                    pitchStr
             );
         }
 
     }
 
-    /// You must provide meta events, this just parses and prints them.
-    static void printMetaEvents(ArrayList<MidiEvent> events) {
 
-        for (MidiEvent event : events) {
-
-            if ( !(event.getMessage() instanceof MetaMessage message) ) {
-                throw new NullPointerException("something other than ShortMessage in list");
-            }
-
-            int type = message.getType();
-            byte[] data = message.getData();
-
-            String type_label;
-            String[] stringArr = new String[data.length];
-            String dataString = "";
-
-            if (type >= 0x20 && type < 0x2F) {
-                type_label = "Channel prefix";
-                dataString = String.valueOf(data[0]);
-            } else {
-                switch (type) {
-
-                    case 0x01:
-                        type_label = "Text";
-                        for (int i = 0; i < data.length; i++) {
-                            stringArr[i] = String.valueOf((char) data[i]);
-                        }
-                        dataString = String.join("", stringArr);
-                        break;
-
-                    case 0x03:
-                        type_label = "\nTrack name";
-                        for (int i = 0; i < data.length; i++) {
-                            stringArr[i] = String.valueOf((char) data[i]);
-                        }
-                        dataString = String.join("", stringArr);
-                        break;
-
-                    case 0x2F:
-                        type_label = "End of track";
-                        break;
-
-                    case 0x51:
-                        type_label = "Set tempo";
-                        int res = 0;
-                        for (byte b : data) {
-                            res <<= 8;
-                            res |= b & 0xFF;
-                        }
-                        dataString = res + " microseconds-per-quarter-note ";
-                        break;
-
-                    case 0x58:
-                        type_label = "Time signature";
-                        stringArr = new String[data.length - 1];
-                        stringArr[0] = (data[0] & 0xFF) + "/" + ((int) (Math.pow(2, data[1]))) + ", ";
-                        stringArr[1]= (data[2] & 0xFF) + " (midi clock ticks / beat), ";
-                        stringArr[2] = (data[3] & 0xFF) + " (32nd notes / beat), ";
-                        dataString = String.join("", stringArr);
-                        break;
-
-                    case 0x59:
-                        type_label = "Key signature";
-                        dataString = getKeySignature(data);
-                        break;
-
-                    default: throw new IllegalArgumentException("Unknown metamessage: " + type);
-                }
-            }
-
-            System.out.println(type_label + ": " + dataString);
-        }
-
-    }
-
-    /// This just prints a sequence in byte (hex) form
-    static void printBytesInALine(Sequence seq){
-        System.out.println("\n================printSequence()=======================");
+    static void printBytes(Sequence seq){
+        System.out.println();
         for (Track track : seq.getTracks()) {
             for (int i = 0; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
@@ -514,11 +225,12 @@ public class ReductorUtil {
                 System.out.println();
             }
         }
-        System.out.println("\n===================================================");
+        System.out.println();
     }
 
-    /// This is not a pretty printout, use w caution
-    static void printBytesSeparatedByMessageType(String filePath) throws IOException {
+
+    /// Prints bytes in hex form; each message type is on a new line and note on/off are in columns
+    static void printBytesByMessageType(String filePath) throws IOException {
 
         byte[] data = java.nio.file.Files.readAllBytes( Path.of(filePath) );
 
@@ -544,9 +256,6 @@ public class ReductorUtil {
         }
 
     }
-
-
-    //endregion
 
 
 }

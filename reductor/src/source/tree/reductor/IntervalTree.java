@@ -128,10 +128,11 @@ public class IntervalTree {
     int numNotes;
 
 
-    /// Default constructor
-    IntervalTree() {
+    /// Primary constructor
+    IntervalTree(ArrayList<Note> notes) {
         size = 0;
         root = null;
+        addAll(notes);
     }
 
 
@@ -150,31 +151,6 @@ public class IntervalTree {
         return changed;
 
     }
-
-
-    //boolean addAll(ArrayList<Note> notes) {
-    //    if (notes == null || notes.isEmpty()) {
-    //        return false;
-    //    }
-    //
-    //    // Call the recursive median-based insertion function
-    //    addMedian(notes, 0, notes.size() - 1);
-    //    return true;
-    //}
-
-    //private void addMedian(ArrayList<Note> notes, int start, int end) {
-    //    if (start > end) {
-    //        return;
-    //    }
-    //
-    //    // Find the median index and insert it
-    //    int mid = (start + end) / 2;
-    //    add(notes.get(mid));
-    //
-    //    // Recursively add the left and right subtrees
-    //    addMedian(notes, start, mid - 1);  // Left subtree
-    //    addMedian(notes, mid + 1, end);    // Right subtree
-    //}
 
 
     private boolean add(Note note) {
@@ -273,7 +249,7 @@ public class IntervalTree {
 
     private ArrayList<Note> query (Node node, Range window, ArrayList<Note> matches) {
 
-        if(window.overlaps(node.range)  &&  !node.queried) {
+        if(window.overlaps(node.range)) {
             matches.addAll(node.notes);
             node.queried = true;
         }

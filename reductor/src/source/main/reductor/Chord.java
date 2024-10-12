@@ -4,8 +4,6 @@ import javax.sound.midi.MidiEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static reductor.ReductorUtil.notesToMidiEvents;
-
 
 /**
  * This is a collection for {@code Note} objects, but where the main comparisons and operations are not
@@ -24,25 +22,22 @@ public class Chord {
     /// The {@code Note} object representing the highest pitch in this {@code Chord}
     Note high;
 
-    /// The approximate time this chord occurs in the {@code Sequence} from which it was sourced from
-    long tick;
-
     Range range;
 
 
     /// Given a list of notes, constructs a {@code Chord} object
-    Chord(ArrayList<Note> notes, long tick) {
+    Chord(ArrayList<Note> notes, long startTick, long endTick) {
 
         if (notes == null) {
             throw new NullPointerException("notes is null");
         }
 
-        this.tick = tick;
-
         // Ascending by pitch
         Collections.sort(notes);
 
         this.notes = notes;
+
+        this.range = new Range(startTick, endTick);
 
         if (!notes.isEmpty()) {
             this.low = this.notes.getFirst();
@@ -53,6 +48,21 @@ public class Chord {
         }
 
     }
+    //
+    //private Range getRange() {
+    //
+    //    long latestTick = 0;
+    //    for (Note note : notes) {
+    //
+    //        if (note.stop() > latestTick) {
+    //            latestTick = note.stop();
+    //        }
+    //
+    //    }
+    //
+    //    return new Range(earliestTick, latestTick);
+    //
+    //}
 
 
     /// Default constructor (used for testing)
@@ -60,7 +70,6 @@ public class Chord {
         this.notes = new ArrayList<>();
         this.low = null;
         this.high = null;
-        this.tick = -1;
     }
 
 
@@ -94,7 +103,7 @@ public class Chord {
 
     /// Returns a list of this {@code Chord}'s notes as a list of {@code MidiEvent}s
     ArrayList<MidiEvent> getMidiEvents() {
-        return notesToMidiEvents(this.notes);
+        return Conversion.notesToMidiEvents(this.notes);
     }
 
 
@@ -102,20 +111,20 @@ public class Chord {
     public String toString() {
 
         if (notes.isEmpty()) {
-            return tick + ": []";
+            return range.low() + ": []";
         }
 
         StringBuilder builder = new StringBuilder();
 
-        builder.append(this.tick);
+        builder.append(this.range.low());
         builder.append(": [");
 
         for (Note note : notes) {
             builder.append(reductor.Pitch.numericalPitchToString(note.pitch(), true));
-            builder.append("-");
+            builder.append(" ");
         }
 
-        builder.delete(builder.lastIndexOf("-"), builder.length());
+        builder.delete(builder.lastIndexOf(" "), builder.length());
 
         builder.append("]");
 

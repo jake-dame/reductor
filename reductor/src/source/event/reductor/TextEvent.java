@@ -1,11 +1,10 @@
 package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 
 
-public class TextEvent extends Event<MetaMessage> {
+public class TextEvent extends MetaEvent {
 
 
     TextEvent(MidiEvent event, int trackIndex) {
@@ -29,8 +28,7 @@ public class TextEvent extends Event<MetaMessage> {
 
         try {
             message.setMessage(this.message.getType(), newData, newData.length);
-        }
-        catch (InvalidMidiDataException e) {
+        } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
 

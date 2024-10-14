@@ -1,21 +1,37 @@
 package reductor;
 
 import javax.sound.midi.MidiEvent;
-import javax.sound.midi.ShortMessage;
+import java.util.Map;
 
 
-public class ProgramChangeEvent extends Event<ShortMessage> {
+public class ProgramChangeEvent extends ChannelEvent {
 
 
-    int channel;
-    int instrument;
+    public static final Map<Integer, String> instruments;
+
+    static {
+
+        instruments = Map.ofEntries(
+                Map.entry(0x0, "acoustic grand piano"),
+                Map.entry(0x2F, "timpani"),
+                Map.entry(0x30, "string ensemble 1"),
+                Map.entry(0x34, "choir aahs"),
+                Map.entry(0x39, "trombone"),
+                Map.entry(0x44, "oboe"),
+                Map.entry(0x46, "bassoon"),
+                Map.entry(0x47, "clarinet")
+        );
+
+    }
+
+
+    int instrumentCode;
 
 
     ProgramChangeEvent(MidiEvent event, int trackIndex) {
 
         super(event, trackIndex);
-        this.channel = this.message.getChannel();
-        this.instrument = this.message.getData1();
+        this.instrumentCode = this.message.getData1();
 
     }
 
@@ -23,7 +39,21 @@ public class ProgramChangeEvent extends Event<ShortMessage> {
     @Override
     String dataString() {
 
-        return "Channel " + this.channel + ", " + Constants.instrumentCodeToString(this.instrument);
+        return super.dataString()
+                + instrumentCodeToString(this.instrumentCode);
+
+    }
+
+
+    String instrumentCodeToString(int instrumentCode) {
+
+        String instrument = instruments.get(instrumentCode);
+
+        if (instrument == null) {
+            throw new RuntimeException("Found new instrument code: 0x" + Integer.toHexString(instrumentCode));
+        }
+
+        return instrument;
 
     }
 

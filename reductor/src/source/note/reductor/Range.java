@@ -74,17 +74,17 @@ public class Range implements Comparable<Range> {
 
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object other) {
 
-        if (this == o) {
+        if (this == other) {
             return true;
         }
 
-        if ( ! (o instanceof Range range) ) {
+        if ( ! (other instanceof Range range) ) {
             return false;
         }
 
-        return low == range.low && high == range.high;
+        return low == range.low  &&  high == range.high;
 
     }
 

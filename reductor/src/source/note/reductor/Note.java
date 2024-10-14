@@ -2,8 +2,6 @@ package reductor;
 
 import java.util.Objects;
 
-import static reductor.Pitch.numericalPitchToString;
-import static reductor.Pitch.stringPitchToNumber;
 
 /**
  * Can represent a pitch, or a pair of MIDI events (ON + OFF) as a single entity.
@@ -13,6 +11,10 @@ public class Note implements Comparable<Note> {
 
     private final Range range;
     private int pitch;
+
+    Rhythm rhythm;
+    KeyContext keyContext;
+    Degree degree;
 
 
     /// Primary constructor
@@ -24,16 +26,25 @@ public class Note implements Comparable<Note> {
     }
 
 
+    Note(int pitch, Range range, KeyContext keyContext) {
+
+        setPitch(pitch);
+        this.range = range;
+        this.keyContext = keyContext;
+
+    }
+
+
     /**
      * Constructor which only assigns pitch. The {@code low} and {@code begin}
-     * fields are meaningless when using this constructor. See {@link reductor.Pitch#stringPitchToNumber}.
+     * fields are meaningless when using this constructor. See {@link reductor.Pitch#toInt}.
      *
      * @param str A string such as "A", "Ab", "A#", "Ax", or "Abb"
      * @param register A register (octave) in [-1, 9]
      */
     Note(String str, int register) {
 
-        this.pitch = stringPitchToNumber(str, register);
+        this.pitch = Pitch.toInt(str, register);
         this.range = null;
 
     }
@@ -42,9 +53,15 @@ public class Note implements Comparable<Note> {
     /// Copy constructor
     Note(Note note) {
 
-        this(note.pitch, note.range);
-        setPitch(note.pitch); // get rid of unsuppressable
+        this(note.pitch, note.range, note.keyContext);
 
+    }
+
+
+    // for testing only
+    Note(Note note, int pitch) {
+        this(note);
+        setPitch(pitch);
     }
 
 
@@ -86,8 +103,8 @@ public class Note implements Comparable<Note> {
     public String toString() {
 
         return this.range == null
-                ? numericalPitchToString(this.pitch, true)
-                : numericalPitchToString(this.pitch, true) + ": " + this.range;
+                ? Pitch.toStr(this.pitch, this.keyContext, true)
+                : Pitch.toStr(this.pitch, this.keyContext, true) + ": " + this.range;
 
     }
 
@@ -112,19 +129,19 @@ public class Note implements Comparable<Note> {
             throw new IllegalArgumentException("invalid MIDI pitch for note; must be in [0,127]");
         }
 
-        // These two checks bring notes out of piano range into piano range [21,108]
-        // I would rather this than throw an exception
-        if (val < 21) {
-            while(val < 21) {
-                val+=12;
-            }
-        }
-
-        if (val > 108) {
-            while(val > 108) {
-                val-=12;
-            }
-        }
+        // These two clamping checks bring notes out of piano range into piano range [21,108]
+        // I would rather this than throw an exception, although can change in future
+        //if (val < 21) {
+        //    while(val < 21) {
+        //        val+=12;
+        //    }
+        //}
+        //
+        //if (val > 108) {
+        //    while(val > 108) {
+        //        val-=12;
+        //    }
+        //}
 
 
         this.pitch = val;

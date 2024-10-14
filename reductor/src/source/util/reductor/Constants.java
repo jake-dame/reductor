@@ -30,55 +30,7 @@ public class Constants {
     public static final int PITCH_BEND = 0xE0;
 
 
-    public static final Map<Integer, String> instruments;
-    public static final Map<Integer, String> controllers;
-
-
-    static {
-
-        instruments = Map.ofEntries(
-                Map.entry(0x0, "acoustic grand piano"),
-                Map.entry(0x34, "choir aahs")
-        );
-
-        controllers = Map.ofEntries(
-                Map.entry(0x2, "breath controller (coarse)"),
-                Map.entry(0x7, "bank select (fine)"),
-                Map.entry(0xA, "pan (coarse)"),
-                Map.entry(0x5B, "effect 1 depth"),
-                Map.entry(0x5D, "effect 3 depth"),
-                Map.entry(0x79, "all controllers off")
-        );
-
-    }
-
-
     private Constants() { }
-
-
-    public static String instrumentCodeToString(int instrumentCode) {
-
-        String instrument = instruments.get(instrumentCode);
-
-        if (instrument == null) {
-            throw new RuntimeException("Found new instrument code: 0x" + Integer.toHexString(instrumentCode));
-        }
-
-        return instrument;
-
-    }
-
-    public static String contollerCodeToString(int controllerCode) {
-
-        String instrument = controllers.get(controllerCode);
-
-        if (instrument == null) {
-            throw new RuntimeException("Found new controller code: 0x" + Integer.toHexString(controllerCode));
-        }
-
-        return instrument;
-
-    }
 
 
 }

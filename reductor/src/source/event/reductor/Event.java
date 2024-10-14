@@ -15,7 +15,7 @@ public abstract class Event<T extends MidiMessage> {
     MidiEvent event;
     T message;
     int trackIndex;
-    long tick;
+    final long tick;
 
 
     Event(MidiEvent event, int trackIndex) {
@@ -31,27 +31,21 @@ public abstract class Event<T extends MidiMessage> {
     abstract String dataString();
 
 
-    //@Override
-    //public String toString() {
-    //
-    //    return String.format("Track %d  Tick  %d  :  %s",
-    //            this.trackIndex,
-    //            this.tick,
-    //            dataString()
-    //    );
-    //
-    //}
-
     @Override
     public String toString() {
 
-        return String.format("(%s) Track %d  Tick  %d  :  %s",
+        return String.format("(%s) Track %d, Tick %d : %s",
                 this.getClass().getSimpleName(),
                 this.trackIndex,
                 this.tick,
                 dataString()
         );
 
+    }
+
+
+    public long tick() {
+        return this.tick;
     }
 
 

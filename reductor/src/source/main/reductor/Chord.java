@@ -4,6 +4,8 @@ import javax.sound.midi.MidiEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import static reductor.Piece.notesToMidiEvents;
+
 
 /**
  * This is a collection for {@code Note} objects, but where the main comparisons and operations are not
@@ -22,22 +24,21 @@ public class Chord {
     /// The {@code Note} object representing the highest pitch in this {@code Chord}
     Note high;
 
+    /// The window of time this chord's notes spans
     Range range;
 
 
     /// Given a list of notes, constructs a {@code Chord} object
-    Chord(ArrayList<Note> notes, long startTick, long endTick) {
+    Chord(ArrayList<Note> notes) {
 
-        if (notes == null) {
-            throw new NullPointerException("notes is null");
-        }
+        assert notes != null;
+
+        this.range = getRange(notes);
 
         // Ascending by pitch
         Collections.sort(notes);
 
         this.notes = notes;
-
-        this.range = new Range(startTick, endTick);
 
         if (!notes.isEmpty()) {
             this.low = this.notes.getFirst();
@@ -48,28 +49,26 @@ public class Chord {
         }
 
     }
-    //
-    //private Range getRange() {
-    //
-    //    long latestTick = 0;
-    //    for (Note note : notes) {
-    //
-    //        if (note.stop() > latestTick) {
-    //            latestTick = note.stop();
-    //        }
-    //
-    //    }
-    //
-    //    return new Range(earliestTick, latestTick);
-    //
-    //}
 
 
-    /// Default constructor (used for testing)
-    Chord() {
-        this.notes = new ArrayList<>();
-        this.low = null;
-        this.high = null;
+    private Range getRange(ArrayList<Note> notes) {
+
+        long min = 0;
+        long max = 0;
+        for (Note note : notes) {
+
+            if (note.start() < min) {
+                min = note.start();
+            }
+
+            if (note.stop() > max) {
+                max = note.stop();
+            }
+
+        }
+
+        return new Range(min, max);
+
     }
 
 
@@ -102,8 +101,10 @@ public class Chord {
 
 
     /// Returns a list of this {@code Chord}'s notes as a list of {@code MidiEvent}s
-    ArrayList<MidiEvent> getMidiEvents() {
-        return Conversion.notesToMidiEvents(this.notes);
+    ArrayList<MidiEvent> events() {
+
+        return notesToMidiEvents(this.notes);
+
     }
 
 
@@ -120,7 +121,7 @@ public class Chord {
         builder.append(": [");
 
         for (Note note : notes) {
-            builder.append(reductor.Pitch.numericalPitchToString(note.pitch(), true));
+            builder.append(reductor.Pitch.toStr(note.pitch(), note.keyContext, true));
             builder.append(" ");
         }
 
@@ -129,6 +130,34 @@ public class Chord {
         builder.append("]");
 
         return builder.toString();
+
+    }
+
+
+    public Range range() {
+
+        return this.range;
+
+    }
+
+
+    public Note low() {
+
+        return this.low;
+
+    }
+
+
+    public Note high() {
+
+        return this.high;
+
+    }
+
+
+    public int size() {
+
+        return this.notes.size();
 
     }
 

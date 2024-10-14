@@ -58,7 +58,7 @@ class NoteTest {
     void stringIntConstruction() {
 
         Note note = new Note("C#", 4);
-        assertEquals(Pitch.stringPitchToNumber("C#", 4), note.pitch());
+        assertEquals(Pitch.toInt("C#", 4), note.pitch());
 
     }
 

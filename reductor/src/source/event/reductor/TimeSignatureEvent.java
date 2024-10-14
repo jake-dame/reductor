@@ -1,16 +1,29 @@
 package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 
 
-public class TimeSignatureEvent extends Event<MetaMessage> {
+public class TimeSignatureEvent extends MetaEvent {
+
+    int upperNumeral;
+    int lowerNumeral;
+    int exponent;
 
 
     TimeSignatureEvent(MidiEvent event, int trackIndex) {
 
         super(event, trackIndex);
+
+        byte[] data = this.message.getData();
+
+        this.upperNumeral = data[0] & 0xFF;
+
+        int lowerNumeralExponent = data[1] & 0xFF;
+        this.lowerNumeral = (int) Math.pow(2, lowerNumeralExponent);
+
+        int clockTicksPerTick = data[2] & 0xFF; // don't delete
+        int thirtySecondsPerBeat = data[3] & 0xFF; // don't delete
 
     }
 
@@ -18,14 +31,7 @@ public class TimeSignatureEvent extends Event<MetaMessage> {
     @Override
     String dataString() {
 
-        byte[] data = this.message.getData();
-
-        int upperNumeral = data[0] & 0xFF;
-        int lowerNumeralExponent = data[1] & 0xFF;
-        int clockTicksPerTick = data[2] & 0xFF; // don't delete
-        int thirtySecondsPerBeat = data[3] & 0xFF; // don't delete
-
-        return upperNumeral + "/" + (int) Math.pow(2, lowerNumeralExponent);
+        return upperNumeral + "/" + lowerNumeral;
 
     }
 
@@ -46,6 +52,8 @@ public class TimeSignatureEvent extends Event<MetaMessage> {
             exponent++;
         }
 
+        this.exponent = exponent;
+
         byte[] oldData = message.getData();
         byte clockTicksPerTick = oldData[2];
         byte thirtySecondsPerBeat = oldData[3];
@@ -58,6 +66,12 @@ public class TimeSignatureEvent extends Event<MetaMessage> {
         catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
+
+    }
+
+    void assignLengthOfMeasure() {
+
+
 
     }
 

@@ -1,11 +1,10 @@
 package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 
 
-public class SetTempoEvent extends Event<MetaMessage> {
+public class SetTempoEvent extends MetaEvent {
 
     int bpm;
 

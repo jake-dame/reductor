@@ -1,16 +1,19 @@
 package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 
 
-public class KeySignatureEvent extends Event<MetaMessage> {
+public class KeySignatureEvent extends MetaEvent {
 
+    int accidentals;
+    int mode;
 
     KeySignatureEvent(MidiEvent event, int trackIndex) {
 
         super(event, trackIndex);
+        this.accidentals = this.message.getData()[0];
+        this.mode = this.message.getData()[1] & 0xFF;
 
     }
 
@@ -18,7 +21,7 @@ public class KeySignatureEvent extends Event<MetaMessage> {
     @Override
     String dataString() {
 
-        return Pitch.getKeySignature(this.message.getData());
+        return KeyContext.getKeySignature(this.message.getData());
 
     }
 

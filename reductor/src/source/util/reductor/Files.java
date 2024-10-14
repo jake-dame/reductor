@@ -34,7 +34,9 @@ public class Files {
     public static final String MINUET_PIANO = addFile("minuet_piano.mid");
     public static final String TEST_1 = addFile("Test1.mid");
     public static final String TEST_2 = addFile("Test2.mid");
-    public static final String TEST_3 = addFile("Test3.mid");
+    public static final String TEST_PITCH = addFile("TestPitch.mid");
+    public static final String TEST_3_TRY_3 = addFile("Test3Try3.mid");
+    public static final String TEST_3_TRY_4 = addFile("Test3Try4.mid");
 
 
     /// This just makes it easier to add new files in one step and reduces text in this file.

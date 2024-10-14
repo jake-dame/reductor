@@ -14,10 +14,10 @@ import static reductor.Files.MIDI_FILES_IN_DIR;
  * <p>
  * Some of this is purely for debugging or specific to my machine.
  * */
-public class ReductorUtil {
+public class Util {
 
 
-    private ReductorUtil() { }
+    private Util() { }
 
 
     /**
@@ -45,6 +45,24 @@ public class ReductorUtil {
 
 
     /**
+     * Helper for {@link Util#openWithGarageBand}. Checks if a file has the correct
+     * {@code .mid} extension.
+     *
+     * @param file The file to check.
+     */
+    private static void checkMidiFileExtension(File file) {
+
+        String outFileName = file.getName();
+        int periodIndex = outFileName.lastIndexOf('.');
+        if (periodIndex == -1
+                || !outFileName.substring(periodIndex + 1).equals("mid") ) {
+            throw new RuntimeException("out file does not have '.mid' extension JAKE");
+        }
+
+    }
+
+
+    /**
      * Given a number of lists, returns a {@link javax.sound.midi.Sequence} object comprised
      * of those events.
      *
@@ -52,7 +70,7 @@ public class ReductorUtil {
      * @param lists 1 or more lists of MidiEvent objects
      * @return A {@link javax.sound.midi.Sequence} object.
      */
-    static Sequence makeSequenceFromMidiEvents(int resolution, ArrayList<MidiEvent>[] lists) {
+    static Sequence makeSequenceFromMidiEvents(int resolution, ArrayList<MidiEvent> list) {
 
         Sequence out;
         try {
@@ -63,10 +81,8 @@ public class ReductorUtil {
 
         Track track = out.getTracks()[0];
 
-        for(ArrayList<MidiEvent> list : lists) {
-            for (MidiEvent event : list) {
-                track.add(event);
-            }
+        for (MidiEvent event : list) {
+            track.add( DeepCopy.copyEvent(event) );
         }
 
         return out;
@@ -112,25 +128,20 @@ public class ReductorUtil {
      */
     static File write(Sequence sequence, String name) {
 
-        File outFile = new File("");
-
-        // If it already had a valid prefix, make a new one to not have "OUT_" too
-        int underscoreIndex = name.indexOf('_');
-        if (underscoreIndex != -1) {
-
-            String prefix = name.substring(0, underscoreIndex);
-            if (prefix.equals("AGG") || prefix.equals("RED")) {
-                outFile = new File(MIDI_FILES_IN_DIR, name);
-            }
-
-        } else {
-            outFile = new File(MIDI_FILES_IN_DIR, name);
+        if (name.contains(".")) {
+            throw new RuntimeException("file name should not contain \'.\'");
         }
 
-        checkMidiFileExtension(outFile);
+        File outFile = new File(name + ".mid");
 
-        // File type: 0 ==> single track; 1 ==> multiple tracks; 2 ==> multiple songs (not used in this program).
-        final int fileType = sequence.getTracks().length < 1 ? 0 : 1;
+        assert sequence.getTracks().length > 0;
+
+        int fileType;
+        if (sequence.getTracks().length == 1) {
+            fileType = 0;
+        } else {
+            fileType = 1;
+        }
 
         try {
             MidiSystem.write(sequence, fileType, outFile);
@@ -138,29 +149,9 @@ public class ReductorUtil {
             throw new RuntimeException(e);
         }
 
-        if (!outFile.exists()) {
-            throw new RuntimeException("out file does not exist");
-        }
-
+        assert outFile.exists();
 
         return outFile;
-    }
-
-
-    /**
-     * Used for writing out and opening with Garage Band. Checks if a file has the correct
-     * {@code .mid} extension.
-     *
-     * @param file The file to check.
-     */
-    private static void checkMidiFileExtension(File file) {
-
-        String outFileName = file.getName();
-        int periodIndex = outFileName.lastIndexOf('.');
-        if (periodIndex == -1
-                || !outFileName.substring(periodIndex + 1).equals("mid") ) {
-            throw new RuntimeException("out file does not have '.mid' extension JAKE");
-        }
 
     }
 
@@ -193,7 +184,7 @@ public class ReductorUtil {
 
             String pitchStr;
             if (command == ShortMessage.NOTE_ON || command == ShortMessage.NOTE_OFF) {
-                pitchStr = reductor.Pitch.numericalPitchToString(message.getData1(), true);
+                pitchStr = reductor.Pitch.toStr(message.getData1(), null, true);
             } else {
                 pitchStr = "n/a";
             }
@@ -203,6 +194,35 @@ public class ReductorUtil {
                     col_tab,
                     pitchStr
             );
+        }
+
+    }
+
+
+    static void printNotesSimple(Sequence sequence) {
+
+        for (Track track : sequence.getTracks()) {
+            for (int i = 0; i < track.size(); i++) {
+                MidiEvent event = track.get(i);
+                MidiMessage message = event.getMessage();
+
+                if (message instanceof ShortMessage shortMessage) {
+
+                    if (shortMessage.getCommand() == ShortMessage.NOTE_ON  &&  shortMessage.getData2() > 0) {
+                        // DON'T DELETE
+                    } else if (shortMessage.getCommand() == ShortMessage.NOTE_OFF
+                            || (shortMessage.getCommand() == ShortMessage.NOTE_ON  &&  shortMessage.getData2() == 0) ) {
+                        System.out.print("\t");
+                    } else {
+                        continue;
+                    }
+
+                    System.out.println(event.getTick() + " (" + Pitch.pitchesItoS.get(shortMessage.getData1()) + ")");
+
+                }
+
+
+            }
         }
 
     }

@@ -1,26 +1,47 @@
 package reductor;
 
+import java.util.ArrayList;
+
+
 public class Reduction {
 
 
-    // give me a chord
-    public void compactAndSplit(Chord chord) {
+    IntervalTree tree;
+    Piece piece;
 
-        if (chord.isEmpty()){
-            return;
+
+    Reduction(Piece piece) {
+
+        this.piece = piece;
+        this.tree = piece.tree;
+
+    }
+
+
+    ArrayList<Chord> chordify(int granularity) {
+
+        ArrayList<Chord> chords = new ArrayList<>();
+
+        long windowMin = 0;
+        long windowMax = granularity;
+
+        while (windowMax <= this.piece.lengthInTicks()) {
+
+            Range window = new Range(windowMin, windowMax - 1);
+
+            ArrayList<Note> matches = this.tree.query(window);
+
+            Chord chord = new Chord(matches);
+
+            chords.add(chord);
+            windowMin += granularity;
+            windowMax += granularity;
+
         }
 
-
-
-
-    }
-
-    private void compact() {
+        return chords;
 
     }
 
-    private void split() {
-
-    }
 
 }

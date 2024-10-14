@@ -1,12 +1,28 @@
 package reductor;
 
 import javax.sound.midi.MidiEvent;
-import javax.sound.midi.ShortMessage;
+import java.util.Map;
 
 
-public class ControlChangeEvent extends Event<ShortMessage> {
+public class ControlChangeEvent extends ChannelEvent {
 
-    int channel;
+
+    public static final Map<Integer, String> controllers;
+
+    static {
+
+        controllers = Map.ofEntries(
+                Map.entry(0x2, "breath controller (coarse)"),
+                Map.entry(0x7, "bank select (fine)"),
+                Map.entry(0xA, "pan (coarse)"),
+                Map.entry(0x5B, "effect 1 depth"),
+                Map.entry(0x5D, "effect 3 depth"),
+                Map.entry(0x79, "all controllers off")
+        );
+
+    }
+
+
     int controllerCode;
     int controllerValue;
 
@@ -14,7 +30,6 @@ public class ControlChangeEvent extends Event<ShortMessage> {
     ControlChangeEvent(MidiEvent event, int trackIndex) {
 
         super(event, trackIndex);
-        this.channel = this.message.getChannel();
         this.controllerCode = this.message.getData1();
         this.controllerValue = this.message.getData2();
 
@@ -24,9 +39,22 @@ public class ControlChangeEvent extends Event<ShortMessage> {
     @Override
     String dataString() {
 
-        return "Channel " + this.channel
-                + ", Controller: " + Constants.contollerCodeToString(this.controllerCode)
+        return super.dataString()
+                + ", Controller: " + contollerCodeToString(this.controllerCode)
                 + ", " + this.controllerValue;
+
+    }
+
+
+    String contollerCodeToString(int controllerCode) {
+
+        String instrument = controllers.get(controllerCode);
+
+        if (instrument == null) {
+            throw new RuntimeException("Found new controller code: 0x" + Integer.toHexString(controllerCode));
+        }
+
+        return instrument;
 
     }
 

@@ -1,11 +1,9 @@
 package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
-import java.nio.charset.StandardCharsets;
 
-public class TrackNameEvent extends Event<MetaMessage> {
+public class TrackNameEvent extends MetaEvent {
 
 
     TrackNameEvent(MidiEvent event, int trackIndex) {
@@ -18,7 +16,7 @@ public class TrackNameEvent extends Event<MetaMessage> {
     @Override
     String dataString() {
 
-        return new String(this.message.getData(), StandardCharsets.UTF_8);
+        return new String(this.message.getData());
 
     }
 

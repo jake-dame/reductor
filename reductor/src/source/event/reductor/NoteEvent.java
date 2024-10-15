@@ -12,6 +12,9 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
     NoteEvent partner;
     boolean paired;
 
+    //KeySignatureEvent key; // TODO
+    //TimeSignatureEvent time; // TODO
+
 
     NoteEvent(MidiEvent event, int trackIndex) {
 
@@ -43,7 +46,7 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
         boolean showRegister = true;
 
         return super.dataString()
-                + Pitch.toStr(this.pitch, null, showRegister)
+                + Pitch.toStr(this.pitch, showRegister)
                 + ", " + this.velocity;
 
     }

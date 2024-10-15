@@ -12,6 +12,7 @@ public class Note implements Comparable<Note> {
     private final Range range;
     private int pitch;
 
+    // TODO
     Rhythm rhythm;
     KeyContext keyContext;
     Degree degree;
@@ -26,26 +27,28 @@ public class Note implements Comparable<Note> {
     }
 
 
-    Note(int pitch, Range range, KeyContext keyContext) {
+    /**
+     * Constructor which takes a string to assign pitch, and a {@code Range}
+     *
+     * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
+     * @see Note#Note(String)
+     */
+    Note(String str, Range range) {
 
-        setPitch(pitch);
-        this.range = range;
-        this.keyContext = keyContext;
+        this(Pitch.toInt(str), range);
 
     }
 
 
     /**
-     * Constructor which only assigns pitch. The {@code low} and {@code begin}
-     * fields are meaningless when using this constructor. See {@link reductor.Pitch#toInt}.
+     * Constructor which takes a string to assign pitch. The {@link Note#range} is assigned null.
      *
-     * @param str A string such as "A", "Ab", "A#", "Ax", or "Abb"
-     * @param register A register (octave) in [-1, 9]
+     * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
+     * @see Pitch#toInt
      */
-    Note(String str, int register) {
+    Note(String str) {
 
-        this.pitch = Pitch.toInt(str, register);
-        this.range = null;
+        this(Pitch.toInt(str), null);
 
     }
 
@@ -53,15 +56,8 @@ public class Note implements Comparable<Note> {
     /// Copy constructor
     Note(Note note) {
 
-        this(note.pitch, note.range, note.keyContext);
+        this(note.pitch, note.range);
 
-    }
-
-
-    // for testing only
-    Note(Note note, int pitch) {
-        this(note);
-        setPitch(pitch);
     }
 
 
@@ -103,15 +99,15 @@ public class Note implements Comparable<Note> {
     public String toString() {
 
         return this.range == null
-                ? Pitch.toStr(this.pitch, this.keyContext, true)
-                : Pitch.toStr(this.pitch, this.keyContext, true) + ": " + this.range;
+                ? Pitch.toStr(this.pitch, true)
+                : Pitch.toStr(this.pitch, true) + ": " + this.range;
 
     }
 
 
     public Range range() {
 
-        return this.range != null ? new Range(this.range) : null;
+        return this.range == null ? null : new Range(this.range);
 
     }
 

@@ -19,7 +19,7 @@ public abstract class ChannelEvent extends Event<ShortMessage> {
     @Override
     String dataString() {
 
-        return "Ch" + this.channel + ", ";
+        return "CH." + this.channel + ", ";
 
     }
 

@@ -15,7 +15,7 @@ public class Piece {
     // This is needed for I/O
     File file;
 
-    // These are probably unused but are remaining for now
+    // These are for debugging
     MidiFileFormat fileFormat;
     Integer fileType;
 
@@ -86,7 +86,7 @@ public class Piece {
                 || fileName.contains("/")
         ) {
             throw new IllegalArgumentException(
-                    "name should just be a unique identifier and not in filename form");
+                    "name should not include '.'");
         }
 
         return new File(fileName + ".mid");
@@ -118,16 +118,9 @@ public class Piece {
         this.keySignatureEvents = new ArrayList<>();
         this.timeSignatureEvents = new ArrayList<>();
 
-        sortEventsIntoLists();
+        this.notes = new ArrayList<>();
 
-        ArrayList<NoteEvent> noteEvents = new ArrayList<>();
-        noteEvents.addAll(noteOnEvents);
-        noteEvents.addAll(noteOffEvents);
-        this.notes = Conversion.pairAndCreateNotes(noteEvents);
-
-        //pairNoteEvents();
-        //
-        //createNotes();
+        sortEvents();
 
         this.tree = new IntervalTree(this.notes);
 
@@ -136,21 +129,33 @@ public class Piece {
     }
 
 
-    private void sortEventsIntoLists() {
+    private void sortEvents() {
 
         Track[] tracks = this.sequence.getTracks();
 
+        // TODO could be implemented using a map or chaining hash table?
+        ArrayList<NoteOnEvent> unpaired = new ArrayList<>();
+
         for (int trackIndex = 0; trackIndex < tracks.length; trackIndex++) {
             Track track = tracks[trackIndex];
+            //debug
+            long lastTick = 0;
+            long currentTick;
+            //debug
 
             for (int eventIndex = 0; eventIndex < track.size(); eventIndex++) {
                 MidiEvent event = track.get(eventIndex);
+
+                // debug
+                currentTick = event.getTick();
+                assert currentTick >= lastTick;
+                // debug
 
                 Event newEvent;
 
                 switch (event.getMessage()) {
                     case ShortMessage _ -> {
-                        newEvent = sortChannelEvent(event, trackIndex);
+                        newEvent = sortChannelEvent(event, trackIndex, unpaired);
                         if (newEvent != null) {
                             this.channelEvents.add((ChannelEvent) newEvent);
                         }
@@ -168,41 +173,43 @@ public class Piece {
                     this.allEvents.add(newEvent);
                 }
 
+                // debug
+                lastTick = currentTick;
+                // debug
+
             }
 
         }
 
+        assert unpaired.isEmpty();
+
     }
 
 
-    private ChannelEvent sortChannelEvent(MidiEvent event, int trackIndex) {
+    private ChannelEvent sortChannelEvent(MidiEvent event, int trackIndex, ArrayList<NoteOnEvent> unpaired) {
 
         ShortMessage message = (ShortMessage) event.getMessage();
-        int type = message.getCommand();
+        int channelMessageType = message.getCommand();
+
+        if (channelMessageType == NOTE_ON  &&  message.getData2() == 0) {
+            try {
+                message.setMessage(NOTE_OFF, message.getChannel(), message.getData1(), message.getData2());
+            } catch (InvalidMidiDataException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         ChannelEvent newEvent;
 
-        switch (type) {
+        switch (channelMessageType) {
             case NOTE_ON -> {
-
-                int velocity = message.getData2();
-
-                if (velocity == 0) {
-                    try {
-                        message.setMessage(NOTE_OFF, message.getChannel(), message.getData1(), message.getData2());
-                    } catch (InvalidMidiDataException e) {
-                        throw new RuntimeException(e);
-                    }
-                    newEvent = new NoteOffEvent(event, trackIndex);
-                    this.noteOffEvents.add((NoteOffEvent) newEvent);
-                } else {
-                    newEvent = new NoteOnEvent(event, trackIndex);
-                    this.noteOnEvents.add((NoteOnEvent) newEvent);
-                }
-
+                newEvent = new NoteOnEvent(event, trackIndex);
+                unpaired.add((NoteOnEvent) newEvent);
+                this.noteOnEvents.add((NoteOnEvent) newEvent);
             }
             case NOTE_OFF -> {
                 newEvent = new NoteOffEvent(event, trackIndex);
+                findNoteOn((NoteOffEvent) newEvent, unpaired);
                 this.noteOffEvents.add((NoteOffEvent) newEvent);
             }
             case CONTROL_CHANGE -> {
@@ -213,10 +220,29 @@ public class Piece {
                 newEvent = new ProgramChangeEvent(event, trackIndex);
                 this.programChangeEvents.add((ProgramChangeEvent) newEvent);
             }
-            default -> throw new IllegalArgumentException("UNKNOWN SHORT MESSAGE TYPE: 0x" + Integer.toHexString(type));
+            default -> throw new IllegalArgumentException("UNKNOWN SHORT MESSAGE TYPE: 0x" + Integer.toHexString(channelMessageType));
         }
 
         return newEvent;
+
+    }
+
+
+    private void findNoteOn(NoteOffEvent off, ArrayList<NoteOnEvent> unpaired) {
+
+        for (int i = unpaired.size() - 1; i >= 0; i--) {
+            NoteOnEvent on = unpaired.get(i);
+            assert !on.paired();
+
+            if (on.pitch() == off.pitch()  &&  on.tick() < off.tick()) {
+                NoteEvent.assignPartners(on, off);
+                this.notes.add(new Note(on.pitch(), new Range(on.tick(), off.tick())));
+                return;
+            }
+
+        }
+
+        throw new RuntimeException("reached end of list and note on not found");
 
     }
 
@@ -229,93 +255,37 @@ public class Piece {
         MetaEvent newEvent;
 
         switch (metaMessageType) {
-            case Constants.TEXT -> {
+            case TEXT -> {
                 newEvent = new TextEvent(event, trackIndex);
-                this.textEvents.add(new TextEvent(event, trackIndex));
+                this.textEvents.add((TextEvent) newEvent);
             }
-            case Constants.TRACK_NAME -> {
+            case TRACK_NAME -> {
                 newEvent = new TrackNameEvent(event, trackIndex);
-                this.trackNameEvents.add( new TrackNameEvent(event, trackIndex) );
+                this.trackNameEvents.add((TrackNameEvent) newEvent);
             }
-            case Constants.SET_TEMPO -> {
+            case SET_TEMPO -> {
                 newEvent = new SetTempoEvent(event, trackIndex);
-                this.setTempoEvents.add( new SetTempoEvent(event, trackIndex) );
+                this.setTempoEvents.add((SetTempoEvent) newEvent);
             }
-            case Constants.TIME_SIGNATURE -> {
+            case TIME_SIGNATURE -> {
                 newEvent = new TimeSignatureEvent(event, trackIndex);
-                this.timeSignatureEvents.add( new TimeSignatureEvent(event, trackIndex) );
+                this.timeSignatureEvents.add((TimeSignatureEvent) newEvent);
             }
-            case Constants.KEY_SIGNATURE -> {
+            case KEY_SIGNATURE -> {
                 newEvent = new KeySignatureEvent(event, trackIndex);
-                this.keySignatureEvents.add( new KeySignatureEvent(event, trackIndex) );
+                this.keySignatureEvents.add((KeySignatureEvent) newEvent);
             }
-            case Constants.PORT_PREFIX, Constants.END_OF_TRACK -> {
+            case PORT_PREFIX, END_OF_TRACK -> {
                 return null;
             }
-            default -> throw new IllegalArgumentException("UNKNOWN META MESSAGE TYPE: 0x" + Integer.toHexString(metaMessageType));
+            default -> {
+                throw new IllegalArgumentException("UNKNOWN META MESSAGE TYPE: 0x" + Integer.toHexString(metaMessageType));
+            }
         }
 
         return newEvent;
 
     }
-
-
-    //private void pairNoteEvents() {
-    //
-    //    ArrayList<NoteEvent> unpaired = new ArrayList<>();
-    //
-    //    this.noteOnEvents.sort(null);
-    //    this.noteOffEvents.sort(null);
-    //
-    //    for (int i = 0; i < noteOnEvents.size(); i++) {
-    //        NoteOnEvent on = noteOnEvents.get(i);
-    //
-    //        for (int j = i; j < noteOffEvents.size(); j++) {
-    //            NoteOffEvent off = noteOffEvents.get(j);
-    //
-    //            if (on.pitch() == off.pitch() &&  on.tick() < off.tick()) {
-    //
-    //                if (on.tick() >= off.tick()) {
-    //                    System.out.println();
-    //                }
-    //
-    //
-    //                on.assignPartner(off);
-    //                off.assignPartner(on);
-    //                break;
-    //            }
-    //
-    //            if (j == noteOffEvents.size() - 1) {
-    //                unpaired.add(on);
-    //                unpaired.add(off);
-    //            }
-    //
-    //        }
-    //
-    //    }
-    //
-    //    System.out.println();
-    //    assert unpaired.isEmpty();
-    //
-    //}
-
-
-    //private void createNotes() {
-    //
-    //    this.notes = new ArrayList<>();
-    //
-    //    for (NoteOnEvent event : noteOnEvents) {
-    //
-    //        if (event.tick() >= event.partner().tick()) {
-    //            System.out.println();
-    //        }
-    //
-    //        Range range = new Range(event.tick(), event.partner().tick());
-    //        this.notes.add( new Note(event.pitch, range) );
-    //
-    //    }
-    //
-    //}
 
 
     public void play() {
@@ -429,7 +399,20 @@ public class Piece {
 
         for (Track track : in.getTracks()) {
             for (int i = 0; i < track.size(); i++) {
-                outTrack.add(track.get(i));
+
+                MidiEvent event = track.get(i);
+
+                if (event.getMessage() instanceof ShortMessage message && message.getCommand() == PROGRAM_CHANGE) {
+
+                    try {
+                        message.setMessage(message.getCommand(), message.getChannel(), 0x0, message.getData2());
+                    } catch (InvalidMidiDataException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                }
+
+                outTrack.add(event);
             }
         }
 

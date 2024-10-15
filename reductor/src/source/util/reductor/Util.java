@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import static reductor.Files.MIDI_FILES_IN_DIR;
+import static reductor.Files.MIDI_FILES_OUT_DIR;
 
 
 /**
@@ -56,7 +56,7 @@ public class Util {
         int periodIndex = outFileName.lastIndexOf('.');
         if (periodIndex == -1
                 || !outFileName.substring(periodIndex + 1).equals("mid") ) {
-            throw new RuntimeException("out file does not have '.mid' extension JAKE");
+            throw new RuntimeException("out file should have '.mid' extension");
         }
 
     }
@@ -67,7 +67,7 @@ public class Util {
      * of those events.
      *
      * @param resolution The resolution for the {@link javax.sound.midi.Sequence} (caution)
-     * @param lists 1 or more lists of MidiEvent objects
+     * @param list 1 or more lists of MidiEvent objects
      * @return A {@link javax.sound.midi.Sequence} object.
      */
     static Sequence makeSequenceFromMidiEvents(int resolution, ArrayList<MidiEvent> list) {
@@ -129,10 +129,10 @@ public class Util {
     static File write(Sequence sequence, String name) {
 
         if (name.contains(".")) {
-            throw new RuntimeException("file name should not contain \'.\'");
+            throw new RuntimeException("file name should not contain '.'");
         }
 
-        File outFile = new File(name + ".mid");
+        File outFile = new File(MIDI_FILES_OUT_DIR + name + ".mid");
 
         assert sequence.getTracks().length > 0;
 
@@ -184,7 +184,7 @@ public class Util {
 
             String pitchStr;
             if (command == ShortMessage.NOTE_ON || command == ShortMessage.NOTE_OFF) {
-                pitchStr = reductor.Pitch.toStr(message.getData1(), null, true);
+                pitchStr = Pitch.toStr(message.getData1(), true);
             } else {
                 pitchStr = "n/a";
             }
@@ -199,6 +199,7 @@ public class Util {
     }
 
 
+    @SuppressWarnings("StatementWithEmptyBody")
     static void printNotesSimple(Sequence sequence) {
 
         for (Track track : sequence.getTracks()) {

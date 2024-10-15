@@ -121,7 +121,7 @@ public class Chord {
         builder.append(": [");
 
         for (Note note : notes) {
-            builder.append(reductor.Pitch.toStr(note.pitch(), note.keyContext, true));
+            builder.append(reductor.Pitch.toStr(note.pitch(), true));
             builder.append(" ");
         }
 

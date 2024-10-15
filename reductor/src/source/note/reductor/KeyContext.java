@@ -82,7 +82,7 @@ public class KeyContext {
             keyString = mapMinor.get(accidentals);
         }
 
-        return Pitch.toInt(keyString, -1);
+        return Pitch.toInt(keyString + "-1");
 
     }
 

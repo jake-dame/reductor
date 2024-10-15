@@ -24,6 +24,7 @@ class IntervalTreeTest {
              07,20                        12,20
 
 
+        New insertion strategy (using medians) does this instead:
 
                        _____10,20_____
                       /               \
@@ -104,15 +105,24 @@ class IntervalTreeTest {
         llr = new Note(C, new Range(7,20));
         rrl = new Note(C, new Range(12,20));
 
-        root_sameRange = new Note(root,D);
-        l_sameRange = new Note(l,D);
-        r_sameRange = new Note(r,D);
-        ll_sameRange = new Note(ll,D);
-        lr_sameRange = new Note(lr,D);
-        rl_sameRange = new Note(rl,D);
-        rr_sameRange = new Note(rr,D);
-        llr_sameRange = new Note(llr,D);
-        rrl_sameRange = new Note(rrl,D);
+        root_sameRange = new Note(root);
+        root_sameRange.setPitch(D);
+        l_sameRange = new Note(l);
+        l_sameRange.setPitch(D);
+        r_sameRange = new Note(r);
+        r_sameRange.setPitch(D);
+        ll_sameRange = new Note(ll);
+        ll_sameRange.setPitch(D);
+        lr_sameRange = new Note(lr);
+        lr_sameRange.setPitch(D);
+        rl_sameRange = new Note(rl);
+        rl_sameRange.setPitch(D);
+        rr_sameRange = new Note(rr);
+        rr_sameRange.setPitch(D);
+        llr_sameRange = new Note(llr);
+        llr_sameRange.setPitch(D);
+        rrl_sameRange = new Note(rrl);
+        rrl_sameRange.setPitch(D);
 
         root_dup = new Note(root);
         l_dup = new Note(l);

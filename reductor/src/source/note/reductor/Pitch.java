@@ -16,7 +16,7 @@ public class Pitch {
     static final Map<Integer, String> pitchesItoS;
     //static final Map<String, Integer> pitchesStoI;
 
-    static final Map<Integer, String> pitches;
+    //static final Map<Integer, String> pitches;
 
 
     static {
@@ -25,21 +25,21 @@ public class Pitch {
 
         accidentalsStoI = Map.of("bb", -2, "b", -1, "", 0, "#", 1, "x", 2);
 
-        pitches = Map.ofEntries(
-                Map.entry(0, "c"),
-                Map.entry(1, "c"),
-                Map.entry(2, "d"),
-                Map.entry(3, "d"),
-                Map.entry(4, "e"),
-                Map.entry(5, "f"),
-                Map.entry(6, "f"),
-                Map.entry(7, "g"),
-                Map.entry(8, "g"),
-                Map.entry(9, "a"),
-                Map.entry(10, "a"),
-                Map.entry(11, "b"),
-                Map.entry(12, "c")
-        );
+        //pitches = Map.ofEntries(
+        //        Map.entry(0, "c"),
+        //        Map.entry(1, "c"),
+        //        Map.entry(2, "d"),
+        //        Map.entry(3, "d"),
+        //        Map.entry(4, "e"),
+        //        Map.entry(5, "f"),
+        //        Map.entry(6, "f"),
+        //        Map.entry(7, "g"),
+        //        Map.entry(8, "g"),
+        //        Map.entry(9, "a"),
+        //        Map.entry(10, "a"),
+        //        Map.entry(11, "b"),
+        //        Map.entry(12, "c")
+        //);
 
         pitchesItoS = new HashMap<>();
         for (int num = 0; num < 128; num++) {
@@ -68,81 +68,121 @@ public class Pitch {
     private Pitch() { }
 
 
-    static String toStr(Number val, KeyContext keyContext, boolean showRegister) {
+    /**
+
+     * Converts a MIDI pitch integer value to a string (currently: non-diatonic spelling is always the sharped degree (Ionian mode)).
+     *
+     * @param val A valid MIDI pitch value (an int in {@code [0, 127]}.
+     * @param showRegister {@code true} if the string returned should be in alphanumeric notation (includes register); {@code false} if the string returned should just be the pitch.
+     * @return The string representation of {@code val}.
+     * @throws IllegalArgumentException If the passed value is not in {@code [0, 127]}.
+     */
+    static String toStr(Number val, boolean showRegister) {
 
         int intValue = val.intValue() & 0xFF;
         if (intValue > 127) {
             throw new IllegalArgumentException("pitch values must be between 0 and 127");
         }
 
-        String pitchStr = getPitchStr(intValue, keyContext);
+        String pitchStr = pitchesItoS.get(intValue);
 
         if (showRegister) {
             return pitchStr;
         } else {
-            return pitchStr.substring(0, pitchStr.length() - 1);
-        }
-
-    }
-
-
-    private static String getPitchStr(int intValue, KeyContext keyContext) {
-
-        String pitchStr = pitchesItoS.get(intValue);
-
-        if (keyContext != null) {
-
-            if (keyContext.isFlat()) {
-                int num = 42;
+            if (pitchStr.charAt(pitchStr.length() - 2) == '-') {
+                return pitchStr.substring(0, pitchStr.length() - 2);
+            } else {
+                return pitchStr.substring(0, pitchStr.length() - 1);
             }
-
         }
 
-        return pitchStr;
     }
 
+    /**
+     * Parses an {alphabetical} or alphanumeric string into its corresponding MIDI pitch value,
+     * which are in {@code [0, 127]}. Valid strings:
+     *
+     * <ul>
+     *     <li>Must have a pitch in upper or lower {@code ['A', 'G']}</li>
+     *     <li>May be followed by an accidental ({@code "#"}, {@code "b"}, {@code "x"}, or {@code "bb"})</li>
+     *     <li>May terminate with a register in {@code ['-1', '9']}; if none is given, default is the {@code -1} register</li>
+     *     <li>Min is {@code "C-1"} and max is {@code "G9"} (or valid enharmonic spellings)</li>
+     * </ul>
+     *
+     * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
+     * @return Returns the MIDI int value corresponding to the pitch described by {@code str}.
+     * @throws IllegalArgumentException If the input string is invalid.
+     */
+    static int toInt(String str) {
 
-    static int toInt(String str, int register) {
-
-        if (register < -1 || register > 9) {
-            throw new IllegalArgumentException("valid registers are in [-1,9]");
+        if (str == null || str.isEmpty() || str.length() > 5) {
+            throw new IllegalArgumentException("string is null, empty, or too long");
         }
 
-        // debug
-        if (str == null) {
-            System.out.println();
-            return -1;
-        }
-        // debug
-        str = str.trim().toLowerCase();
+        str = str.toLowerCase().trim();
 
-        if (str.isEmpty()  ||  str.length() > 3) {
-            throw new IllegalArgumentException("string is empty or too long");
+        // Clunky but checks special cases: valid enharmonic spellings of min/max.
+        switch (str) {
+            case "b#-2", "dbb-1": return 0;
+            case "bx-2": return 1;
+            case "fx9", "abb9": return 127;
         }
 
-        // These two checks are clunky but don't fit any (easy) algorithm neatly.
-        // They check for valid enharmonic spellings of min/max.
-        if (register == -1  &&  (str.equals("b#")  ||  str.equals("dbb"))) { return 0; }
-        if (register == 9  &&  (str.equals("fx")  ||  str.equals("abb"))) { return 127; }
-
-        Integer semitone = semitonesStoI.get( str.substring(0,1) );
+        Integer semitone = semitonesStoI.get(str.substring(0, 1));
         if (semitone == null) {
-            throw new IllegalArgumentException("invalid pitch (valid pitches are in upper/lower [A,G])");
+            throw new IllegalArgumentException("invalid pitch; valid pitches are in upper or lower ['a','g']");
         }
 
-        if (str.length() > 1) {
-            Integer accidentalAdjustment = accidentalsStoI.get( str.substring(1) );
-            if (accidentalAdjustment == null) {
-                throw new IllegalArgumentException("invalid accidental (valid accidentals are \"#\", \"b\", \"x\", or \"bb\")");
+        if (str.length() == 1) {
+            // It's just a pitch, so just return the pitch.
+            return semitone;
+        }
+
+        // Trim off the pitch char.
+        str = str.substring(1);
+
+        // Default register should just be -1.
+        int register = -1;
+        String accidental;
+
+        /*
+         Register is kind of messy because it can be either "-1" (two chars) or '0' - '9'
+         Afterward, we want just the accidental symbol left over, since it will be easiest to
+         parse that on its own (since it can also be 1 (e.g. "#") or 2 chars (e.g. "bb").
+        */
+        String[] arr = new String[2];
+        if (str.contains("-")) {
+            if (str.charAt(str.length() - 1) != '1') {
+                throw new IllegalArgumentException("if there is a hyphen it needs to apply to 1");
+            } else {
+                accidental = str.split("-")[0];
             }
-            semitone += accidentalAdjustment;
+        } else {
+            char last = str.charAt(str.length() - 1);
+            if(Character.isDigit(last)) {
+               if(last < '0' || last > '9') {
+                   throw new IllegalArgumentException("register char must be in ['-1','9']");
+               } else {
+                   register = last - '0';
+                   accidental = str.substring(0, str.length() - 1);
+               }
+            } else {
+                accidental = str;
+            }
         }
 
-        if (register == 9 && semitone > 7) {
-            throw new IllegalArgumentException("G is the highest valid pitch in register 9");
+        Integer accidentalAdjustment = accidentalsStoI.get(accidental);
+        if (accidentalAdjustment == null) {
+            throw new IllegalArgumentException("invalid accidental; can be one of the following: \"#\", \"b\", \"x\", or \"bb\"");
         }
 
-        return semitone + (register + 1) * 12;
+        /*
+         Midi registers are sort of offset, start at -1; so we add one and it makes the math correct (e.g. -1
+         is really the zero-eth register, really, so -1 + 1 * 12 = 0, plus the semitone,
+         plus -2,-1,0,1, or 2 depending on the value returned for accidentalAdjustment.
+        */
+        return semitone + ((register + 1) * 12) + accidentalAdjustment;
+
     }
 
 

@@ -14,7 +14,8 @@ public abstract class Event<T extends MidiMessage> {
 
     MidiEvent event;
     T message;
-    int trackIndex;
+    final int trackIndex;
+    //final String trackName; // TODO
     final long tick;
 
 
@@ -45,7 +46,9 @@ public abstract class Event<T extends MidiMessage> {
 
 
     public long tick() {
+
         return this.tick;
+
     }
 
 

@@ -12,8 +12,8 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
     NoteEvent partner;
     boolean paired;
 
-    //KeySignatureEvent key; // TODO
-    //TimeSignatureEvent time; // TODO
+    KeySignatureEvent key; // todo
+    TimeSignatureEvent time; // todo
 
 
     NoteEvent(MidiEvent event, int trackIndex) {
@@ -23,6 +23,9 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
         this.velocity = this.message.getData2();
         this.partner = null;
         this.paired = false;
+
+        this.key = null; // todo
+        this.time = null; // todo
 
     }
 

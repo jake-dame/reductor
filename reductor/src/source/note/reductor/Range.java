@@ -2,7 +2,7 @@ package reductor;
 
 import java.util.Objects;
 
-public class Range implements Comparable<Range> {
+public class Range implements Comparable<Range>, Ranged {
 
 
     private final long low;
@@ -98,6 +98,14 @@ public class Range implements Comparable<Range> {
     @Override
     public String toString() {
         return "[" + low + ", " + high + "]";
+    }
+
+
+    @Override
+    public Range range() {
+
+        return this;
+
     }
 
 

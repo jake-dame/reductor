@@ -18,6 +18,8 @@ public abstract class Event<T extends MidiMessage> {
     //final String trackName; // TODO
     final long tick;
 
+    String trackName;
+
 
     Event(MidiEvent event, int trackIndex) {
 

@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Can represent a pitch, or a pair of MIDI events (ON + OFF) as a single entity.
  */
-public class Note implements Comparable<Note> {
+public class Note implements Comparable<Note>, Ranged {
 
 
     private final Range range;
@@ -104,7 +104,7 @@ public class Note implements Comparable<Note> {
 
     }
 
-
+    @Override
     public Range range() {
 
         return this.range == null ? null : new Range(this.range);

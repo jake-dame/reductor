@@ -32,7 +32,7 @@ import java.util.List;
               ^
            (upper) median
 
-     So if I used 2 to split my subtree, the tree would look like this:
+     So if I used `2` to split my subtree, the tree would look like this:
 
 
                           2
@@ -53,6 +53,7 @@ import java.util.List;
      This allows for accurate median selection to build the tree so that it is keyed on these ranges and balanced.
      After the scaffolding is constructed, the notes themselves are added using a basic query algorithm for
      intervals which takes lgN time.
+
     */
 
 

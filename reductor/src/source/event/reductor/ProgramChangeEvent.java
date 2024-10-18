@@ -13,13 +13,26 @@ public class ProgramChangeEvent extends ChannelEvent {
 
         instruments = Map.ofEntries(
                 Map.entry(0x0, "acoustic grand piano"),
+                Map.entry(0x6, "harpsichord"),
+                Map.entry(0x20, "acoustic bass"),
+                Map.entry(0x28, "violin"),
+                Map.entry(0x29, "viola"),
+                Map.entry(0x2A, "cello"),
+                Map.entry(0x2B, "contrabass"),
+                Map.entry(0x2C, "tremolo strings"),
+                Map.entry(0x2D, "pizzicato strings"),
                 Map.entry(0x2F, "timpani"),
                 Map.entry(0x30, "string ensemble 1"),
                 Map.entry(0x34, "choir aahs"),
+                Map.entry(0x38, "trumpet"),
                 Map.entry(0x39, "trombone"),
+                Map.entry(0x3B, "muted trumpet"),
+                Map.entry(0x3C, "french horn"),
                 Map.entry(0x44, "oboe"),
                 Map.entry(0x46, "bassoon"),
-                Map.entry(0x47, "clarinet")
+                Map.entry(0x47, "clarinet"),
+                Map.entry(0x48, "piccolo"),
+                Map.entry(0x49, "flute")
         );
 
     }

@@ -25,14 +25,8 @@ public class Piece {
 
     // Composite lists
     ArrayList<Event> allEvents;
-    ArrayList<MetaEvent> metaEvents;
-    ArrayList<ChannelEvent> channelEvents;
-
-    // Channel events
-    ArrayList<NoteOnEvent> noteOnEvents;
-    ArrayList<NoteOffEvent> noteOffEvents;
-    ArrayList<ControlChangeEvent> controlChangeEvents;
-    ArrayList<ProgramChangeEvent> programChangeEvents;
+    ArrayList<MetaEvent> allMetaEvents;
+    ArrayList<ChannelEvent> allChannelEvents;
 
     // Meta events
     ArrayList<TextEvent> textEvents;
@@ -40,6 +34,13 @@ public class Piece {
     ArrayList<SetTempoEvent> setTempoEvents;
     ArrayList<KeySignatureEvent> keySignatureEvents;
     ArrayList<TimeSignatureEvent> timeSignatureEvents;
+
+    // Channel events
+    ArrayList<NoteOnEvent> noteOnEvents;
+    ArrayList<NoteOffEvent> noteOffEvents;
+    ArrayList<ControlChangeEvent> controlChangeEvents;
+    ArrayList<ProgramChangeEvent> programChangeEvents;
+
 
     // List of Notes
     ArrayList<Note> notes;
@@ -104,14 +105,14 @@ public class Piece {
         this.allEvents = new ArrayList<>();
 
         // Channel
-        this.channelEvents = new ArrayList<>();
+        this.allChannelEvents = new ArrayList<>();
         this.noteOnEvents = new ArrayList<>();
         this.noteOffEvents = new ArrayList<>();
         this.controlChangeEvents = new ArrayList<>();
         this.programChangeEvents = new ArrayList<>();
 
         // Meta
-        this.metaEvents = new ArrayList<>();
+        this.allMetaEvents = new ArrayList<>();
         this.textEvents = new ArrayList<>();
         this.trackNameEvents = new ArrayList<>();
         this.setTempoEvents = new ArrayList<>();
@@ -119,6 +120,8 @@ public class Piece {
         this.timeSignatureEvents = new ArrayList<>();
 
         this.notes = new ArrayList<>();
+
+        this.resolution = sequence.getResolution();
 
         sortEvents();
 
@@ -129,27 +132,38 @@ public class Piece {
     }
 
 
+    // todo
+    ArrayList<NoteOnEvent> unpaired;
+    TrackNameEvent trackNameEvent = null;
+    KeySignatureEvent keySignatureEvent = null;
+    TimeSignatureEvent timeSignatureEvent = null;
+    int currentPort = -1;
+    ArrayList<MidiEvent> port_change = new ArrayList<>();
+    ArrayList<MidiEvent> eot = new ArrayList<>();
+    // todo
+
+
+    // TODO could be implemented using a map or chaining hash table?
     private void sortEvents() {
 
         Track[] tracks = this.sequence.getTracks();
 
-        // TODO could be implemented using a map or chaining hash table?
-        ArrayList<NoteOnEvent> unpaired = new ArrayList<>();
-
         for (int trackIndex = 0; trackIndex < tracks.length; trackIndex++) {
             Track track = tracks[trackIndex];
-            //debug
+            // todo
             long lastTick = 0;
             long currentTick;
-            //debug
+            // todo
+
+            this.unpaired = new ArrayList<>();
 
             for (int eventIndex = 0; eventIndex < track.size(); eventIndex++) {
                 MidiEvent event = track.get(eventIndex);
 
-                // debug
+                // todo
                 currentTick = event.getTick();
                 assert currentTick >= lastTick;
-                // debug
+                // todo
 
                 Event newEvent;
 
@@ -157,13 +171,13 @@ public class Piece {
                     case ShortMessage _ -> {
                         newEvent = sortChannelEvent(event, trackIndex, unpaired);
                         if (newEvent != null) {
-                            this.channelEvents.add((ChannelEvent) newEvent);
+                            this.allChannelEvents.add((ChannelEvent) newEvent);
                         }
                     }
                     case MetaMessage _ -> {
                         newEvent = sortMetaEvent(event, trackIndex);
                         if (newEvent != null) {
-                            this.metaEvents.add((MetaEvent) newEvent);
+                            this.allMetaEvents.add((MetaEvent) newEvent);
                         }
                     }
                     default -> { throw new RuntimeException("Event with sysex or unknown message type: " + event.getMessage()); }
@@ -173,76 +187,15 @@ public class Piece {
                     this.allEvents.add(newEvent);
                 }
 
-                // debug
+                // todo
                 lastTick = currentTick;
-                // debug
+                // todo
 
             }
 
         }
 
         assert unpaired.isEmpty();
-
-    }
-
-
-    private ChannelEvent sortChannelEvent(MidiEvent event, int trackIndex, ArrayList<NoteOnEvent> unpaired) {
-
-        ShortMessage message = (ShortMessage) event.getMessage();
-        int channelMessageType = message.getCommand();
-
-        if (channelMessageType == NOTE_ON  &&  message.getData2() == 0) {
-            try {
-                message.setMessage(NOTE_OFF, message.getChannel(), message.getData1(), message.getData2());
-            } catch (InvalidMidiDataException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        ChannelEvent newEvent;
-
-        switch (channelMessageType) {
-            case NOTE_ON -> {
-                newEvent = new NoteOnEvent(event, trackIndex);
-                unpaired.add((NoteOnEvent) newEvent);
-                this.noteOnEvents.add((NoteOnEvent) newEvent);
-            }
-            case NOTE_OFF -> {
-                newEvent = new NoteOffEvent(event, trackIndex);
-                findNoteOn((NoteOffEvent) newEvent, unpaired);
-                this.noteOffEvents.add((NoteOffEvent) newEvent);
-            }
-            case CONTROL_CHANGE -> {
-                newEvent = new ControlChangeEvent(event, trackIndex);
-                this.controlChangeEvents.add((ControlChangeEvent) newEvent);
-            }
-            case PROGRAM_CHANGE -> {
-                newEvent = new ProgramChangeEvent(event, trackIndex);
-                this.programChangeEvents.add((ProgramChangeEvent) newEvent);
-            }
-            default -> throw new IllegalArgumentException("UNKNOWN SHORT MESSAGE TYPE: 0x" + Integer.toHexString(channelMessageType));
-        }
-
-        return newEvent;
-
-    }
-
-
-    private void findNoteOn(NoteOffEvent off, ArrayList<NoteOnEvent> unpaired) {
-
-        for (int i = unpaired.size() - 1; i >= 0; i--) {
-            NoteOnEvent on = unpaired.get(i);
-            assert !on.paired();
-
-            if (on.pitch() == off.pitch()  &&  on.tick() < off.tick()) {
-                NoteEvent.assignPartners(on, off);
-                this.notes.add(new Note(on.pitch(), new Range(on.tick(), off.tick())));
-                return;
-            }
-
-        }
-
-        throw new RuntimeException("reached end of list and note on not found");
 
     }
 
@@ -260,6 +213,7 @@ public class Piece {
                 this.textEvents.add((TextEvent) newEvent);
             }
             case TRACK_NAME -> {
+                this.trackNameEvent = new TrackNameEvent(event, trackIndex); // todo
                 newEvent = new TrackNameEvent(event, trackIndex);
                 this.trackNameEvents.add((TrackNameEvent) newEvent);
             }
@@ -268,14 +222,22 @@ public class Piece {
                 this.setTempoEvents.add((SetTempoEvent) newEvent);
             }
             case TIME_SIGNATURE -> {
+                this.timeSignatureEvent = new TimeSignatureEvent(event, trackIndex); // todo
                 newEvent = new TimeSignatureEvent(event, trackIndex);
                 this.timeSignatureEvents.add((TimeSignatureEvent) newEvent);
             }
             case KEY_SIGNATURE -> {
+                this.keySignatureEvent = new KeySignatureEvent(event, trackIndex); // todo
                 newEvent = new KeySignatureEvent(event, trackIndex);
                 this.keySignatureEvents.add((KeySignatureEvent) newEvent);
             }
-            case PORT_PREFIX, END_OF_TRACK -> {
+            case PORT_PREFIX -> {
+                this.currentPort = message.getData()[0] & 0xff;
+                port_change.add(event);
+                return null;
+            }
+            case END_OF_TRACK -> {
+                eot.add(event);
                 return null;
             }
             default -> {
@@ -284,6 +246,81 @@ public class Piece {
         }
 
         return newEvent;
+
+    }
+
+
+    private ChannelEvent sortChannelEvent(MidiEvent event, int trackIndex, ArrayList<NoteOnEvent> unpaired) {
+
+        ShortMessage message = (ShortMessage) event.getMessage();
+
+        if (message.getCommand() == NOTE_ON  &&  message.getData2() == 0) {
+            try {
+                message.setMessage(NOTE_OFF, message.getChannel(), message.getData1(), message.getData2());
+            } catch (InvalidMidiDataException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        int channelMessageType = message.getCommand();
+
+        ChannelEvent newEvent;
+
+        switch (channelMessageType) {
+            case NOTE_ON -> {
+                newEvent = new NoteOnEvent(event, trackIndex);
+                newEvent.trackName = trackNameEvent.dataString();
+                unpaired.add((NoteOnEvent) newEvent);
+                this.noteOnEvents.add((NoteOnEvent) newEvent);
+            }
+            case NOTE_OFF -> {
+                newEvent = new NoteOffEvent(event, trackIndex);
+                findNoteOn((NoteOffEvent) newEvent, unpaired);
+                this.noteOffEvents.add((NoteOffEvent) newEvent);
+            }
+            case CONTROL_CHANGE -> {
+                newEvent = new ControlChangeEvent(event, trackIndex);
+                this.controlChangeEvents.add((ControlChangeEvent) newEvent);
+            }
+            case PROGRAM_CHANGE -> {
+                newEvent = new ProgramChangeEvent(event, trackIndex);
+                this.programChangeEvents.add((ProgramChangeEvent) newEvent);
+            }
+            default -> {
+                throw new IllegalArgumentException("UNKNOWN SHORT MESSAGE TYPE: 0x" + Integer.toHexString(channelMessageType));
+            }
+        }
+
+        return newEvent;
+
+    }
+
+
+    private void findNoteOn(NoteOffEvent off, ArrayList<NoteOnEvent> unpaired) {
+
+        for (int i = unpaired.size() - 1; i >= 0; i--) {
+            NoteOnEvent on = unpaired.get(i);
+            assert !on.paired();
+
+            if (on.pitch() == off.pitch()  &&  on.tick() < off.tick()) {
+                this.notes.add(new Note(on.pitch(), new Range(on.tick(), off.tick())));
+                unpaired.remove(on);
+
+                // todo
+                on.partner = off;
+                off.partner = on;
+                on.paired = off.paired = true;
+                on.trackName = this.trackNameEvent.dataString();
+                on.key = this.keySignatureEvent;
+                on.time = this.timeSignatureEvent;
+                // todo
+
+                return;
+            }
+
+        }
+
+        throw new RuntimeException("reached end of list and note on not found");
 
     }
 

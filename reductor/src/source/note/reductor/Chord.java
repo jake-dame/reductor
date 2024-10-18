@@ -13,7 +13,7 @@ import static reductor.Piece.notesToMidiEvents;
  * intervals that comprise chords). The number of {@code Note} elements in this will be pretty small (presumably less than 15),
  * so the "collection" operations for this class are kept pretty straightforward.
  */
-public class Chord {
+public class Chord implements Ranged {
 
     /// The notes that comprise this {@code Chord} in ascending order
     ArrayList<Note> notes;
@@ -33,7 +33,7 @@ public class Chord {
 
         assert notes != null;
 
-        this.range = getRange(notes);
+        this.range = findSpan(notes);
 
         // Ascending by pitch
         Collections.sort(notes);
@@ -51,7 +51,7 @@ public class Chord {
     }
 
 
-    private Range getRange(ArrayList<Note> notes) {
+    private Range findSpan(ArrayList<Note> notes) {
 
         long min = 0;
         long max = 0;
@@ -134,9 +134,10 @@ public class Chord {
     }
 
 
+    @Override
     public Range range() {
 
-        return this.range;
+        return this.range == null ? null : new Range(this.range);
 
     }
 

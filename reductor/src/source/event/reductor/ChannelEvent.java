@@ -30,4 +30,13 @@ public abstract class ChannelEvent extends Event<ShortMessage> {
     }
 
 
+    //todo
+    public int channel() {
+
+        return this.channel;
+
+    }
+    //todo
+
+
 }

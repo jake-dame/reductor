@@ -56,6 +56,8 @@ T  12 -- H
 
 */
 
+// heuristics: try lowest note. can be tonic, fifth
+
 public enum Degree {
 
     TONIC(0),

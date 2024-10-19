@@ -91,13 +91,17 @@ public class Range implements Comparable<Range>, Ranged {
 
     @Override
     public int hashCode() {
+
         return Objects.hash(low, high);
+
     }
 
 
     @Override
     public String toString() {
+
         return "[" + low + ", " + high + "]";
+
     }
 
 

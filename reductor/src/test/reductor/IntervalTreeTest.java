@@ -85,7 +85,7 @@ class IntervalTreeTest {
     Note rrl_dup;
 
     /// The tree
-    private IntervalTree testTree;
+    private IntervalTree<Note> testTree;
 
     @BeforeEach
     void setup() {
@@ -175,9 +175,7 @@ class IntervalTreeTest {
     @Test
     void testConstructWithTestNotes() {
 
-
-
-        IntervalTree testTree = new IntervalTree(testNotes);
+        IntervalTree<Note> testTree = new IntervalTree<>(testNotes);
 
         assertTrue(orderIsMaintained(testTree), "in order traversal list should be in ascending order by Comp");
         assertEquals(testNotes.size(), testTree.numNodes(), "number of nodes at this point should be equal to testNotes size (1:1 note:node)");
@@ -188,7 +186,7 @@ class IntervalTreeTest {
     @Test
     void testConstructWithQuasiDups() {
 
-        IntervalTree testTree = new IntervalTree(quasiDups);
+        IntervalTree<Note> testTree = new IntervalTree<>(quasiDups);
 
         assertTrue(orderIsMaintained(testTree), "in order traversal list should be in ascending order by Comp");
         assertEquals(testNotes.size(), testTree.numNodes(), "number of nodes at this point should still be equal to testNotes size (2 notes per node, but node count should not have changed)");
@@ -200,7 +198,7 @@ class IntervalTreeTest {
     @Test
     void testConstructWithDups() {
 
-        IntervalTree testTree = new IntervalTree(dups);
+        IntervalTree<Note> testTree = new IntervalTree<>(dups);
 
         assertTrue(orderIsMaintained(testTree), "in order traversal list should be in ascending order by Comp");
         assertEquals(testNotes.size(), testTree.numNodes(), "number of nodes at this point should still be equal to testNotes size (2 notes per node, but node count should not have changed; dups should not have been added)");
@@ -210,7 +208,7 @@ class IntervalTreeTest {
 
 
 
-    boolean orderIsMaintained(IntervalTree tree) {
+    boolean orderIsMaintained(IntervalTree<Note> tree) {
 
         // Notes are Comparable by pitch, not range. And since toList returns Notes, this seemed easiest
         var comp = new Comparator<Note>() {

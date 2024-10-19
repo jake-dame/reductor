@@ -2,6 +2,13 @@ package reductor;
 
 public class Rhythm {
 
+    TimeSignatureEvent timeSignatureEvent;
+    int resolution;
+
+    Rhythm(int resolution, TimeSignatureEvent timeSignatureEvent) {
+        this.resolution = resolution;
+        this.timeSignatureEvent = timeSignatureEvent;
+    }
 
     //private void assignRhythmValues() {
     //

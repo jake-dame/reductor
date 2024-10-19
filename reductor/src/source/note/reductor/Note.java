@@ -1,18 +1,19 @@
 package reductor;
 
+import javax.sound.midi.MidiEvent;
+import java.util.ArrayList;
 import java.util.Objects;
 
 
 /**
  * Can represent a pitch, or a pair of MIDI events (ON + OFF) as a single entity.
  */
-public class Note implements Comparable<Note>, Ranged {
+public class Note implements Ranged, Comparable<Note>, Noted {
 
 
     private final Range range;
     private int pitch;
 
-    // TODO
     Rhythm rhythm;
     KeyContext keyContext;
     Degree degree;
@@ -53,10 +54,18 @@ public class Note implements Comparable<Note>, Ranged {
     }
 
 
+    Note(int pitch, Range range, Rhythm rhythm, KeyContext keyContext, Degree degree) {
+        this(pitch, range);
+        this.rhythm = rhythm;
+        this.keyContext = keyContext;
+        this.degree = degree;
+    }
+
+
     /// Copy constructor
     Note(Note note) {
 
-        this(note.pitch, note.range);
+        this(note.pitch, note.range, note.rhythm, note.keyContext, note.degree);
 
     }
 
@@ -163,6 +172,24 @@ public class Note implements Comparable<Note>, Ranged {
         } else {
             throw new NullPointerException("range is null");
         }
+
+    }
+
+
+    @Override
+    public ArrayList<Note> getNotes() {
+
+        var list = new ArrayList<Note>();
+        list.add(this);
+        return list;
+
+    }
+
+
+    @Override
+    public ArrayList<MidiEvent> getNotesAsMidiEvents() {
+
+        return Piece.notesToMidiEvents(this.getNotes());
 
     }
 

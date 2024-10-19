@@ -58,9 +58,9 @@ public class KeyContext {
 
     private KeyContext(KeySignatureEvent event) {
 
-        this.mode = event.mode;
-        this.accidentals = event.accidentals;
-        this.tonic = getTonic();
+            this.mode = event.mode;
+            this.accidentals = event.accidentals;
+            this.tonic = getTonic();
 
     }
 

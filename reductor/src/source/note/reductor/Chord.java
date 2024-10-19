@@ -3,6 +3,7 @@ package reductor;
 import javax.sound.midi.MidiEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 import static reductor.Piece.notesToMidiEvents;
 
@@ -13,9 +14,9 @@ import static reductor.Piece.notesToMidiEvents;
  * intervals that comprise chords). The number of {@code Note} elements in this will be pretty small (presumably less than 15),
  * so the "collection" operations for this class are kept pretty straightforward.
  */
-public class Chord implements Ranged {
+public class Chord implements Ranged, Comparable<Chord>, Noted {
 
-    /// The notes that comprise this {@code Chord} in ascending order
+    /// The notes that comprise this {@code Chord} in ascending order by pitch
     ArrayList<Note> notes;
 
     /// The {@code Note} object representing the lowest pitch in this {@code Chord}
@@ -27,16 +28,20 @@ public class Chord implements Ranged {
     /// The window of time this chord's notes spans
     Range range;
 
+    /// This is the actual window that the chord was created using
+    Range chunk;
+
 
     /// Given a list of notes, constructs a {@code Chord} object
-    Chord(ArrayList<Note> notes) {
+    Chord(ArrayList<Note> notes, Range chunk) {
 
         assert notes != null;
 
+        this.chunk = chunk;
+
         this.range = findSpan(notes);
 
-        // Ascending by pitch
-        Collections.sort(notes);
+        notes.sort( Comparator.comparingInt(Note::pitch) );
 
         this.notes = notes;
 
@@ -67,7 +72,11 @@ public class Chord implements Ranged {
 
         }
 
-        return new Range(min, max);
+        if (min >= max) {
+            return null;
+        } else {
+            return new Range(min, max);
+        }
 
     }
 
@@ -159,6 +168,37 @@ public class Chord implements Ranged {
     public int size() {
 
         return this.notes.size();
+
+    }
+
+
+    @Override
+    public int compareTo(Chord o) {
+
+        return this.range.compareTo(o.range());
+
+    }
+
+
+    public Note getNote(int chordIndex) {
+
+        return this.notes.get(chordIndex);
+
+    }
+
+
+    @Override
+    public ArrayList<Note> getNotes() {
+
+        return null;
+
+    }
+
+
+    @Override
+    public ArrayList<MidiEvent> getNotesAsMidiEvents() {
+
+        return Piece.notesToMidiEvents(this.getNotes());
 
     }
 

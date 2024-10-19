@@ -29,7 +29,7 @@ class ChordTest {
     @Test
     void TestConstruction() {
 
-        Chord chord = new Chord(list_CDFGB);
+        Chord chord = new Chord(list_CDFGB, null);
         assertEquals(list_CDFGB.getFirst().pitch(), chord.low().pitch());
         assertEquals(list_CDFGB.getLast().pitch(), chord.high().pitch());
         assertEquals(0, chord.range.low());

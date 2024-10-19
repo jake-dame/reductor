@@ -74,18 +74,21 @@ public class Util {
 
         Sequence out;
         try {
-            out = new Sequence(Sequence.PPQ, resolution, 1);
+            out = new Sequence(Sequence.PPQ, resolution);
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
 
-        Track track = out.getTracks()[0];
+        Track track = out.createTrack();
 
         for (MidiEvent event : list) {
-            track.add( DeepCopy.copyEvent(event) );
+            //track.add( DeepCopy.copyEvent(event) );
+            track.add(event);
+            System.out.println(event.getTick());
         }
 
         return out;
+
     }
 
 
@@ -275,6 +278,13 @@ public class Util {
 
             System.out.print(Integer.toHexString(b) + " ");
         }
+
+    }
+
+
+    void gamut() {
+
+
 
     }
 

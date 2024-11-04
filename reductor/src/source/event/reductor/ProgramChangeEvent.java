@@ -14,6 +14,8 @@ public class ProgramChangeEvent extends ChannelEvent {
         instruments = Map.ofEntries(
                 Map.entry(0x0, "acoustic grand piano"),
                 Map.entry(0x6, "harpsichord"),
+                Map.entry(0x13, "church organ"),
+                Map.entry(0xE, "tubular bell"),
                 Map.entry(0x20, "acoustic bass"),
                 Map.entry(0x28, "violin"),
                 Map.entry(0x29, "viola"),
@@ -21,8 +23,11 @@ public class ProgramChangeEvent extends ChannelEvent {
                 Map.entry(0x2B, "contrabass"),
                 Map.entry(0x2C, "tremolo strings"),
                 Map.entry(0x2D, "pizzicato strings"),
+                Map.entry(0x2E, "orchestral strings/harp"),
                 Map.entry(0x2F, "timpani"),
                 Map.entry(0x30, "string ensemble 1"),
+                Map.entry(0x31, "string ensemble 2/slow strings"),
+                Map.entry(0x32, "synth strings 1"),
                 Map.entry(0x34, "choir aahs"),
                 Map.entry(0x38, "trumpet"),
                 Map.entry(0x39, "trombone"),
@@ -41,22 +46,16 @@ public class ProgramChangeEvent extends ChannelEvent {
     int instrumentCode;
 
 
-    ProgramChangeEvent(MidiEvent event, int trackIndex) {
-
-        super(event, trackIndex);
-        this.instrumentCode = this.message.getData1();
-
+    ProgramChangeEvent(MidiEvent event) {
+        super(event);
+        this.instrumentCode = this.message().getData1();
     }
 
 
     @Override
     String dataString() {
-
-        return super.dataString()
-                + instrumentCodeToString(this.instrumentCode);
-
+        return super.dataString() + instrumentCodeToString(this.instrumentCode);
     }
-
 
     String instrumentCodeToString(int instrumentCode) {
 

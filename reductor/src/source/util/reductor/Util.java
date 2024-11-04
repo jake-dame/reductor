@@ -84,7 +84,7 @@ public class Util {
         for (MidiEvent event : list) {
             //track.add( DeepCopy.copyEvent(event) );
             track.add(event);
-            System.out.println(event.getTick());
+            System.out.println("deep copying @" + event.getTick());
         }
 
         return out;
@@ -203,7 +203,7 @@ public class Util {
 
 
     @SuppressWarnings("StatementWithEmptyBody")
-    static void printNotesSimple(Sequence sequence) {
+    static void printNotesColumnar(Sequence sequence) {
 
         for (Track track : sequence.getTracks()) {
             for (int i = 0; i < track.size(); i++) {
@@ -277,6 +277,32 @@ public class Util {
             }
 
             System.out.print(Integer.toHexString(b) + " ");
+        }
+
+    }
+
+
+    static void printNotesLinear(Sequence sequence) {
+
+        for(int j = 0; j < sequence.getTracks().length; j++) {
+            Track track = sequence.getTracks()[j];
+            System.out.println("\nTrack "+j);
+            for (int i = 0; i < track.size(); i++) {
+                MidiEvent event = track.get(i);
+                MidiMessage message = event.getMessage();
+
+                if (message instanceof ShortMessage sm) {
+                    if (sm.getCommand() == ShortMessage.NOTE_ON  && sm.getData2() != 0) {
+                        System.out.print(Pitch.toStr(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + " : ");
+                    }
+
+                    if (sm.getCommand() == ShortMessage.NOTE_OFF || (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0)) {
+                        System.out.print("(" + Pitch.toStr(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + ") : ");
+                    }
+                }
+
+            }
+            System.out.println("");
         }
 
     }

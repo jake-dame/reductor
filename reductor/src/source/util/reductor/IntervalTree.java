@@ -4,99 +4,129 @@ import java.util.*;
 
 
     /*
+        This is an implementation of an interval tree, mostly following the approach described in CLR, where each
+        node is keyed on a single interval, stores its associated data as a List, and also stores the max right endpoint
+        of the subtree rooted at that node (which allows, using the interval trichotomy, for ignoring the left subtree
+        of certain nodes at times, leading to logN/binary searches.
 
-    This tree stores `Note` objects.
+        The only exposed functionality for this tree besides construction, which can only be done once, is query, as
+        this meets the needs of the program.
 
-    `Note` objects represented a unison of two corresponding MIDI Note On/Off events, and have three
-    important pieces of data represented by two member fields - start tick, end tick, and pitch, represented
-    by the range (type Range - just an interval object) and pitch (int) fields.
+        The purpose of the tree is to store objects representing different musical elements (e.g. notes, chords,
+        measures, etc.). We will use notes (which in this program are represented by the Note class, which extends
+        both Range and Comparable<Note>) as an example of the unique challenges of implementing this data structure
+        in a useful way.
 
-    The unique challenges of this tree are:
+        Additional context:
+        1.The Ranged interface looks like this:
 
-    1. Although there will be no exact duplicates (MIDI spec does not allow exact duplicate events),
-    there will be a handful of elements with duplicate ranges (different pitches, but occurring at the same time),
-    such as in a chord: C-E-G-Bb-C may be represented by 5 different Note objects, but have identical ranges,
-    such as [0,480], because they are played, say, by a pianist as a chord in the left hand.
+            public interface Ranged {
+                Range range(); // this is merely a getter for an object's Range field
+            }
 
-    2. Depending on the thickness of the textures in the piece (a Bach violin sonata vs. a Mahler symphony),
-    storing every single Note object in its own Node could increase the height of the tree in a not-insignificant
-    way. Therefore, Note objects with identical ranges are stored in a list at each node.
+        2. All Range objects represent a musical element's start and end values, in terms of MIDI ticks:
 
-    3. Constructing the tree to be balanced is also challenging due to duplicate clustering. For instance
-    (using integers), a list might look like this:
+            A range representing [0,480] in turn represents a musical element whose starting/ON tick is at 0 and
+            ending/OFF tick is at 480.
 
-        011111234567  // len 12
-              ^
-           (upper) median
+        3. The tree is not self-balancing because the use cases for this tree do not involve addition or removal;
+        they always involve construction of a tree from prepared and static data.
 
-     So if I used `2` to split my subtree, the tree would look like this:
+        Unique challenges:
 
+            1. While we can safely ignore/prevent exact duplicates (say two Note objects both representing identical
+            ranges and pitches), Notes with different pitches but identical ranges should all be stored in the tree.
+            Therefore: C4 [0,480], E4 [0,480], and G4 [0,480] should all be added to the list at the Node for [0,480]; i
+            .e., the Node at [0,480] contains the notes C4, E4, and G4. There should never be duplicates in the list
+            at the Node, since those would be cases of notes with exactly equal ranges *and* pitches (which are both
+            not allowed on the same channel in the MIDI spec, in addition to be problematic for this program).
 
-                          2
-                      1*      5
-                    0       3   6
-                           2 4   7
+            2. Construction using the recursive list/median approach is further complicated by the fact that many
+            duplicate ranges may exist in a list of otherwise perfectly distinct elements. This causes clustering
+            that throws off the median calculation. The approach that I took to solve this is to construct the tree
+            from a Set of unique ranges represented in the List, creating a skeleton or scaffold of sorts, after
+            which each element is actually added. There is probably a way to do this all in one loop, but in terms of
+            clarity and maintainability, the former approach is better as the latter would be rather complicated and
+            verbose.
 
+            3. When querying (which is usually done in a sequential, "chunking" manner, notes that have long durations
+            whilst many other notes occur should not be added to a list of targets every single query; in other words,
+            a query window spanning the entire length of a piece which consists of 1 tied, lengthy note spanning the
+            entire length of the piece with 1000 other notes occurring at various points in the piece should still
+            only return a list of targets/matches of size 1001.
 
-           *Five 1's are stored in the list here
+        This implementation currently controls for exact duplicates using List.contains(), which is not optimal, but
+        I thought it better than enforcing the argument given to the constructor to be a Set, which would put more
+        data manipulation responsibility on classes not necessarily suited for data manipulation tasks.
 
-
-     For some MIDI sequences, the number of Note objects can easily be in the tens of thousands.
-
-     Although when compared to the numbers heavy-duty programs deal in this is not really that big of a deal,
-     I still wanted as balanced a tree as possible.
-
-     A "scaffolding" of this tree is constructed with a Set of ranges derived from the original list of elements.
-     This allows for accurate median selection to build the tree so that it is keyed on these ranges and balanced.
-     After the scaffolding is constructed, the elements themselves are added using a basic query algorithm for
-     intervals which takes lgN time.
-
+        I also experimented with using HashSets and TreeSets for the container in both Node.elements and the "matches"
+        container of the query() function. The problems were:
+            + HashSet is disastrous if elements are anything but perfectly immutable. While Range() objects are
+            themselves immutable, the objects that implement Ranged (such as Note and Chord) are *not*. The purpose
+            of this program at this point largely revolves around mutation of musical elements. At some point in the
+            future, this may be controlled for by constructing entirely new structures, but for now, I could not risk
+            using hashCode() with mutable objects.
+            + TreeSet uses an object's compareTo(). While all objects that implement Ranged, coincidentally, also
+            implement Comparable, their respective compareTo() methods are *not* always involving their Range fields.
+            For instance, Note objects compare by pitch, not by range. This led to very confusing test results before
+            I realized what the problem was (notes with the same pitch were not being added to the Set because their
+            compareTo() determined they were equal).
     */
+
+
+// todo the construction time complexity analysis is not accurate given the current implementation
+/**
+ * An interval tree (augmented BST) that can contain any object with a {@link reductor.Range}
+ * (i.e., implements the {@link reductor.Ranged} interface), e.g. {@link reductor.Note}, {@link reductor.Chord}, etc.
+ * <p>
+ * This implementation follows that which is described in CLR:
+ * <ul>
+ *     <li> Construction in O(NlogN) time </li>
+ *     <li> Queries in O(logN + m) time </li>
+ * </ul>
+ * <p>
+ * Since the purpose of this tree within the context of this application is to provide efficient
+ * look-up, it only provides query functionality, and can only be constructed once, from
+ * fixed data.
+ */
+public class IntervalTree<T extends Ranged> {
 
 
     /*
+        Natural ordering of T.range():
 
-        Primary ordering:              by low value
-        Secondary ordering:            by high value
-        Notes with duplicate ranges:   allowed if data associated with range is different
+            Primary ordering:              by low value
+            Secondary ordering:            by high value
+            Ts with duplicate ranges:      allowed as long as associated data is different (using equals())
 
-                   Range of          Interval
-                  current node:      to add:          Action:
+        Within context of tree insert/query operations:
 
-        Case 1.1:   [10,20]          [10,15]          Look left
-        Case 1.2:   [10,20]          [5,20]           Look left
-        Case 2:     [10,20]          [10,20]          Add to Current Node
-        Case 3.1:   [10,20]          [10,25]          Look right
-        Case 3.2:   [10,20]          [15,20]          Look right
+                        Range of        Interval
+                      current node:      to add:          Action:
 
+            Case 1.1:   [10,20]          [10,15]          Go left
+            Case 1.2:   [10,20]          [5,20]           Go left
+
+            Case 2:     [10,20]          [10,20]          Add to Current Node if not !equals()
+
+            Case 3.1:   [10,20]          [10,25]          Go right
+            Case 3.2:   [10,20]          [15,20]          Go right
     */
 
-/**
- * In implementation of an interval tree that sorts {@link reductor.Note}s
- * (objects constructed from MIDI events which contain, in part, a start/stop or low/high).
- * <p>
- * This is an augmented BST and follows the implementation described in CLR. Comparisons for addition
- * use a range's natural ordering (primary: low value; secondary: high value); queries are accomplished
- * in O(logN + k) time by ignoring subtrees where the max high value does not overlap the query, and where
- * k is the number of elements that match the query.
- * <p>
- * Since the purpose of this tree, within the context of this application, is to provide efficient
- * look-up, it only provides query() functionality, and can only be constructed once, from
- * fixed data.
- */
-public class IntervalTree<T extends Ranged & Comparable<T>> {
+
+    //region <Node>
 
 
     /// A binary node which represents a range/interval and stores a list of elements
-    private class Node implements Ranged {
+    class Node implements Ranged { // todo make private again
 
-        /// The {@link reductor.Range} (interval) this node represents
+        /// The {@link reductor.Range} (i.e., interval) this node represents
         Range range;
 
-        /// Max endpoint in subtree rooted at this node (used to ignore left pathways)
+        /// Max endpoint in subtree rooted at this node (used to ignore left subtrees during queries)
         long max;
 
-        /// This node's data (a Set of elements with the same range but differing pitches)
+        /// This node's data (a Set of elements with the same range but possibly differing pitches)
         List<T> elements;
 
         /// This node's left child
@@ -105,70 +135,45 @@ public class IntervalTree<T extends Ranged & Comparable<T>> {
         /// This node's right child
         Node right;
 
-        boolean queried;
 
-        /// Primary constructor which takes a {@link reductor.Note}
+        /// Primary constructor which takes a {@link reductor.Range}
         Node(Range range) {
-
             this.range = new Range(range);
-
             this.max = -1;
-
             this.left = null;
             this.right = null;
-
             this.elements = new ArrayList<>();
-
-            this.queried = false;
-
         }
 
-        // Mostly for debugging
         /// The number of elements this node holds
         int size() {
-
             return this.elements.size();
-
         }
 
-        /// Adds an element to this node
+        /// Adds an element to this node's list
         boolean add(T elem) {
-
-            int insertionIndex = Collections.binarySearch(this.elements, elem);
-
-            if (insertionIndex < 0) {
-                insertionIndex = -(insertionIndex + 1);
-            }
-
-            if (this.elements.contains(elem)) {
-                return false;
-            }
-
-            this.elements.add(insertionIndex, elem);
-
-            return true;
-
+            assert elem.range().equals(this.range());
+            if (this.elements.contains(elem)) { return false; }
+            return this.elements.add(elem);
         }
-
 
         @Override
         public String toString() {
-            return this.range.toString() + "(" + size() + ")";
+            return this.range.toString() + "[" + size() + "]";
         }
-
 
         @Override
         public Range range() {
-
-            return new Range(this.range);
-
+            return this.range;
         }
 
 
     }
+    //endregion
 
 
-    /// Root of this tree
+    // todo these should all be private
+    /// Root of this interval tree
     Node root;
 
     /// Size (number of nodes)
@@ -181,62 +186,77 @@ public class IntervalTree<T extends Ranged & Comparable<T>> {
     /// Primary constructor
     IntervalTree(ArrayList<T> elements) {
 
-        assert elements != null  &&  !elements.isEmpty();
+        if (elements == null) {
+            throw new NullPointerException("whatever was passed to IntervalTree constructor was null");
+        }
 
         numNodes = 0;
         numElements = 0;
-        root = buildScaffold(elements);
+
+        // Get a "set" of the ranges of the elements
+        ArrayList<Range> uniqueRanges = getUniqueRanges(elements);
+        // Ensure the list is sorted before doing median-based recursive construction
+        uniqueRanges.sort(null);
+
+        // Build the outline/structure/skeleton of the tree
+        root = buildSkeleton(uniqueRanges);
+
+        // Add the actual elements to the nodes' lists
         addAll(elements);
 
     }
 
 
-    private Node buildScaffold(ArrayList<T> elements) {
+    //region <Build>
 
-        ArrayList<Range> ranges = getUniqueRanges(elements);
 
-        ranges.sort(null);
+    /// Adds ranges of elements to Set to remove duplicate ranges, and gives back (sorted) List
+    private ArrayList<Range> getUniqueRanges(ArrayList<T> elements) {
 
-        return addScaffold(ranges, 0, ranges.size() - 1);
+        HashSet<Range> rangesSet = new HashSet<>();
+
+        // Remove duplicates
+        for (T elem : elements) {
+            rangesSet.add(elem.range());
+        }
+
+        // Convert back to List
+        return new ArrayList<>(rangesSet);
 
     }
 
 
-    private Node addScaffold(ArrayList<Range> ranges, int start, int end) {
+    /// Recursively constructs the structure of the tree; all nodes are still empty when this function returns
+    private Node buildSkeleton(ArrayList<Range> ranges) {
 
-        if (start > end) {
-            // Base case (this will effectually create leaf nodes by assigning the caller's left/right children as null)
+        return buildSkeleton(ranges, 0, ranges.size() - 1);
+
+    }
+
+
+    private Node buildSkeleton(ArrayList<Range> ranges, int firstIndex, int lastIndex) {
+
+        // e.g., firstIndex: 25; lastIndex: 24
+        if (firstIndex > lastIndex) {
+            // Base case (return a null child)
             return null;
         }
 
-        // 0 to 100 --> 50
-        int middleIndex = (start + end) / 2;
+        // e.g., 0 to 100 --> 50 (upper median)
+        int middleIndex = (firstIndex + lastIndex) / 2;
 
-        // add 50 here
-        Node node = new Node( ranges.get(middleIndex) );
+        // e.g., add 50 here (median of subtree rooted at this node)
+        Node node = new Node(ranges.get(middleIndex));
         numNodes++;
 
-        // start left subtree with 0 to 49
-        node.left = addScaffold(ranges, start, middleIndex - 1);
+        // e.g.,start left subtree with 0 to 49
+        node.left = buildSkeleton(ranges, firstIndex, middleIndex - 1);
 
-        // start right subtree with 51 to 100
-        node.right = addScaffold(ranges, middleIndex + 1, end);
+        // e.g.,start right subtree with 51 to 100
+        node.right = buildSkeleton(ranges, middleIndex + 1, lastIndex);
 
         // return the actual node you just created here once all of the functions you called have returned
         return node;
-
-    }
-
-
-    private ArrayList<Range> getUniqueRanges(ArrayList<T> elements) {
-
-        HashSet<Range> ranges = new HashSet<>();
-
-        for (T elem : elements) {
-            ranges.add(elem.range());
-        }
-
-        return new ArrayList<>(ranges);
 
     }
 
@@ -252,35 +272,43 @@ public class IntervalTree<T extends Ranged & Comparable<T>> {
 
     private void add(Node node, T elem) {
 
+        // Update node.max if elem to be added will set the new max right endpoint of elems in subtree rooted at
+        // this node
         if (node.max < elem.range().high()) {
             node.max = elem.range().high();
         }
 
-        if (node.range.equals(elem.range())) {
+        if (elem.range().compareTo(node.range()) < 0) {
+            if (node.left != null) {
+                add(node.left, elem);
+            }
+        } else if (elem.range().compareTo(node.range()) > 0)  {
+            if (node.right != null) {
+                add(node.right, elem);
+            }
+        } else {
+            // Only increment element count if node added elem (exact duplicates are not added)
             if (node.add(elem)) {
                 numElements++;
             }
         }
 
-        if(node.left == null  &&  node.right == null) {
-            // Base case
-            return;
-        }
-
-        if (node.left != null  &&  elem.range().compareTo(node.range) < 0) {
-            add(node.left, elem);
-        }
-
-        if (node.right != null) {
-            add(node.right, elem);
-        }
-
     }
+    //endregion
+
+
+    //region <Query>
 
 
     ArrayList<T> query (Range window) {
 
-        assert root != null  &&  window != null;
+        if (root == null) {
+            return new ArrayList<>();
+        }
+
+        if (window == null) {
+            throw new NullPointerException("null Range was passed to IntervalTree#query");
+        }
 
         ArrayList<T> matches = new ArrayList<>();
 
@@ -292,8 +320,11 @@ public class IntervalTree<T extends Ranged & Comparable<T>> {
     private ArrayList<T> query (Node node, Range window, ArrayList<T> matches) {
 
         if (window.overlaps(node.range)) {
-            matches.addAll(node.elements);
-            node.queried = true;
+            for (T elem : node.elements) {
+                if (!matches.contains(elem)) {
+                    matches.add(elem);
+                }
+            }
         }
 
         if (node.left == null  &&  node.right == null) {
@@ -311,71 +342,64 @@ public class IntervalTree<T extends Ranged & Comparable<T>> {
         return matches;
 
     }
+    //endregion
+
+
+    //region <Miscellaneous>
 
 
     /// Returns the tree as an ArrayList, using in-order traversal
     ArrayList<T> toList() {
-
         ArrayList<T> inOrderList = new ArrayList<>();
-
         toList(root, inOrderList);
-
         return inOrderList;
-
     }
-
 
     private void toList(Node node, ArrayList<T> inOrderList) {
 
         if ( node == null ) {
+            // Base case
             return;
         }
 
         toList(node.left, inOrderList);
-
         inOrderList.addAll(node.elements);
-
         toList(node.right, inOrderList);
 
     }
 
 
+    void print() {
+        print(root);
+    }
+
+    private void print(Node node) {
+
+        if (node == null) {
+            return;
+        }
+
+        print(node.left);
+        for (T elem : node.elements) {
+            System.out.println(elem);
+        }
+        print(node.right);
+
+    }
+
+
     int numNodes() {
-
         return numNodes;
-
     }
 
 
     int numElements() {
-
         return numElements;
-
     }
 
 
-    void print() {
-
-        print(root);
-
-    }
-
-
-    private void print(Node node) {
-
-        if (node.left != null)  {
-            print(node.left);
-        }
-
-        for(T elem : node.elements) {
-            System.out.println(elem);
-        }
-
-        if (node.right != null) {
-            print(node.right);
-        }
-
-    }
+    //endregion
 
 
 }
+

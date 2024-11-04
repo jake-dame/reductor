@@ -6,9 +6,9 @@ import javax.sound.midi.MidiEvent;
 public class NoteOffEvent extends NoteEvent {
 
 
-    NoteOffEvent(MidiEvent event, int trackIndex) {
+    NoteOffEvent(MidiEvent event) {
 
-        super(event, trackIndex);
+        super(event);
 
     }
 

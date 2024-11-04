@@ -8,12 +8,14 @@ public class KeySignatureEvent extends MetaEvent {
 
     int accidentals;
     int mode;
+    MessageType type;
 
-    KeySignatureEvent(MidiEvent event, int trackIndex) {
+    KeySignatureEvent(MidiEvent event) {
 
-        super(event, trackIndex);
-        this.accidentals = this.message.getData()[0];
-        this.mode = this.message.getData()[1] & 0xFF;
+        super(event);
+        this.accidentals = this.message().getData()[0];
+        this.mode = this.message().getData()[1] & 0xFF;
+        this.type = MessageType.KEY_SIGNATURE;
 
     }
 
@@ -21,7 +23,7 @@ public class KeySignatureEvent extends MetaEvent {
     @Override
     String dataString() {
 
-        return KeyContext.getKeySignature(this.message.getData());
+        return KeyContext.getKeySignature(this.message().getData());
 
     }
 
@@ -39,7 +41,7 @@ public class KeySignatureEvent extends MetaEvent {
         byte[] newData = new byte[]{(byte) numAccidentals, (byte) mode};
 
         try {
-            message.setMessage(this.message.getType(), newData, newData.length);
+            message().setMessage(this.message().getType(), newData, newData.length);
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }

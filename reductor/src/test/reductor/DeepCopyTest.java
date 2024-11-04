@@ -54,6 +54,10 @@ class DeepCopyTest {
 
         }
 
+        //Piece piece = new Piece(midiFile.getPath());
+        //assertEquals(piece.notes.size(), piece.noteOnEvents.size());
+        //assertEquals(piece.tree.toList().size(), piece.notes.size());
+
     }
 
 

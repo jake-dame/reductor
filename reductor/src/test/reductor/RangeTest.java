@@ -92,10 +92,9 @@ public class RangeTest {
     @Test
     void compareToWithPrimaryOrdering() {
 
-        final long HIGH = 200;
-        Range target = new Range(100, HIGH);
-        assertEquals(-1, target.compareTo( new Range(101, HIGH) ), "target should be considered less than other");
-        assertEquals(1, target.compareTo( new Range(99, HIGH) ), "target should be considered greater than other");
+        Range target = new Range(100, 200);
+        assertEquals(-1, target.compareTo( new Range(101, 200) ), "target should be considered less than other");
+        assertEquals(1, target.compareTo( new Range(99, 200) ), "target should be considered greater than other");
 
     }
 
@@ -103,10 +102,9 @@ public class RangeTest {
     @Test
     void compareToWithSecondaryOrdering() {
 
-        final long LOW = 100;
-        Range target = new Range(LOW, 200);
-        assertEquals(-1, target.compareTo( new Range(LOW, 201) ), "target should be considered less than other");
-        assertEquals(1, target.compareTo( new Range(LOW, 199) ), "target should be considered greater than other");
+        Range target = new Range(100, 200);
+        assertEquals(-1, target.compareTo( new Range(100, 201) ), "target should be considered less than other");
+        assertEquals(1, target.compareTo( new Range(100, 199) ), "target should be considered greater than other");
 
     }
 

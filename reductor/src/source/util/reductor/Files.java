@@ -27,11 +27,27 @@ public class Files {
     /// Piece files downloaded from ClassicalArchives.org or imslp.org
     public static final String MOZART_40 = addFile("mozart_40_i.mid");
     public static final String BEETHOVEN_MOONLIGHT = addFile("beethoven_moonlight.mid");
-    public static final String BEETHOVEN_5_IV = addFile("beethoven_5_iv.mid"); // at 69.2 clarinets have erroneous g's
     public static final String BACH_INV_1 = addFile("bach_inv_1.mid");
     public static final String BACH_PREL_1 = addFile("bach_prel_1.mid");
+    public static final String BEETHOVEN_5_I = addFile("beethoven_5_i.mid");
+    public static final String BACH_BEFIEHL_DU_DEINE_WEGE = addFile("bach_befiehl_du_deine_wege.mid");
+    public static final String BEETHOVEN_5_II = addFile("beethoven_5_ii.mid");
+    public static final String BEETHOVEN_5_III_IV = addFile("beethoven_5_iii_iv.mid");
+    public static final String BIZET_PEARL_FISHERS_DUET = addFile("bizet_pearl_fishers_duet.mid");
+    public static final String HANDEL_ZADOK = addFile("handel_zadok.mid");
+    public static final String LISZT_SYMPHONY_5 = addFile("liszt_symphony_5.mid");
+    public static final String MOZART_DIE_ENTFUHRUNG = addFile("mozart_die_entfuhrung.mid");
+    public static final String MOZART_LUCIO_SILLA = addFile("mozart_lucio_silla.mid");
 
-    /// SATB large intervals, rhythm test
+    public static final String BEETHOVEN_5_IV = addFile("beethoven_5_iv.mid");
+    public static final String BEETHOVEN_7_FUGUE = addFile("beethoven_7_fugue_full.mid");
+    public static final String BEETHOVEN_7_FUGUE_PIANO = addFile("beethoven_7_fugue_piano.mid");
+
+    /// C3 (Voice 1), G3 (Voice 2), E4 (Voice 3), C5 (Voice 4). Half note "chord"; 2/4. 1 measure.
+    public static final String VOICE_TO_CHANNEL_MAPPING = addFile("voice_to_channel_mapping.mid");
+
+
+    /// SATB large intervals, duration test
     public static final String TEST_1 = addFile("Test1.mid");
 
     /// zadok pattern, 2-measures, overlapping voices

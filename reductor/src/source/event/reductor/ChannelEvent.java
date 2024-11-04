@@ -6,12 +6,14 @@ import javax.sound.midi.ShortMessage;
 
 public abstract class ChannelEvent extends Event<ShortMessage> {
 
-    int channel;
 
-    ChannelEvent(MidiEvent event, int trackIndex) {
+    private final int channel;
 
-        super(event, trackIndex);
-        this.channel = this.message.getChannel();
+
+    ChannelEvent(MidiEvent event) {
+
+        super(event);
+        this.channel = this.message().getChannel();
 
     }
 
@@ -19,24 +21,16 @@ public abstract class ChannelEvent extends Event<ShortMessage> {
     @Override
     String dataString() {
 
-        return "CH." + this.channel + ", ";
-
-    }
-
-    public ShortMessage getMessage() {
-
-        return this.message;
+        return "(Ch" + this.channel + ") ";
 
     }
 
 
-    //todo
     public int channel() {
 
         return this.channel;
 
     }
-    //todo
 
 
 }

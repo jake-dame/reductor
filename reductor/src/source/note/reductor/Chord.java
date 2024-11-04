@@ -39,7 +39,7 @@ public class Chord implements Ranged, Comparable<Chord>, Noted {
 
         this.chunk = chunk;
 
-        this.range = findSpan(notes);
+        this.range = findRange(notes);
 
         notes.sort( Comparator.comparingInt(Note::pitch) );
 
@@ -56,7 +56,7 @@ public class Chord implements Ranged, Comparable<Chord>, Noted {
     }
 
 
-    private Range findSpan(ArrayList<Note> notes) {
+    private Range findRange(ArrayList<Note> notes) {
 
         long min = 0;
         long max = 0;

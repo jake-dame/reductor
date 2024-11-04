@@ -14,19 +14,14 @@ public class Note implements Ranged, Comparable<Note>, Noted {
     private final Range range;
     private int pitch;
 
-    Rhythm rhythm;
-    KeyContext keyContext;
-    Degree degree;
+    int originalChannel;
 
 
     /// Primary constructor
     Note(int pitch, Range range) {
-
         setPitch(pitch);
         this.range = range;
-
     }
-
 
     /**
      * Constructor which takes a string to assign pitch, and a {@code Range}
@@ -35,11 +30,8 @@ public class Note implements Ranged, Comparable<Note>, Noted {
      * @see Note#Note(String)
      */
     Note(String str, Range range) {
-
         this(Pitch.toInt(str), range);
-
     }
-
 
     /**
      * Constructor which takes a string to assign pitch. The {@link Note#range} is assigned null.
@@ -48,56 +40,30 @@ public class Note implements Ranged, Comparable<Note>, Noted {
      * @see Pitch#toInt
      */
     Note(String str) {
-
         this(Pitch.toInt(str), null);
-
     }
-
-
-    Note(int pitch, Range range, Rhythm rhythm, KeyContext keyContext, Degree degree) {
-        this(pitch, range);
-        this.rhythm = rhythm;
-        this.keyContext = keyContext;
-        this.degree = degree;
-    }
-
 
     /// Copy constructor
     Note(Note note) {
-
-        this(note.pitch, note.range, note.rhythm, note.keyContext, note.degree);
-
+        this(note.pitch, note.range);
     }
-
 
     @Override
     public boolean equals(Object other) {
+        if (this == other) { return true; }
+        if (!(other instanceof Note note)) { return false; }
 
-        if (this == other) {
-            return true;
-        }
-
-        if ( ! (other instanceof Note note) ) {
-            return false;
-        }
-
-        return pitch == note.pitch  &&  Objects.equals(range, note.range);
-
+        return this.pitch == note.pitch  &&  this.range == note.range;
     }
 
     @Override
     public int compareTo(Note other) {
-
         return Integer.compare(this.pitch, other.pitch());
-
     }
-
 
     @Override
     public int hashCode() {
-
         return Objects.hash(range, pitch);
-
     }
 
 
@@ -134,22 +100,29 @@ public class Note implements Ranged, Comparable<Note>, Noted {
             throw new IllegalArgumentException("invalid MIDI pitch for note; must be in [0,127]");
         }
 
-        // These two clamping checks bring notes out of piano range into piano range [21,108]
-        // I would rather this than throw an exception, although can change in future
-        //if (val < 21) {
-        //    while(val < 21) {
-        //        val+=12;
-        //    }
-        //}
-        //
-        //if (val > 108) {
-        //    while(val > 108) {
-        //        val-=12;
-        //    }
-        //}
-
-
         this.pitch = val;
+
+    }
+
+
+    /// Clamps this Note's pitch to be within piano range
+    public void clampPitch() {
+
+        final int PIANO_MAX_PITCH = 108;
+        final int PIANO_MIN_PITCH = 21;
+        final int OCTAVE = 12;
+
+        if (this.pitch < PIANO_MIN_PITCH) {
+            while(this.pitch < PIANO_MIN_PITCH) {
+                this.pitch += OCTAVE;
+            }
+        }
+
+        if (this.pitch > PIANO_MAX_PITCH) {
+            while(this.pitch > PIANO_MAX_PITCH) {
+                this.pitch -= OCTAVE;
+            }
+        }
 
     }
 
@@ -190,6 +163,13 @@ public class Note implements Ranged, Comparable<Note>, Noted {
     public ArrayList<MidiEvent> getNotesAsMidiEvents() {
 
         return Piece.notesToMidiEvents(this.getNotes());
+
+    }
+
+
+    void setChannel(int channel) {
+
+        this.originalChannel = channel;
 
     }
 

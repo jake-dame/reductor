@@ -6,24 +6,24 @@ import javax.sound.midi.MidiEvent;
 public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteEvent> {
 
 
-    int pitch;
-    int velocity;
+    private final int pitch;
+    private final int velocity;
 
     NoteEvent partner;
 
-    KeySignatureEvent key; // todo
-    TimeSignatureEvent time; // todo
+    private KeySignatureEvent keySignature;
+    private TimeSignatureEvent timeSignature;
 
 
-    NoteEvent(MidiEvent event, int trackIndex) {
+    NoteEvent(MidiEvent event) {
 
-        super(event, trackIndex);
-        this.pitch = this.message.getData1();
-        this.velocity = this.message.getData2();
+        super(event);
+        this.pitch = this.message().getData1();
+        this.velocity = this.message().getData2();
         this.partner = null;
 
-        this.key = null; // todo
-        this.time = null; // todo
+        this.keySignature = null;
+        this.timeSignature = null;
 
     }
 
@@ -32,6 +32,11 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
 
         assert noteOn.pitch() == noteOff.pitch();
         assert !noteOn.paired()  &&  !noteOff.paired();
+
+        if (noteOn.tick() >= noteOff.tick()) {
+            throw new RuntimeException();
+        }
+
 
         noteOn.partner = noteOff;
         noteOff.partner = noteOn;
@@ -44,9 +49,7 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
 
         boolean showRegister = true;
 
-        return super.dataString()
-                + Pitch.toStr(this.pitch, showRegister)
-                + ", " + this.velocity;
+        return super.dataString() + Pitch.toStr(this.pitch, showRegister);
 
     }
 
@@ -54,7 +57,7 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
     @Override
     public int compareTo(NoteEvent other) {
 
-        return Long.compare(this.tick, other.tick);
+        return Long.compare(this.tick(), other.tick());
 
     }
 
@@ -76,6 +79,48 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
     boolean paired() {
 
         return this.partner != null;
+
+    }
+
+
+    int getVelocity() {
+
+        return velocity;
+
+    }
+
+
+    NoteEvent getPartner() {
+
+        return partner;
+
+    }
+
+
+    KeySignatureEvent getKeySignature() {
+
+        return keySignature;
+
+    }
+
+
+    TimeSignatureEvent getTimeSignature() {
+
+        return timeSignature;
+
+    }
+
+
+    void setKeySignature(KeySignatureEvent keySignature) {
+
+        this.keySignature = keySignature;
+
+    }
+
+
+    void setTimeSignature(TimeSignatureEvent timeSignature) {
+
+        this.timeSignature = timeSignature;
 
     }
 

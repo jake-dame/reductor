@@ -22,9 +22,7 @@ public class Reduction {
         chordMax = -1;
         timeSignatureEvents = this.piece.timeSignatureEvents;
         this.chords = getChords(15);
-        this.soprano = new Line();
-        this.bass = new Line();
-        getLines();
+        assignSopranoBass();
 
     }
 
@@ -87,18 +85,49 @@ public class Reduction {
 
     }
 
-    Line getLines() {
+    void assignSopranoBass() {
 
-        Line line = new Line();
+        this.soprano = new Line();
+        this.bass = new Line();
 
-        for (Chord chord : chords) {
-            this.soprano.add(chord.high());
-            this.bass.add(chord.low());
+        Note lastHigh;
+        Note lastLow;
+        Note currHigh;
+        Note currLow;
+        for (int i = 1; i < chords.size(); i++) {
+
+            Chord currChord = chords.get(i);
+            Chord lastChord = chords.get(i - 1);
+
+            if (i == 1) {
+                this.bass.add(currChord.low());
+                this.soprano.add(currChord.high());
+            }
+
+            currLow = currChord.low();
+            currHigh = currChord.high();
+            lastLow = lastChord.low();
+            lastHigh = lastChord.high();
+
+            if (currLow != null  && lastLow != null) {
+                if (currLow.pitch() - lastLow.pitch() > 18) {
+                    System.out.println("[LOW] last: " + Pitch.toStr(lastLow.pitch(), true) + ", curr: " + Pitch.toStr(currLow.pitch(), true));
+                }
+                else {
+                    this.bass.add(currChord.low());
+                }
+            }
+
+            if (currHigh != null  && lastHigh != null) {
+                if (currHigh.pitch() - lastHigh.pitch() > 18) {
+                    System.out.println("[HIGH] last: " + Pitch.toStr(lastHigh.pitch(), true) + ", curr: " + Pitch.toStr(currHigh.pitch(), true));
+                }
+                else {
+                    this.soprano.add(currChord.high());
+                }
+            }
+
         }
-
-        line.sort();
-
-        return line;
 
     }
 

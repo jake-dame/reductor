@@ -11,11 +11,11 @@ public class TimeSignatureEvent extends MetaEvent {
     int exponent;
 
 
-    TimeSignatureEvent(MidiEvent event, int trackIndex) {
+    TimeSignatureEvent(MidiEvent event) {
 
-        super(event, trackIndex);
+        super(event);
 
-        byte[] data = this.message.getData();
+        byte[] data = this.message().getData();
 
         this.upperNumeral = data[0] & 0xFF;
 
@@ -54,14 +54,14 @@ public class TimeSignatureEvent extends MetaEvent {
 
         this.exponent = exponent;
 
-        byte[] oldData = message.getData();
+        byte[] oldData = message().getData();
         byte clockTicksPerTick = oldData[2];
         byte thirtySecondsPerBeat = oldData[3];
 
         byte[] newData = new byte[]{(byte) upperNumeral, (byte) exponent, clockTicksPerTick, thirtySecondsPerBeat};
 
         try {
-            message.setMessage(this.message.getType(), newData, newData.length);
+            message().setMessage(this.message().getType(), newData, newData.length);
         }
         catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);

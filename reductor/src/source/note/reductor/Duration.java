@@ -1,11 +1,11 @@
 package reductor;
 
-public class Rhythm {
+public class Duration {
 
     TimeSignatureEvent timeSignatureEvent;
     int resolution;
 
-    Rhythm(int resolution, TimeSignatureEvent timeSignatureEvent) {
+    Duration(int resolution, TimeSignatureEvent timeSignatureEvent) {
         this.resolution = resolution;
         this.timeSignatureEvent = timeSignatureEvent;
     }

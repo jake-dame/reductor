@@ -7,9 +7,9 @@ import javax.sound.midi.MidiEvent;
 public class TextEvent extends MetaEvent {
 
 
-    TextEvent(MidiEvent event, int trackIndex) {
+    TextEvent(MidiEvent event) {
 
-        super(event, trackIndex);
+        super(event);
 
     }
 
@@ -17,7 +17,7 @@ public class TextEvent extends MetaEvent {
     @Override
     String dataString() {
 
-        return new String(this.message.getData());
+        return new String(this.message().getData());
 
     }
 
@@ -27,7 +27,7 @@ public class TextEvent extends MetaEvent {
         byte[] newData = text.getBytes();
 
         try {
-            message.setMessage(this.message.getType(), newData, newData.length);
+            this.message().setMessage(this.message().getType(), newData, newData.length);
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }

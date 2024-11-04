@@ -5,19 +5,13 @@ import javax.sound.midi.MidiEvent;
 
 public class PortChangeEvent extends MetaEvent{
 
-
-    PortChangeEvent(MidiEvent event, int trackIndex) {
-
-        super(event, trackIndex);
+    PortChangeEvent(MidiEvent event) {
+        super(event);
     }
-
 
     @Override
     String dataString() {
-
-        return "Port: " + (this.message.getData()[0] & 0xff);
-
+        return "Port: " + (this.message().getData()[0] & 0xff);
     }
-
 
 }

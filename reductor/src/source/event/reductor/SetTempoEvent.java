@@ -6,12 +6,14 @@ import javax.sound.midi.MidiEvent;
 
 public class SetTempoEvent extends MetaEvent {
 
+
     int bpm;
 
-    SetTempoEvent(MidiEvent event, int trackIndex) {
 
-        super(event, trackIndex);
-        this.bpm = convertMicrosecondsToBPM(this.message.getData());
+    SetTempoEvent(MidiEvent event) {
+
+        super(event);
+        this.bpm = convertMicrosecondsToBPM(this.message().getData());
 
     }
 
@@ -29,7 +31,7 @@ public class SetTempoEvent extends MetaEvent {
         byte[] newData = convertBPMToMicroseconds(bpm);
 
         try {
-            this.message.setMessage(Constants.SET_TEMPO, newData, newData.length);
+            this.message().setMessage(Constants.SET_TEMPO, newData, newData.length);
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }

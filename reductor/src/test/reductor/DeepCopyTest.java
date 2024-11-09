@@ -13,76 +13,53 @@ import static reductor.DeepCopy.copySequence;
 
 class DeepCopyTest {
 
-
     /// Helper for {@link DeepCopy#copySequence(Sequence)}
     @ParameterizedTest
-    @MethodSource("reductor.Files#getMidiFiles")
+    @MethodSource("reductor.Files#getFiles")
     void testCopySequence(File midiFile) {
-
         //System.out.println(midiFile.getName());
-
         Sequence sequenceIn;
         try {
             sequenceIn = MidiSystem.getSequence(midiFile);
-        }
-        catch (InvalidMidiDataException | IOException e) {
+        } catch (InvalidMidiDataException | IOException e) {
             throw new RuntimeException(e);
         }
-
         Sequence copy = copySequence(sequenceIn);
-
         checkSequences(sequenceIn, copy);
-
         Track[] tracksIn = sequenceIn.getTracks();
         Track[] tracksCopy = copy.getTracks();
-
         assertEquals(tracksIn.length, tracksCopy.length);
-
         for (int t = 0; t < tracksIn.length; t++) {
-
             Track trackIn = tracksIn[t];
             Track trackCopy = tracksCopy[t];
-            assertEquals( trackIn.size(), trackCopy.size());
-
+            assertEquals(trackIn.size(), trackCopy.size());
             for (int i = 0; i < trackIn.size(); i++) {
-
                 MidiEvent eventIn = trackIn.get(i);
                 MidiEvent eventCopy = trackCopy.get(i);
                 checkEvents(eventIn, eventCopy);
-
             }
-
         }
-
         //Piece piece = new Piece(midiFile.getPath());
         //assertEquals(piece.notes.size(), piece.noteOnEvents.size());
         //assertEquals(piece.tree.toList().size(), piece.notes.size());
-
     }
-
 
     /// Helper for {@link #testCopySequence(File)}
     private void checkSequences(Sequence sequenceIn, Sequence copy) {
-
         assertEquals(sequenceIn.getTracks().length, copy.getTracks().length);
         assertEquals(sequenceIn.getDivisionType(), copy.getDivisionType());
         assertEquals(sequenceIn.getResolution(), copy.getResolution());
         assertEquals(sequenceIn.getTickLength(), copy.getTickLength());
         assertEquals(sequenceIn.getMicrosecondLength(), copy.getMicrosecondLength());
-
     }
-
 
     /// Helper for {@link #testCopySequence(File)}
     private void checkEvents(MidiEvent eventIn, MidiEvent eventCopy) {
-
         MidiMessage messageIn = eventIn.getMessage();
         MidiMessage messageCopy = eventCopy.getMessage();
-
         assertEquals(messageIn.getStatus(), messageCopy.getStatus());
         assertEquals(messageIn.getLength(), messageCopy.getLength());
         assertArrayEquals(messageIn.getMessage(), messageCopy.getMessage());
-
         switch (messageIn) {
             case ShortMessage shortMessageIn -> {
                 ShortMessage shortMessageCopy = (ShortMessage) messageCopy;
@@ -102,9 +79,9 @@ class DeepCopyTest {
                 assertInstanceOf(SysexMessage.class, sysexMessageCopy);
                 assertArrayEquals(sysexMessageIn.getData(), sysexMessageCopy.getData());
             }
-            default -> { }
+            default -> {
+            }
         }
-
     }
 
 

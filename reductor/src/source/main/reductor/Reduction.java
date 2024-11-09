@@ -3,131 +3,89 @@ package reductor;
 import java.util.ArrayList;
 
 
+// Right now Reduction needs a Piece. Later plan to make it an inner class of Piece.
 public class Reduction {
 
-
-    Piece piece;
-    int resolution;
-    int chordMax;
-    ArrayList<TimeSignatureEvent> timeSignatureEvents;
-    ArrayList<Chord> chords;
-    Line soprano;
-    Line bass;
+    private final Piece piece;
+    private final Notes notes;
+    private final IntervalTree<Note> tree;
 
 
     Reduction(Piece piece) {
-
         this.piece = piece;
-        this.resolution = piece.resolution();
-        chordMax = -1;
-        timeSignatureEvents = this.piece.timeSignatureEvents;
-        this.chords = getChords(15);
-        assignSopranoBass();
+        this.notes = piece.getNotes();
 
+        this.tree = new IntervalTree<>(this.notes.getList());
+            assert this.notes.size() == this.tree.getNumElements();
+            assert this.notes.size() == this.piece.getEvents().noteOnEvents.size();
+
+        getChords(15); // todo remove
     }
 
+    /// Given a time signature, returns the size of a measure in ticks
+    int getMeasureSize(TimeSignatureEvent timeSignatureEvent) {
 
-    int getMeasureSize(TimeSignatureEvent timeSignatureEvent, int resolution) {
+        // These need to be floats for stuff like 3/8 or 7/8
+        float upperNumeral = timeSignatureEvent.getUpperNumeral();
+        float lowerNumeral = timeSignatureEvent.getLowerNumeral();
 
-        int upperNumeral = timeSignatureEvent.upperNumeral;
-        int lowerNumeral = timeSignatureEvent.lowerNumeral;
+        assert lowerNumeral % 2 == 0; // will handle the day I come across odd denominator
+        assert lowerNumeral >= 1; // jic divide by 0
 
-        assert lowerNumeral % 4 == 0;
-        assert lowerNumeral >= 1;
-
-        while(lowerNumeral != 4) {
+        // Get lower numeral to be in terms of quarter notes (4)
+        while (lowerNumeral != 4) {
 
             if (lowerNumeral > 4) {
+                // e.g. 3/8 --> 1.5/4
                 upperNumeral /= 2;
                 lowerNumeral /= 2;
-            }
-
-            if (lowerNumeral < 4) {
+            } else if (lowerNumeral < 4) {
+                // e.g. 2/2 --> 4/4
                 upperNumeral *= 2;
                 lowerNumeral *= 2;
             }
 
         }
 
-        return resolution * upperNumeral;
+        // Quarters per measure * ticks per quarter
+        float res = upperNumeral * Piece.RESOLUTION;
+        // to make sure there is no loss (compare to int version of itself)
+        assert res == (int) res;
 
+        return (int) res;
     }
 
-
-    ArrayList<Chord> getChords(int windowSize) {
-
+    public ArrayList<Chord> getChords(int windowSize) {
         ArrayList<Chord> chords = new ArrayList<>();
-
-        IntervalTree<Note> tree = new IntervalTree<>(this.piece.notes);
 
         long windowMin = 0;
         long windowMax = windowSize;
+        long length = this.piece.getLengthInTicks();
 
-        while (windowMax <= this.piece.lengthInTicks()) {
+        // Theoretically this should always be true if using normal rhythm vals
+        //assert length % windowSize == 0;
 
+        while (windowMax <= length) {
             Range window = new Range(windowMin, windowMax - 1);
 
-            ArrayList<Note> matches = tree.query(window);
+            ArrayList<Note> matches = this.tree.query(window);
+
+            //dev
+            removeOverlappers(matches);
+            //dev
 
             Chord chord = new Chord(matches, window);
-
-            if (chord.size() > chordMax) {
-                chordMax = chord.size();
-            }
-
             chords.add(chord);
+
             windowMin += windowSize;
             windowMax += windowSize;
-
         }
 
         return chords;
-
     }
 
-    void assignSopranoBass() {
+    void removeOverlappers(ArrayList<Note> newMatches) {
 
-        this.soprano = new Line();
-        this.bass = new Line();
-
-        Note lastHigh;
-        Note lastLow;
-        Note currHigh;
-        Note currLow;
-        for (int i = 1; i < chords.size(); i++) {
-
-            Chord currChord = chords.get(i);
-            Chord lastChord = chords.get(i - 1);
-
-            if (i == 1) {
-                this.bass.add(currChord.low());
-                this.soprano.add(currChord.high());
-            }
-
-            currLow = currChord.low();
-            currHigh = currChord.high();
-            lastLow = lastChord.low();
-            lastHigh = lastChord.high();
-
-            if (currLow != null  && lastLow != null) {
-                if (currLow.pitch() - lastLow.pitch() > 18) {
-                    System.out.println("[LOW] last: " + Pitch.toStr(lastLow.pitch(), true) + ", curr: " + Pitch.toStr(currLow.pitch(), true));
-                }
-                else {
-                    this.bass.add(currChord.low());
-                }
-            }
-
-            if (currHigh != null  && lastHigh != null) {
-                if (currHigh.pitch() - lastHigh.pitch() > 18) {
-                    System.out.println("[HIGH] last: " + Pitch.toStr(lastHigh.pitch(), true) + ", curr: " + Pitch.toStr(currHigh.pitch(), true));
-                }
-                else {
-                    this.soprano.add(currChord.high());
-                }
-            }
-
-        }
 
     }
 

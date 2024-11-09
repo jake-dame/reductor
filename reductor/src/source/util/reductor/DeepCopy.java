@@ -10,9 +10,8 @@ import java.util.ArrayList;
  */
 public class DeepCopy {
 
-
-    private DeepCopy() { }
-
+    private DeepCopy() {
+    }
 
     /**
      * Makes a deep copy of a {@link javax.sound.midi.Sequence}.
@@ -21,7 +20,6 @@ public class DeepCopy {
      * @return A deep copy of the input.
      */
     static Sequence copySequence(Sequence sequenceIn) {
-
         Sequence sequenceOut;
         try {
             sequenceOut = new Sequence(
@@ -32,28 +30,19 @@ public class DeepCopy {
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
-
         assert sequenceIn.getTracks().length == sequenceOut.getTracks().length;
-
         for (int t = 0; t < sequenceIn.getTracks().length; t++) {
-
             Track trackIn = sequenceIn.getTracks()[t];
             Track trackOut = sequenceOut.getTracks()[t];
-
-            for (int e = 0; e < trackIn.size(); e++){
-
+            for (int e = 0; e < trackIn.size(); e++) {
                 MidiEvent eventIn = trackIn.get(e);
                 MidiEvent eventOut = copyEvent(eventIn);
                 trackOut.add(eventOut);
-
             }
-
             assert trackIn.size() == trackOut.size();
         }
-
         return sequenceOut;
     }
-
 
     /**
      * Makes a deep copy of a {@link javax.sound.midi.MidiEvent}.
@@ -66,7 +55,6 @@ public class DeepCopy {
         return new MidiEvent(messageOut, eventIn.getTick());
     }
 
-
     /**
      * Makes a deep copy of a {@link javax.sound.midi.MidiMessage}.
      *
@@ -74,11 +62,8 @@ public class DeepCopy {
      * @return A deep copy of the input.
      */
     static MidiMessage copyMessage(MidiMessage messageIn) {
-
         MidiMessage messageOut;
-
         try {
-
             switch (messageIn) {
                 case ShortMessage shortMessage -> {
                     int command = shortMessage.getCommand();
@@ -103,14 +88,11 @@ public class DeepCopy {
                     throw new InvalidMidiDataException("Unknown message type: " + messageIn.getStatus());
                 }
             }
-
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
-
         return messageOut;
     }
-
 
     /**
      * Makes a deep copy of a list of {@link javax.sound.midi.MidiEvent}s.
@@ -119,14 +101,11 @@ public class DeepCopy {
      * @return A deep copy of the input.
      */
     static ArrayList<MidiEvent> copyEvents(ArrayList<MidiEvent> eventsIn) {
-
         ArrayList<MidiEvent> eventsOut = new ArrayList<>();
-
         for (MidiEvent event : eventsIn) {
             MidiEvent copy = copyEvent(event);
             eventsOut.add(copy);
         }
-
         return eventsOut;
     }
 

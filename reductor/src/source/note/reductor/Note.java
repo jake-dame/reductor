@@ -1,26 +1,27 @@
 package reductor;
 
-import javax.sound.midi.MidiEvent;
-import java.util.ArrayList;
 import java.util.Objects;
 
 
 /**
  * Can represent a pitch, or a pair of MIDI events (ON + OFF) as a single entity.
  */
-public class Note implements Ranged, Comparable<Note>, Noted {
-
+public class Note implements Ranged, Comparable<Note> {
 
     private final Range range;
     private int pitch;
-
-    int originalChannel;
+    private final int originalChannel;
+    private int assignedChannel;
+    private String trackName;
+    private int trackIndex;
 
 
     /// Primary constructor
     Note(int pitch, Range range) {
         setPitch(pitch);
         this.range = range;
+        this.originalChannel = -1;
+        this.assignedChannel = 0x0;
     }
 
     /**
@@ -43,67 +44,112 @@ public class Note implements Ranged, Comparable<Note>, Noted {
         this(Pitch.toInt(str), null);
     }
 
-    /// Copy constructor
-    Note(Note note) {
-        this(note.pitch, note.range);
+    /**
+     * Constructor which takes a {@link reductor.NoteOnEvent}.
+     *
+     * @param on A {@link reductor.NoteOnEvent}
+     */
+    Note(NoteOnEvent on) {
+        this.range = new Range(on.getTick(), on.getPartner().getTick());
+        setPitch(on.getPitch());
+        this.originalChannel = on.getChannel();
+        this.trackName = on.getTrackName();
+        this.trackIndex = on.getTrackIndex();
+        this.assignedChannel = 0x0;
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) { return true; }
-        if (!(other instanceof Note note)) { return false; }
-
-        return this.pitch == note.pitch  &&  this.range == note.range;
+    /// Copy constructor
+    Note(Note other) {
+        this.range = new Range(other.getRange());
+        setPitch(other.getPitch());
+        this.originalChannel = other.getOriginalChannel();
+        this.assignedChannel = other.getAssignedChannel();
+        this.trackName = other.getTrackName();
+        this.trackIndex = other.getTrackIndex();
     }
 
     @Override
     public int compareTo(Note other) {
-        return Integer.compare(this.pitch, other.pitch());
+        return Integer.compare(this.pitch, other.getPitch());
+    }
+
+    // todo hashCode() and equals() should both include everything about the object
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) { return true; }
+        if (!(other instanceof Note note)) { return false; }
+        return this.pitch == note.pitch && this.range == note.range;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(range, pitch);
+        return Objects.hash(pitch);
     }
-
 
     /**
      * If the {@code Note} is displayed as a pitch only, it indicates that its tick values are meaningless.
      */
     @Override
     public String toString() {
-
         return this.range == null
                 ? Pitch.toStr(this.pitch, true)
                 : Pitch.toStr(this.pitch, true) + ": " + this.range;
-
     }
 
     @Override
-    public Range range() {
+    public Range getRange() {
 
-        return this.range == null ? null : new Range(this.range);
+        if (this.range == null) {
+            throw new NullPointerException("range is null");
+        }
+
+        return new Range(this.range);
 
     }
 
+    public long getDuration() {
 
-    public int pitch() {
+        if (this.range == null) {
+            throw new NullPointerException("range is null");
+        }
 
+        return this.getRange().getHigh() - this.getRange().getLow();
+
+    }
+
+    public int getPitch() {
         return this.pitch;
-
     }
 
+    public int getOriginalChannel() {
+        return this.originalChannel;
+    }
+
+    public int getAssignedChannel() {
+        return this.assignedChannel;
+    }
+
+    public String getTrackName() {
+        return this.trackName;
+    }
+
+    public int getTrackIndex() {
+        return this.trackIndex;
+    }
+
+    public void setChannel(int value) {
+        this.assignedChannel = value;
+    }
 
     public void setPitch(int val) {
 
-        if (val < 0  ||  val > 127) {
+        if (val < 0 || val > 127) {
             throw new IllegalArgumentException("invalid MIDI pitch for note; must be in [0,127]");
         }
 
         this.pitch = val;
 
     }
-
 
     /// Clamps this Note's pitch to be within piano range
     public void clampPitch() {
@@ -113,63 +159,36 @@ public class Note implements Ranged, Comparable<Note>, Noted {
         final int OCTAVE = 12;
 
         if (this.pitch < PIANO_MIN_PITCH) {
-            while(this.pitch < PIANO_MIN_PITCH) {
+            while (this.pitch < PIANO_MIN_PITCH) {
                 this.pitch += OCTAVE;
             }
         }
 
         if (this.pitch > PIANO_MAX_PITCH) {
-            while(this.pitch > PIANO_MAX_PITCH) {
+            while (this.pitch > PIANO_MAX_PITCH) {
                 this.pitch -= OCTAVE;
             }
         }
 
     }
 
-
     public long start() {
 
-        if (this.range != null) {
-            return this.range.low();
-        } else {
+        if (this.range == null) {
             throw new NullPointerException("range is null");
         }
 
-    }
+        return this.range.getLow();
 
+    }
 
     public long stop() {
 
-        if (this.range != null) {
-            return this.range.high();
-        } else {
+        if (this.range == null) {
             throw new NullPointerException("range is null");
         }
 
-    }
-
-
-    @Override
-    public ArrayList<Note> getNotes() {
-
-        var list = new ArrayList<Note>();
-        list.add(this);
-        return list;
-
-    }
-
-
-    @Override
-    public ArrayList<MidiEvent> getNotesAsMidiEvents() {
-
-        return Piece.notesToMidiEvents(this.getNotes());
-
-    }
-
-
-    void setChannel(int channel) {
-
-        this.originalChannel = channel;
+        return this.range.getHigh();
 
     }
 

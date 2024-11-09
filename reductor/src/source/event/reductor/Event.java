@@ -6,35 +6,30 @@ import static reductor.Constants.NOTE_OFF;
 
 
 /**
- * This is a wrapper class for a Java MidiEvent
+ * This is a wrapper class for a {@link javax.sound.midi.MidiEvent}
  *
  * @param <T> The type of MidiMessage the Event holds
  */
 public abstract class Event<T extends MidiMessage> {
 
-
     private final MidiEvent event;
     private final MessageType type;
     private final long tick;
     private final T message;
-
     private int trackIndex;
     private TrackNameEvent trackNameEvent;
 
-
-    private Event(MidiEvent event) {
+    Event(MidiEvent event) {
         this.event = event;
         this.tick = event.getTick();
         this.message = (T) event.getMessage();
-        this.type = assignType(this.message());
+        this.type = assignType(this.getMessage());
     }
 
     public static Event<?> createEvent(MidiEvent event) throws InvalidMidiDataException {
-
         MidiMessage message = event.getMessage();
         int typeCode;
         MessageType type;
-
         if (message instanceof ShortMessage sm) {
             typeCode = sm.getCommand();
             type = MessageType.getEnumType(typeCode);
@@ -48,9 +43,13 @@ public abstract class Event<T extends MidiMessage> {
                         yield new NoteOnEvent(event);
                     }
                 }
-                case NOTE_OFF -> new NoteOffEvent(event);
+                case NOTE_OFF -> {
+                    yield new NoteOffEvent(event);
+                }
                 case CONTROL_CHANGE -> new ControlChangeEvent(event);
                 case PROGRAM_CHANGE -> new ProgramChangeEvent(event);
+                case PITCH_BEND -> new PitchBendEvent(event);
+                case CHANNEL_PRESSURE -> new ChannelPressureEvent(event);
                 default -> throw new RuntimeException();
             };
         } else if (message instanceof MetaMessage mm) {
@@ -58,25 +57,30 @@ public abstract class Event<T extends MidiMessage> {
             type = MessageType.getEnumType(typeCode);
             return switch (type) {
                 case TEXT -> new TextEvent(event);
+                case COPYRIGHT_NOTICE -> new CopyrightNoticeEvent(event);
                 case TRACK_NAME -> new TrackNameEvent(event);
+                case INSTRUMENT_NAME -> new InstrumentNameEvent(event);
                 case PORT_CHANGE -> new PortChangeEvent(event);
                 case END_OF_TRACK -> new EndOfTrackEvent(event);
                 case SET_TEMPO -> new SetTempoEvent(event);
+                case SMPTE_OFFSET -> new SMPTEOffsetEvent(event);
                 case TIME_SIGNATURE -> new TimeSignatureEvent(event);
                 case KEY_SIGNATURE -> new KeySignatureEvent(event);
+                case SEQUENCER_SPECIFIC -> new SequencerSpecificEvent(event);
+                case LYRICS -> new LyricsEvent(event);
+                case MARKER -> new MarkerEvent(event);
+                case CHANNEL_PREFIX -> new ChannelPrefixEvent(event);
                 default -> throw new RuntimeException();
             };
         } else {
-            throw new RuntimeException("unexpected message type: 0x" + Integer.toHexString(message.getStatus()));
+            //System.out.println("found a sysex message: 0x" + Integer.toHexString(message.getStatus()));
+            //throw new RuntimeException("unexpected message type: 0x" + Integer.toHexString(message.getStatus()));
+            return null;
         }
-
     }
 
-
     private MessageType assignType(MidiMessage message) {
-
         int typeCode;
-
         if (message instanceof ShortMessage sm) {
             typeCode = sm.getCommand();
         } else if (message instanceof MetaMessage mm) {
@@ -84,14 +88,10 @@ public abstract class Event<T extends MidiMessage> {
         } else {
             throw new RuntimeException("encountered a sysex or invalid message type");
         }
-
         return MessageType.getEnumType(typeCode);
-
     }
 
-
     abstract String dataString();
-
 
     @Override
     public final String toString() {
@@ -102,28 +102,28 @@ public abstract class Event<T extends MidiMessage> {
         );
     }
 
-    public final MidiEvent event() {
+    public final MidiEvent getMidiEvent() {
         return event;
     }
 
-    public final T message() {
+    public final T getMessage() {
         return message;
     }
 
-    public final MessageType type() {
+    public final MessageType getType() {
         return type;
     }
 
-    public final long tick() {
+    public final long getTick() {
         return this.tick;
     }
 
-    public final int trackIndex() {
+    public final int getTrackIndex() {
         return trackIndex;
     }
 
-    public final String trackName() {
-        return trackNameEvent.trackName();
+    public String getTrackName() {
+        return trackNameEvent != null ? trackNameEvent.getName() : "null";
     }
 
     public final void setTrackIndex(int trackIndex) {

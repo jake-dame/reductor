@@ -1,4 +1,17 @@
 package reductor;
 
-public class ChannelPrefixEvent {
+import javax.sound.midi.MidiEvent;
+
+
+public class ChannelPrefixEvent extends MetaEvent {
+
+    ChannelPrefixEvent(MidiEvent event) {
+        super(event);
+    }
+
+    @Override
+    String dataString() {
+        return "not implemented";
+    }
+
 }

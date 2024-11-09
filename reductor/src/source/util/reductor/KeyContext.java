@@ -1,15 +1,12 @@
 package reductor;
 
-
 import java.util.Map;
 
 
 public class KeyContext {
 
-
     static final Map<Integer, String> mapMajor;
     static final Map<Integer, String> mapMinor;
-
 
     static {
         mapMajor = Map.ofEntries(
@@ -29,7 +26,6 @@ public class KeyContext {
                 Map.entry(6, "F#"),
                 Map.entry(7, "C#")
         );
-
         mapMinor = Map.ofEntries(
                 Map.entry(-7, "Ab"),
                 Map.entry(-6, "Eb"),
@@ -47,84 +43,56 @@ public class KeyContext {
                 Map.entry(6, "D#"),
                 Map.entry(7, "A#")
         );
-
     }
-
 
     int mode;
     int accidentals;
     int tonic;
 
-
     private KeyContext(KeySignatureEvent event) {
-
-            this.mode = event.mode;
-            this.accidentals = event.accidentals;
-            this.tonic = getTonic();
-
+        this.mode = event.mode;
+        this.accidentals = event.accidentals;
+        this.tonic = getTonic();
     }
 
     public static KeyContext getKeyContextObject(KeySignatureEvent event) {
-
-        if (event == null) {
-            return null;
-        }
-
+        if (event == null) { return null; }
         return new KeyContext(event);
     }
 
     int getTonic() {
-
         String keyString;
         if (isMajor()) {
             keyString = mapMajor.get(accidentals);
         } else {
             keyString = mapMinor.get(accidentals);
         }
-
         return Pitch.toInt(keyString + "-1");
-
     }
-
 
     boolean isMajor() {
-
         return mode == 0;
-
     }
-
 
     boolean isMinor() {
-
         return mode == 1;
-
     }
-
 
     boolean isSharp() {
-
         return accidentals >= 0;
-
     }
-
 
     boolean isFlat() {
-
         return accidentals < 0;
-
     }
-
 
     @Override
     public String toString() {
-
         byte[] bytes = new byte[2];
         bytes[0] = (byte) accidentals;
         bytes[1] = (byte) mode;
         return getKeySignature(bytes);
-
     }
-
 
     /**
      * Returns a string given a valid "Key signature" meta message data:
@@ -135,14 +103,11 @@ public class KeyContext {
      * @return The key signature as a string
      */
     static String getKeySignature(byte[] bytes) {
-
         int accidentalCount = bytes[0];
         int mode = bytes[1];
-
-        if (accidentalCount < -7  ||  accidentalCount > 7) {
+        if (accidentalCount < -7 || accidentalCount > 7) {
             throw new IllegalArgumentException("bytes representing accidental counts must be between -7 and 7");
         }
-
         String str;
         if (mode == 0) {
             return String.format("%s Major", mapMajor.get(accidentalCount));
@@ -151,7 +116,6 @@ public class KeyContext {
         } else {
             throw new IllegalArgumentException("bytes representing modes must be 0 (major) or 1 (minor)");
         }
-
     }
 
 

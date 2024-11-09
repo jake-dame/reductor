@@ -1,4 +1,17 @@
 package reductor;
 
-public class MarkerEvent {
+import javax.sound.midi.MidiEvent;
+
+
+public class MarkerEvent extends MetaEvent {
+
+    MarkerEvent(MidiEvent event) {
+        super(event);
+    }
+
+    @Override
+    String dataString() {
+        return "not implemented";
+    }
+
 }

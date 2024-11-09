@@ -13,12 +13,11 @@ import static reductor.Files.MIDI_FILES_OUT_DIR;
  * General purpose utility class for the {@code reductor} program.
  * <p>
  * Some of this is purely for debugging or specific to my machine.
- * */
+ */
 public class Util {
 
-
-    private Util() { }
-
+    private Util() {
+    }
 
     /**
      * Opens a valid MIDI file with GarageBand.
@@ -26,9 +25,7 @@ public class Util {
      * @param file The file to open with GarageBand
      */
     static void openWithGarageBand(File file) {
-
         checkMidiFileExtension(file);
-
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(
                     "open",
@@ -40,9 +37,7 @@ public class Util {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
 
     /**
      * Helper for {@link Util#openWithGarageBand}. Checks if a file has the correct
@@ -51,46 +46,33 @@ public class Util {
      * @param file The file to check.
      */
     private static void checkMidiFileExtension(File file) {
-
         String outFileName = file.getName();
         int periodIndex = outFileName.lastIndexOf('.');
         if (periodIndex == -1
-                || !outFileName.substring(periodIndex + 1).equals("mid") ) {
+                || !outFileName.substring(periodIndex + 1).equals("mid")) {
             throw new RuntimeException("out file should have '.mid' extension");
         }
-
     }
-
 
     /**
      * Given a number of lists, returns a {@link javax.sound.midi.Sequence} object comprised
      * of those events.
      *
      * @param resolution The resolution for the {@link javax.sound.midi.Sequence} (caution)
-     * @param list 1 or more lists of MidiEvent objects
+     * @param list       1 or more lists of MidiEvent objects
      * @return A {@link javax.sound.midi.Sequence} object.
      */
-    static Sequence makeSequenceFromMidiEvents(int resolution, ArrayList<MidiEvent> list) {
-
+    static Sequence makeSequenceFromMidiEvents(int resolution, ArrayList<MidiEvent> list) throws InvalidMidiDataException {
         Sequence out;
-        try {
-            out = new Sequence(Sequence.PPQ, resolution);
-        } catch (InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
-
+        out = new Sequence(Sequence.PPQ, resolution);
         Track track = out.createTrack();
-
         for (MidiEvent event : list) {
             //track.add( DeepCopy.copyEvent(event) );
             track.add(event);
             System.out.println("deep copying @" + event.getTick());
         }
-
         return out;
-
     }
-
 
     /**
      * A wrapper for the {@link javax.sound.midi.Sequencer}'s {@code play()} function.
@@ -98,7 +80,6 @@ public class Util {
      * @param sequence The {@link javax.sound.midi.Sequence} to play
      */
     static void play(Sequence sequence) {
-
         Sequencer sequencer;
         try {
             sequencer = MidiSystem.getSequencer();
@@ -107,18 +88,14 @@ public class Util {
         } catch (MidiUnavailableException | InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
-
         sequencer.start();
-
         while (true) {
-            if ( ! sequencer.isRunning()) {
+            if (!sequencer.isRunning()) {
                 sequencer.close();
                 return;
             }
         }
-
     }
-
 
     /**
      * Given a {@link javax.sound.midi.Sequence}, writes out a valid {@code .mid} file to
@@ -126,148 +103,126 @@ public class Util {
      * project-specific prefix.
      *
      * @param sequence The {@link javax.sound.midi.Sequence} object to write out
-     * @param name A name to give the file
+     * @param name     A name to give the file
      * @return The File object pertaining to the new file
      */
     static File write(Sequence sequence, String name) {
-
         if (name.contains(".")) {
             throw new RuntimeException("file name should not contain '.'");
         }
-
         File outFile = new File(MIDI_FILES_OUT_DIR + name + ".mid");
-
         assert sequence.getTracks().length > 0;
-
         int fileType;
         if (sequence.getTracks().length == 1) {
             fileType = 0;
         } else {
             fileType = 1;
         }
-
         try {
             MidiSystem.write(sequence, fileType, outFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         assert outFile.exists();
-
         return outFile;
-
     }
-
 
     /// You must provide note events, this just parses and prints them.
     static void printNoteEvents(ArrayList<MidiEvent> events) {
-
         int currChannel = -1;
         for (MidiEvent event : events) {
-
-            if ( !(event.getMessage() instanceof ShortMessage message) ) {
+            if (!(event.getMessage() instanceof ShortMessage message)) {
                 throw new NullPointerException("something other than ShortMessage in list");
             }
-
             // Only print channel header once per Track
             if (currChannel != message.getChannel()) {
                 currChannel = message.getChannel();
                 System.out.printf("Channel %d \n", currChannel);
             }
-
             // Print NOTE ON/OFF in diff columns
             int command = message.getCommand();
             int velocity = message.getData2();
             String col_tab;
-            if (command == ShortMessage.NOTE_OFF || (command == ShortMessage.NOTE_ON && velocity == 0) ) {
+            if (command == ShortMessage.NOTE_OFF || (command == ShortMessage.NOTE_ON && velocity == 0)) {
                 col_tab = "\t";
             } else {
                 col_tab = "";
             }
-
             String pitchStr;
             if (command == ShortMessage.NOTE_ON || command == ShortMessage.NOTE_OFF) {
                 pitchStr = Pitch.toStr(message.getData1(), true);
             } else {
                 pitchStr = "n/a";
             }
-
             System.out.printf("\t%-5d\t%-5s\t%s \n",
                     event.getTick(),
                     col_tab,
                     pitchStr
             );
         }
-
     }
-
 
     @SuppressWarnings("StatementWithEmptyBody")
     static void printNotesColumnar(Sequence sequence) {
-
         for (Track track : sequence.getTracks()) {
             for (int i = 0; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
                 MidiMessage message = event.getMessage();
-
                 if (message instanceof ShortMessage shortMessage) {
-
-                    if (shortMessage.getCommand() == ShortMessage.NOTE_ON  &&  shortMessage.getData2() > 0) {
+                    if (shortMessage.getCommand() == ShortMessage.NOTE_ON && shortMessage.getData2() > 0) {
                         // DON'T DELETE
                     } else if (shortMessage.getCommand() == ShortMessage.NOTE_OFF
-                            || (shortMessage.getCommand() == ShortMessage.NOTE_ON  &&  shortMessage.getData2() == 0) ) {
+                            || (shortMessage.getCommand() == ShortMessage.NOTE_ON && shortMessage.getData2() == 0)) {
                         System.out.print("\t");
                     } else {
                         continue;
                     }
-
                     System.out.println(event.getTick() + " (" + Pitch.pitchesItoS.get(shortMessage.getData1()) + ")");
-
                 }
-
-
             }
         }
-
     }
 
-
-    static void printBytes(Sequence seq){
+    static void printBytes(Sequence seq) {
         System.out.println();
         for (Track track : seq.getTracks()) {
             for (int i = 0; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
                 MidiMessage msg = event.getMessage();
-                byte[] data = msg.getMessage();
-                for (int j = 0; j < data.length; j++) {
-                    int firstByte = data[0] & 0xFF;
-                    if (firstByte == 0x80) {
-                        System.out.print("\t");
+                if (msg instanceof ShortMessage sm
+                        && sm.getChannel() == 7
+                        && sm.getData1() == 38
+                        && event.getTick() >= 24607
+                        && event.getTick() < 27000) {
+
+                    byte[] data = msg.getMessage();
+                    for (int j = 0; j < data.length; j++) {
+                        int firstByte = data[0] & 0xFF;
+                        if (firstByte == 0x80) {
+                            System.out.print("\t");
+                        }
+                        System.out.print(Integer.toHexString(data[j] & 0xFF) + " ");
                     }
-                    System.out.print(Integer.toHexString(data[j] & 0xFF) + " ");
+                    System.out.print("("+event.getTick()+")");
+                    System.out.println();
+
                 }
-                System.out.println();
             }
         }
         System.out.println();
     }
 
-
     /// Prints bytes in hex form; each message type is on a new line and note on/off are in columns
     static void printBytesByMessageType(String filePath) throws IOException {
-
-        byte[] data = java.nio.file.Files.readAllBytes( Path.of(filePath) );
-
+        byte[] data = java.nio.file.Files.readAllBytes(Path.of(filePath));
         int lineCtr = 0;
         for (int i = 0; i < data.length; i++) {
             int b = data[i] & 0xFF;
-
             if (b == 0xFF) {
                 System.out.println();
                 lineCtr++;
             }
-
-            if(lineCtr > 4) {
+            if (lineCtr > 4) {
                 if (b >= 0x90 && b <= 0x9F) {
                     System.out.println();
                 }
@@ -275,43 +230,28 @@ public class Util {
                     System.out.print("\n\t");
                 }
             }
-
             System.out.print(Integer.toHexString(b) + " ");
         }
-
     }
 
-
     static void printNotesLinear(Sequence sequence) {
-
-        for(int j = 0; j < sequence.getTracks().length; j++) {
+        for (int j = 0; j < sequence.getTracks().length; j++) {
             Track track = sequence.getTracks()[j];
-            System.out.println("\nTrack "+j);
+            System.out.println("\nTrack " + j);
             for (int i = 0; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
                 MidiMessage message = event.getMessage();
-
                 if (message instanceof ShortMessage sm) {
-                    if (sm.getCommand() == ShortMessage.NOTE_ON  && sm.getData2() != 0) {
+                    if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() != 0) {
                         System.out.print(Pitch.toStr(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + " : ");
                     }
-
                     if (sm.getCommand() == ShortMessage.NOTE_OFF || (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0)) {
                         System.out.print("(" + Pitch.toStr(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + ") : ");
                     }
                 }
-
             }
             System.out.println("");
         }
-
-    }
-
-
-    void gamut() {
-
-
-
     }
 
 

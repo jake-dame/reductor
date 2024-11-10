@@ -30,14 +30,18 @@ public enum MessageType {
         this.statusCode = statusCode;
     }
 
-    public static MessageType getEnumType(int messageTypeOrCommandValue) {
-        MessageType type;
+    /// param value: getCommand() for ShortMessage; getType() for MetaMessage
+    public static MessageType getEnumType(int value) {
+
         for (MessageType enumType : MessageType.values()) {
-            if (enumType.statusCode == messageTypeOrCommandValue) {
-                return enumType;
-            }
+            if (enumType.statusCode == value) { return enumType; }
         }
-        throw new RuntimeException("New message type that is not currently in enum: 0x" + Integer.toHexString(messageTypeOrCommandValue));
+
+        throw new RuntimeException(
+                    "New message type that is not currently in enum: 0x"
+                    + Integer.toHexString(value)
+                );
+
     }
 
     @Override

@@ -3,6 +3,7 @@ package reductor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Objects;
 
 
 /**
@@ -38,6 +39,11 @@ public class Chord implements Ranged, Comparable<Chord> {
             this.low = null;
             this.high = null;
         }
+    }
+
+    Chord(Range chunk) {
+        this.chunk = chunk;
+        this.notes = new Notes();
     }
 
     private Range findRange(ArrayList<Note> notes) {
@@ -122,6 +128,22 @@ public class Chord implements Ranged, Comparable<Chord> {
     @Override
     public int compareTo(Chord o) {
         return this.range.compareTo(o.getRange());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Chord chord)) {
+            return false;
+        }
+        return Objects.equals(notes, chord.notes) && Objects.equals(low, chord.low) && Objects.equals(high, chord.high) && Objects.equals(range, chord.range) && Objects.equals(chunk, chord.chunk);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(notes, low, high, range);
     }
 
 

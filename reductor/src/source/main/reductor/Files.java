@@ -100,9 +100,16 @@ public class Files {
     /// 20 empty tracks + piccolo (4 c5 quarters) + soprano (c5 whole)
     public static final String TEST_4_TRY_3 = addFile("Test4Try3.mid");
     /// Overlapping test (4 measure string quartet in C)
-    public static final String OVERLAPPING_TEST = addFile("overlappingTest.mid");
-    public static final String OVERLAPPING_TEST_2 = addFile("overlappingTest2.mid");
+    public static final String OVERLAPPING_TEST = addFile("overlapping_test.mid");
+    public static final String OVERLAPPING_TEST_2 = addFile("overlapping_test_2.mid");
+    public static final String OVERLAPPING_TEST_3 = addFile("overlapping_test_3.mid");
+    public static final String OVERLAPPING_TEST_4 = addFile("overlapping_test_4.mid");
+    public static final String OVERLAPPING_TEST_5 = addFile("overlapping_test_5.mid");
+    public static final String OVERLAPPING_TEST_6 = addFile("overlapping_test_6.mid");
+    public static final String OVERLAPPING_TEST_7 = addFile("overlapping_test_7.mid");
+    public static final String OVERLAPPING_ASCENDING_SCALE = addFile("overlapping_ascending_scale.mid");
     public static final String BEETHOVEN_7_FUGUE = addFile("beethoven_7_fugue_full.mid");
+    public static final String MEASURE_SIZE_TEST = addFile("measure_size_test.mid");
     //public static final String BEETHOVEN_7_FUGUE_PIANO = addFile("beethoven_7_fugue_piano.mid"); // overlapping notes
 
 

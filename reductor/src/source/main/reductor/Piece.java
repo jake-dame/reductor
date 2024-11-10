@@ -12,8 +12,9 @@ import static reductor.DeepCopy.copySequence;
 public class Piece {
 
     /// Resolution == ticks per quarter note
-    static int RESOLUTION;
-    static int DIVISION_TYPE;
+    public static int RESOLUTION;
+    public static int DIVISION_TYPE;
+    public static long LENGTH_IN_TICKS;
     private final File file;
     private final MidiFileFormat fileFormat;
     private final Integer fileType;
@@ -28,6 +29,8 @@ public class Piece {
             throw new RuntimeException("this program does not support SMPTE timing");
         }
         RESOLUTION = sequence.getResolution();
+        DIVISION_TYPE = (int) this.sequence.getDivisionType();
+        LENGTH_IN_TICKS = this.getLengthInTicks();
         this.fileFormat = MidiSystem.getMidiFileFormat(this.file);
         this.fileType = fileFormat.getType();
         this.events = new Events(this.sequence);

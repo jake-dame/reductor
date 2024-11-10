@@ -5,6 +5,7 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 
 public class Events {
@@ -123,7 +124,6 @@ public class Events {
                 for (int eventIndex = 0; eventIndex < track.size(); eventIndex++) {
                     Event<?> newEvent = Event.createEvent(track.get(eventIndex));
 
-                    MessageType type = newEvent.getType();
                     if (newEvent instanceof ChannelEvent channelEvent) {
                         Events.this.allChannelEvents.add(channelEvent);
                         handleChannelEvents(channelEvent);
@@ -263,6 +263,18 @@ public class Events {
 
         }
 
+
+    }
+
+    ArrayList<TimeSignatureEvent> getTimeSignatureEvents() {
+
+        if (timeSignatureEvents.isEmpty()) {
+            return null;
+        }
+
+        timeSignatureEvents.sort(Comparator.comparingLong(TimeSignatureEvent::getTick));
+
+        return timeSignatureEvents;
 
     }
 

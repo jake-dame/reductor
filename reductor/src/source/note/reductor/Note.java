@@ -14,6 +14,7 @@ public class Note implements Ranged, Comparable<Note> {
     private int assignedChannel;
     private String trackName;
     private int trackIndex;
+    private long duration;
 
 
     /// Primary constructor
@@ -56,6 +57,7 @@ public class Note implements Ranged, Comparable<Note> {
         this.trackName = on.getTrackName();
         this.trackIndex = on.getTrackIndex();
         this.assignedChannel = 0x0;
+        this.duration = getDuration();
     }
 
     /// Copy constructor
@@ -66,6 +68,7 @@ public class Note implements Ranged, Comparable<Note> {
         this.assignedChannel = other.getAssignedChannel();
         this.trackName = other.getTrackName();
         this.trackIndex = other.getTrackIndex();
+        this.duration = other.getDuration();
     }
 
     @Override
@@ -91,9 +94,10 @@ public class Note implements Ranged, Comparable<Note> {
      */
     @Override
     public String toString() {
-        return this.range == null
-                ? Pitch.toStr(this.pitch, true)
-                : Pitch.toStr(this.pitch, true) + ": " + this.range;
+        //return this.range == null
+        //        ? Pitch.toStr(this.pitch, true)
+        //        : Pitch.toStr(this.pitch, true) + ": " + this.range;
+        return Pitch.toStr(this.pitch, true);
     }
 
     @Override

@@ -1,0 +1,131 @@
+package reductor;
+
+public class Rhythm {
+
+
+    // in enum ordinal order: whole, half, quarter, 8th, 16th, 32nd, 64th, 128th
+    // `base` is the nearest note value in that list _without going over_
+    private RhythmType base;
+    // This can be gotten from the enum at any time, just nice to have calculated once
+    private final long baseDuration;
+    // The duration passed to the constructor
+    private final long actualDuration;
+
+    private boolean isTriplet;
+    // There is absolutely no way to tell between these two from MIDI data, for equivalent durations
+    // If it's not a triplet or dotted, it gets flagged as some sort of tied
+    private boolean isDotted;
+    private boolean isTied;
+    // Trill, tremolo, grace, turn, etc. Anything less than a 32nd note.
+    private boolean isOrnament;
+
+
+    Rhythm(long actualDuration, int resolution) {
+
+        assert actualDuration > 0;
+        assert resolution > 0;
+
+        this.base = RhythmType.getEnumType(actualDuration, resolution);
+        this.actualDuration = actualDuration;
+        this.baseDuration = this.base.getDuration(resolution);
+
+        checkTriplet(resolution);
+
+        // if this is:
+        //     + 0: we are done. it is exactly a quarter, 16th, etc.
+        //     + >0: it is greater than its base, so it is some kind of dotted
+        //     + <0: if exactly half, then dotted; if not, some kind of tie
+        if (!isTriplet) {
+            long remainder = Math.abs(this.baseDuration - this.actualDuration);
+            if (remainder != 0) {
+                if (remainder == baseDuration / 2) {
+                    isDotted = true;
+                } else {
+                    isTied = true;
+                }
+            }
+        }
+
+        if (this.base.compareTo(RhythmType.THIRTY_SECOND) > 0) {
+            isOrnament = true;
+        }
+
+    }
+
+    private void checkTriplet(int resolution) {
+
+        /*
+         Yes this is messy, but here's what it does (using triplet EIGHTHs as an example:
+
+         1.) The base is assigned so that, based on the passed duration, the nearest rhythm value is assigned, _without
+         going over_. This is so that the Rhythm class can use the base as a "species" of sort.
+                + "This note is some species of EIGHTH note: tied, dotted, tripleted, etc.
+         2.) However, due to how triplets work, a triplet EIGHTH is actually defined by being part of a trio that fits
+          into a QUARTER note, i.e., the next biggest rhythm value.
+                + Triplet HALF notes fit into a WHOLE note
+                + Triple QUARTER notes fit into a HALF note
+                + etc.
+         3.) But, because the actual duration of triplet notes are LESS than their species version (i.e. a triplet
+         EIGHTH is smaller in duration than an EIGHTH), they actually get assigned the next smallest base/species (e
+         .g. a triplet EIGHTH gets assigned as "some form of SIXTEENTH")
+         4.) To check for triplet values, we need to check if something is exactly (or within some threshold of)
+         one-third the value of the ENCLOSING base (e.g. a QUARTER encloses the duration of 3 tripleted EIGHTHs);
+         since we are already bumped down to a SIXTEENTH due to the fact that the duration is less than an EIGHTH, we
+         have to actually check up 2.
+         5.) This also just leads to some messy boundary checks due to the limitations of the enum values array itself
+
+         So:
+            + If the passed duration is exactly one-third the value of the base TWO bases up from me, I am a triplet of
+            that base.
+
+        */
+
+        RhythmType enclosingRhythm;
+
+        int ordinal = this.base.ordinal();
+        if (ordinal == 0) {
+            // this is a WHOLE note
+            return;
+        } else if (ordinal == 1) {
+            // this is a HALF note
+            enclosingRhythm = RhythmType.values()[ordinal - 1];
+        } else {
+            // this is anything else
+            enclosingRhythm =  RhythmType.values()[ordinal - 2];
+        }
+
+        var tripletedValue = enclosingRhythm.getDuration(resolution) / 3;
+        if (actualDuration == tripletedValue) {
+            isTriplet = true;
+            // Re-assign to be more accurate ("some species of")
+            this.base = RhythmType.values()[base.ordinal() - 1];
+        }
+
+    }
+
+    @Override public String toString() {
+        String str = "";
+        if (isDotted) { str += "DOTTED"; }
+        if (isTriplet) { str += "TRIPLET"; }
+        if (isTied) { str += "TIED "; }
+        return str + " " + this.base;
+    }
+
+    public boolean isTriplet() {
+        return isTriplet;
+    }
+
+    public boolean isDotted() {
+        return isDotted;
+    }
+
+    public boolean isTied() {
+        return isTied;
+    }
+
+    public boolean isOrnament() {
+        return isOrnament;
+    }
+
+
+}

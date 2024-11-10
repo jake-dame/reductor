@@ -185,6 +185,31 @@ class IntervalTreeTest<T extends Ranged> {
         assertThrows(NullPointerException.class, () -> tree.query(null), "should throw when window is null and query is attempted");
     }
 
+    @Test
+    void getMax() {
+
+        ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
+        distinctPlusQuasiDups.addAll(distinctElems);
+        distinctPlusQuasiDups.addAll(quasiDupElems);
+        IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
+
+        assertEquals(30L, tree.getMax());
+
+    }
+
+    @Test
+    void queryPastEndOfTree() {
+
+        ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
+        distinctPlusQuasiDups.addAll(distinctElems);
+        distinctPlusQuasiDups.addAll(quasiDupElems);
+        IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
+
+        Range window = new Range(tree.getMax() + 1, tree.getMax() + 2);
+        assertTrue(tree.query(window).isEmpty());
+
+    }
+
     // These two methods are used to iterate over every node in the tree
     // and, for each node, check its entire subtree to determine if the node indeed
     // stores the highest right endpoint (i.e., node.range().high()) stored in its subtree
@@ -196,7 +221,7 @@ class IntervalTreeTest<T extends Ranged> {
         checkMaxes(tree.root);
     }
 
-    long checkMaxes(Node node) {
+    private long checkMaxes(Node node) {
         if (node == null) {
             return -1;
         }

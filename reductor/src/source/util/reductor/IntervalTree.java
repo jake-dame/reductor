@@ -849,6 +849,10 @@ public class IntervalTree<T extends Ranged> {
         return numElements;
     }
 
+    long getMax() {
+        return root.max;
+    }
+
 
     //endregion
 

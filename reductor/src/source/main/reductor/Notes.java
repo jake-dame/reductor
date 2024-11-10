@@ -14,28 +14,40 @@ public class Notes {
     private final ArrayList<Note> notes;
     private Map<String, List<Note>> mapByInstrument;
     private Map<Integer, List<Note>> mapByChannel;
+    private Map<Long, List<Note>> mapByDuration;
 
 
     Notes(ArrayList<NoteOnEvent> noteOnEvents) {
-
         assert noteOnEvents != null;
-
         this.notes = new ArrayList<>();
-        this.mapByInstrument = new HashMap<>();
-        this.mapByChannel = new HashMap<>();
-
         for (NoteOnEvent on : noteOnEvents) {
-            Note note = new Note(on);
-            this.notes.add(note);
-            this.mapByInstrument.computeIfAbsent(note.getTrackName(), k -> new ArrayList<>()).add(note);
-            this.mapByChannel.computeIfAbsent(note.getOriginalChannel(), k -> new ArrayList<>()).add(note);
+            this.notes.add(new Note(on));
         }
-
+        mapNotes();
     }
 
-    // This is List to avoid type erasure conflicting method signatures
+    public void mapNotes() {
+
+        this.mapByInstrument = new HashMap<>();
+        this.mapByChannel = new HashMap<>();
+        this.mapByDuration = new HashMap<>();
+
+        for (Note note : this.notes) {
+
+            this.mapByInstrument.computeIfAbsent(note.getTrackName(), k -> new ArrayList<>()).add(note);
+            this.mapByChannel.computeIfAbsent(note.getOriginalChannel(), k -> new ArrayList<>()).add(note);
+            this.mapByDuration.computeIfAbsent(note.getDuration(), k -> new ArrayList<>()).add(note);
+        }
+    }
+
+    /// This is List to avoid type erasure conflicting method signatures
     Notes(List<Note> notes) {
         this.notes = (ArrayList<Note>) notes;
+    }
+
+    /// Empty constructor
+    Notes() {
+        this.notes = new ArrayList<>();
     }
 
 
@@ -92,12 +104,16 @@ public class Notes {
         final int MEDIAN_VELOCITY = 64;
 
         for (Note note : notes) {
-            // todo switching between getOriginalChannel() and getAssignedChannel()
-            ShortMessage onMessage = new ShortMessage(ShortMessage.NOTE_ON, note.getOriginalChannel(), note.getPitch(), MEDIAN_VELOCITY);
+            // todo switch between these
+            //final int CHANNEL = note.getAssignedChannel();
+            final int CHANNEL = note.getOriginalChannel();
+            //final int CHANNEL = 0;
+            ShortMessage onMessage = new ShortMessage(ShortMessage.NOTE_ON, CHANNEL, note.getPitch(),
+                    MEDIAN_VELOCITY);
             MidiEvent noteOnEvent = new MidiEvent(onMessage, note.start());
             outList.add(noteOnEvent);
 
-            ShortMessage offMessage = new ShortMessage(ShortMessage.NOTE_OFF, note.getOriginalChannel(), note.getPitch(), 0);
+            ShortMessage offMessage = new ShortMessage(ShortMessage.NOTE_OFF, CHANNEL, note.getPitch(), 0);
             MidiEvent noteOffEvent = new MidiEvent(offMessage, note.stop());
             outList.add(noteOffEvent);
         }

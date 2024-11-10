@@ -54,24 +54,46 @@ public class Util {
         }
     }
 
-    /**
-     * Given a number of lists, returns a {@link javax.sound.midi.Sequence} object comprised
-     * of those events.
-     *
-     * @param resolution The resolution for the {@link javax.sound.midi.Sequence} (caution)
-     * @param list       1 or more lists of MidiEvent objects
-     * @return A {@link javax.sound.midi.Sequence} object.
-     */
-    static Sequence makeSequenceFromMidiEvents(int resolution, ArrayList<MidiEvent> list) throws InvalidMidiDataException {
-        Sequence out;
-        out = new Sequence(Sequence.PPQ, resolution);
-        Track track = out.createTrack();
-        for (MidiEvent event : list) {
-            //track.add( DeepCopy.copyEvent(event) );
-            track.add(event);
-            System.out.println("deep copying @" + event.getTick());
+
+    public static void makePiano(Sequence in) throws InvalidMidiDataException {
+
+        Sequence out = new Sequence(in.getDivisionType(), in.getResolution());
+
+        Track[] inTracks = in.getTracks();
+
+        for (Track inTrack : inTracks) {
+            for (int i = 0; i < inTrack.size(); i++) {
+                MidiEvent inEvent = inTrack.get(i);
+                MidiMessage inMessage = inEvent.getMessage();
+
+                // Process
+                if (inMessage instanceof ShortMessage sm) {
+                    makePianoShortMessage(sm);
+                }
+
+                if (inMessage instanceof MetaMessage mm) {
+                    makePianoMetaMessage(mm);
+                }
+
+                // Add to out
+
+
+            }
         }
-        return out;
+
+    }
+
+    private static void makePianoShortMessage(ShortMessage sm) throws InvalidMidiDataException {
+        if (sm.getCommand() == Constants.PROGRAM_CHANGE) {
+            final int ACOUSTIC_GRAND_PIANO = 0x0;
+            sm.setMessage(sm.getCommand(), sm.getChannel(), ACOUSTIC_GRAND_PIANO, sm.getData2());
+        }
+    }
+
+    private static void makePianoMetaMessage(MetaMessage mm) throws InvalidMidiDataException {
+        if (mm.getType() == Constants.TRACK_NAME) {
+            mm.setMessage(mm.getType(), new byte[]{'P', 'i', 'a', 'n', 'o'}, 5);
+        }
     }
 
     /**

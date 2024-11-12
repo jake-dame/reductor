@@ -110,6 +110,7 @@ public class Files {
     public static final String OVERLAPPING_ASCENDING_SCALE = addFile("overlapping_ascending_scale.mid");
     public static final String BEETHOVEN_7_FUGUE = addFile("beethoven_7_fugue_full.mid");
     public static final String MEASURE_SIZE_TEST = addFile("measure_size_test.mid");
+    public static final String MEASURE_STACK_TEST = addFile("measure_stack_test.mid");
     //public static final String BEETHOVEN_7_FUGUE_PIANO = addFile("beethoven_7_fugue_piano.mid"); // overlapping notes
 
 

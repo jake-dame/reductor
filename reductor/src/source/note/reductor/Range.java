@@ -58,6 +58,10 @@ public class Range implements Comparable<Range>, Ranged {
         return this;
     }
 
+    public long length() {
+        return this.high - this.low;
+    }
+
     public long getLow() {
         return low;
     }

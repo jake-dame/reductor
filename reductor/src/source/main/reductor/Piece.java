@@ -88,6 +88,14 @@ public class Piece {
         return this.notes.toSequencePlusAddBacks(this.getAddBacks());
     }
 
+    public ArrayList<TimeSignature> getTimeSignatures() {
+        ArrayList<TimeSignature> timeSigs = new ArrayList<>();
+        for (TimeSignatureEvent event : events.getTimeSignatureEvents()) {
+            timeSigs.add(new TimeSignature(event));
+        }
+        return timeSigs;
+    }
+
     // debug
     private void checkDataStrings() {
         for (Event<?> event : this.events.allEvents) {

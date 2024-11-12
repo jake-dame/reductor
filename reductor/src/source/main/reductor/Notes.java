@@ -10,6 +10,8 @@ import java.util.Map;
 /// This is a wrapper class for `ArrayList<Note>`. It makes conversion to ArrayList<MidiEvent> and Sequence easier
 /// and centralized. Also I got tired of typing ArrayList<Note\>.
 public class Notes {
+    //todo make this Ranged?
+    // THis probably just needs to eat the Chord class anyway...
 
     private final ArrayList<Note> notes;
     private Map<String, List<Note>> mapByInstrument;

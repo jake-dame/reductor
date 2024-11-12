@@ -147,4 +147,17 @@ public class Chord implements Ranged, Comparable<Chord> {
     }
 
 
+    public static Notes toNotes(ArrayList<Chord> chords) {
+
+        ArrayList<Note> notes = new ArrayList<>();
+
+        for (Chord chord : chords) {
+            notes.addAll(chord.getNotes().getList());
+        }
+
+        return new Notes(notes);
+
+    }
+
+
 }

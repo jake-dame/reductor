@@ -181,6 +181,7 @@ public class Events {
                 }
                 case TIME_SIGNATURE -> {
                     Events.this.timeSignatureEvents.add((TimeSignatureEvent) event);
+                    ((TimeSignatureEvent) event).setResolution(Piece.RESOLUTION); // quick fix
                     this.currTimeSignatureEvent = (TimeSignatureEvent) event;
                 }
                 case KEY_SIGNATURE -> {
@@ -267,15 +268,8 @@ public class Events {
     }
 
     ArrayList<TimeSignatureEvent> getTimeSignatureEvents() {
-
-        if (timeSignatureEvents.isEmpty()) {
-            return null;
-        }
-
         timeSignatureEvents.sort(Comparator.comparingLong(TimeSignatureEvent::getTick));
-
         return timeSignatureEvents;
-
     }
 
 

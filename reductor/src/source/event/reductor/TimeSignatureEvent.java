@@ -2,12 +2,15 @@ package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
+import java.util.Objects;
 
 
 public class TimeSignatureEvent extends MetaEvent {
 
     private final int upperNumeral;
     private final int lowerNumeral;
+
+    private int resolution;
 
     TimeSignatureEvent(MidiEvent event) {
         super(event);
@@ -44,12 +47,36 @@ public class TimeSignatureEvent extends MetaEvent {
         getMessage().setMessage(this.getMessage().getType(), newData, newData.length);
     }
 
+    public int getResolution() {
+        return this.resolution;
+    }
+
+    public void setResolution(int val) {
+        this.resolution = val;
+    }
+
     public int getUpperNumeral() {
         return upperNumeral;
     }
 
     public int getLowerNumeral() {
         return lowerNumeral;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof TimeSignatureEvent that)) {
+            return false;
+        }
+        return upperNumeral == that.upperNumeral && lowerNumeral == that.lowerNumeral;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(upperNumeral, lowerNumeral);
     }
 
 

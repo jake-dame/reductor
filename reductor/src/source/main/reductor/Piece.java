@@ -3,51 +3,118 @@ package reductor;
 import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Queue;
 
-import static reductor.Constants.PROGRAM_CHANGE;
+import static java.nio.file.Files.createFile;
 import static reductor.DeepCopy.copySequence;
 
 
 public class Piece {
 
-    /// Resolution == ticks per quarter note
     public static int RESOLUTION;
-    public static int DIVISION_TYPE;
-    public static long LENGTH_IN_TICKS;
+    public static float DIVISION_TYPE;
+    public static long LENGTH; // TODO: just make a Range?
+
     private final File file;
-    private final MidiFileFormat fileFormat;
     private final Integer fileType;
+
     private final Sequence sequence;
     private final Events events;
+
     private final Notes notes;
+    private final Measures measures;
 
-    public Piece(String filepath) throws InvalidMidiDataException, IOException {
-        this.file = new File(filepath);
-        this.sequence = MidiSystem.getSequence(this.file);
-        if (this.sequence.getDivisionType() != Sequence.PPQ) {
-            throw new RuntimeException("this program does not support SMPTE timing");
-        }
+    private final ArrayList<TimeSignature> timeSignatures;
+    private final ArrayList<KeySignature> keySignatures;
+
+    private Piece(Sequence sequence, File file, Integer fileType) throws InvalidMidiDataException {
+
+        this.sequence = sequence;
+        this.file = file;
+        this.fileType = fileType;
+
         RESOLUTION = sequence.getResolution();
-        DIVISION_TYPE = (int) this.sequence.getDivisionType();
-        LENGTH_IN_TICKS = this.getLengthInTicks();
-        this.fileFormat = MidiSystem.getMidiFileFormat(this.file);
-        this.fileType = fileFormat.getType();
+        DIVISION_TYPE = 1;
+        LENGTH = this.sequence.getTickLength();
+
         this.events = new Events(this.sequence);
+
         this.notes = new Notes(this.events.noteOnEvents);
-        //region <development/debug>
-        checkDataStrings();
-        //endregion
+        this.measures = Measures.createMeasures(this.getTimeSignatures());
+
+        this.timeSignatures = new ArrayList<>();
+        this.keySignatures = new ArrayList<>();
 
     }
 
-    public void play() {
-        Util.play(this.sequence);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private static void assignRanges(ArrayList<? extends Ranged> events) {
+
+        events.sort(Comparator.comparingLong(Ranged::start));
+
+        Queue<Ranged> queue = new ArrayDeque<>(events);
+
+        Ranged curr;
+        Ranged next;
+        long startTick;
+        long endTick;
+        while (!queue.isEmpty()) {
+
+            curr = queue.remove();
+            startTick = curr.start();
+
+            if (!queue.isEmpty()) {
+                endTick = queue.peek().start();
+            } else {
+                // Overcompensate in order to make the last range completely inclusive.
+                endTick = Piece.LENGTH + 1;
+            }
+
+            Range range = new Range(startTick, endTick - 1);
+            curr.setRange(range);
+
+        }
+
     }
 
-    public File write() {
-        return Util.write(this.sequence, this.file.getName());
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public Sequence getSequence() {
         return copySequence(this.sequence);
@@ -67,10 +134,6 @@ public class Piece {
 
     public String getName() {
         return this.file.getName().split("\\.")[0];
-    }
-
-    public long getLengthInTicks() {
-        return this.sequence.getTickLength();
     }
 
     public long getLengthInMicroseconds() {
@@ -96,11 +159,85 @@ public class Piece {
         return timeSigs;
     }
 
-    // debug
-    private void checkDataStrings() {
-        for (Event<?> event : this.events.allEvents) {
-            String str = event.toString();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public static Piece createPiece(String filepath) throws InvalidMidiDataException {
+
+        File file = new File(filepath);
+
+        Sequence sequence;
+        int fileType;
+
+        try {
+            sequence = MidiSystem.getSequence(file);
+            fileType = MidiSystem.getMidiFileFormat(file).getType();
+        } catch (InvalidMidiDataException | IOException e) {
+            System.err.println(e.getMessage());
+            return null;
         }
+
+        if (sequence.getDivisionType() != Sequence.PPQ) {
+            System.err.println("this program does not support SMPTE timing yet");
+            return null;
+        }
+
+        String name = file.getName().split("\\.")[0];
+
+        return new Piece(sequence, file, fileType);
+
+    }
+
+    public static Piece createPiece(Sequence sequence, String name) throws InvalidMidiDataException {
+
+        if (!name.contains(".")) {
+            System.err.println("name should be plain, not in file form");
+            return null;
+        }
+
+        File file;
+
+        try {
+            file = createFile(Path.of(name + ".mid")).toFile();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            return null;
+        }
+
+        if (sequence != null) {
+            return new Piece(sequence, file, null);
+        } else {
+            System.err.println("passed Sequence was null");
+        }
+
+        return null;
+
+    }
+
+    public void play() {
+        Util.play(this.sequence);
+    }
+
+    public File write() {
+        return Util.write(this.sequence, this.file.getName());
     }
 
 

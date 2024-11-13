@@ -129,6 +129,11 @@ public class Util {
      * @return The File object pertaining to the new file
      */
     static File write(Sequence sequence, String name) {
+
+
+        // TODO: double-check that the way you writing files out (type 1: single-track) isn't screwing up musescore stuff
+
+
         if (name.contains(".")) {
             throw new RuntimeException("file name should not contain '.'");
         }

@@ -3,6 +3,7 @@
 //import java.util.ArrayList;
 //import java.util.HashSet;
 //import java.util.List;
+//import java.util.Set;
 //
 //
 ///*
@@ -327,20 +328,18 @@
 //            throw new NullPointerException("null Range was passed to IntervalTree#query");
 //        }
 //
-//        ArrayList<T> matches = new ArrayList<>();
+//        Set<T> matches = new HashSet<>();
 //
-//        return query(root, window, matches);
+//        query(root, window, matches);
+//
+//        return new ArrayList<>(matches);
 //
 //    }
 //
-//    private ArrayList<T> query(Node node, Range window, ArrayList<T> matches) {
+//    private Set<T> query(Node node, Range window, Set<T> matches) {
 //
 //        if (window.overlaps(node.getRange())) {
-//            for (T elem : node.elements) {
-//                if (!matches.contains(elem)) {
-//                    matches.add(elem);
-//                }
-//            }
+//            matches.addAll(node.elements);
 //        }
 //
 //        if (node.left == null && node.right == null) {
@@ -412,6 +411,10 @@
 //        return numElements;
 //    }
 //
+//    long getMax() {
+//        return root.max;
+//    }
+//
 //
 //    //endregion
 //
@@ -422,26 +425,9 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 package reductor;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /*
@@ -562,7 +548,7 @@ public class IntervalTree<T extends Ranged> {
     class Node implements Ranged { // todo make private again and members
 
         /// The {@link reductor.Range} (i.e., interval) this node represents
-        private final Range range;
+        private Range range;
 
         /// Max endpoint in subtree rooted at this node (used to ignore left subtrees during queries)
         private long max;
@@ -576,6 +562,8 @@ public class IntervalTree<T extends Ranged> {
         /// This node's right child
         Node right;
 
+        /// Flag used during queries
+        boolean queried;
 
         /// Primary constructor which takes a {@link reductor.Range}
         Node(Range range) {
@@ -584,6 +572,7 @@ public class IntervalTree<T extends Ranged> {
             this.left = null;
             this.right = null;
             this.elements = new ArrayList<>();
+            this.queried = false;
         }
 
 
@@ -621,6 +610,16 @@ public class IntervalTree<T extends Ranged> {
             return new Range(this.range);
         }
 
+        @Override
+        public long start() {
+            return this.range.getLow();
+        }
+
+        @Override
+        public void setRange(Range range) {
+            this.range = range;
+        }
+
         /// The number of elements this node holds
         int size() {
             return this.elements.size();
@@ -629,6 +628,7 @@ public class IntervalTree<T extends Ranged> {
         public long getMax() {
             return this.max;
         }
+
 
     }
 
@@ -644,6 +644,8 @@ public class IntervalTree<T extends Ranged> {
 
     /// Size (number of elements)
     private int numElements;
+
+    Stack<Node> queriedNodes = new Stack<>();
 
     /// Primary constructor
     IntervalTree(ArrayList<T> elements) {
@@ -756,6 +758,19 @@ public class IntervalTree<T extends Ranged> {
     //region <Query>
 
 
+    // TODO:
+    // You know I am starting to think that the duplicate note thing might actually be better implemented in the
+    // query function after all with flags. And it wouldn't be all that bad.
+    //     + Add every Node you touch to a STACK and set its queried flag to true.
+    //     + At the end of the query in IntervalTree, just pop everything out of the stack and set them all back to
+    //     false.
+    //     + I think this would make the code so much easier to maintain and simpler, AND it wouldn't really be a
+    //     performance thing in the end when compared to how you're doing things now.
+    //     + jake: double check that the queried flag can stay with Node and not have to be in Note, because that
+    //     WOULD be a considerable design drawback (don't want a member in Note that has to do with whether or not it
+    //     was queried during a method call).
+
+
     ArrayList<T> query(Range window) {
 
         if (root == null) {
@@ -766,18 +781,25 @@ public class IntervalTree<T extends Ranged> {
             throw new NullPointerException("null Range was passed to IntervalTree#query");
         }
 
-        Set<T> matches = new HashSet<>();
+        ArrayList<T> matches = new ArrayList<>();
 
         query(root, window, matches);
+
+        while(!this.queriedNodes.isEmpty()) {
+            queriedNodes.pop().queried = false;
+        }
 
         return new ArrayList<>(matches);
 
     }
 
-    private Set<T> query(Node node, Range window, Set<T> matches) {
+    private ArrayList<T> query(Node node, Range window, ArrayList<T> matches) {
 
-        if (window.overlaps(node.getRange())) {
+        if (!node.queried
+                && window.overlaps(node.getRange())) {
             matches.addAll(node.elements);
+            node.queried = true;
+            queriedNodes.push(node);
         }
 
         if (node.left == null && node.right == null) {

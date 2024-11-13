@@ -14,12 +14,15 @@ public class TimeSignatureEvent extends MetaEvent {
 
     TimeSignatureEvent(MidiEvent event) {
         super(event);
+
         byte[] data = this.getMessage().getData();
         this.upperNumeral = data[0] & 0xFF;
         int lowerNumeralExponent = data[1] & 0xFF;
         this.lowerNumeral = (int) Math.pow(2, lowerNumeralExponent);
         int clockTicksPerTick = data[2] & 0xFF; // don't delete
         int thirtySecondsPerBeat = data[3] & 0xFF; // don't delete
+
+        this.resolution = Piece.RESOLUTION;
     }
 
     @Override
@@ -49,10 +52,6 @@ public class TimeSignatureEvent extends MetaEvent {
 
     public int getResolution() {
         return this.resolution;
-    }
-
-    public void setResolution(int val) {
-        this.resolution = val;
     }
 
     public int getUpperNumeral() {

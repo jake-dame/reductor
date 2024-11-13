@@ -1,56 +1,55 @@
 package reductor;
 
 
-public class TimeSignature {
+public class TimeSignature implements Ranged {
 
     private final int upperNumeral;
     private final int lowerNumeral;
     private final int resolution;
-    private final TimeSignatureEvent event;
-    private final Range range;
+    private Range range;
+    private final TimeSignatureEvent event; // TODO: remove once get/setRange() is implemented
 
-    // todo this whole constructor is a quick fix
-    TimeSignature(TimeSignatureEvent e) {
-        this.upperNumeral = e.getUpperNumeral();
-        this.lowerNumeral = e.getLowerNumeral();
-        this.resolution = Piece.RESOLUTION;
-        this.event = e;
+
+    TimeSignature(TimeSignatureEvent timeSignatureEvent) {
+        this.upperNumeral = timeSignatureEvent.getUpperNumeral();
+        this.lowerNumeral = timeSignatureEvent.getLowerNumeral();
+
+        this.resolution = timeSignatureEvent.getResolution();
+
         this.range = null;
+
+        this.event = timeSignatureEvent;
     }
 
 
-    //TimeSignature(int upperNumeral, int lowerNumeral, int resolution) {
-    //    this.range = null;
-    //    this.upperNumeral = upperNumeral;
-    //    this.lowerNumeral = lowerNumeral;
-    //    this.resolution = resolution;
-    //}
-    //
-    //TimeSignature(TimeSignatureEvent timeSignatureEvent) {
-    //    this(timeSignatureEvent.getUpperNumeral(), timeSignatureEvent.getLowerNumeral(), timeSignatureEvent.getResolution());
-    //    this.event = timeSignatureEvent;
-    //}
+    public int getUpperNumeral() { return this.upperNumeral; }
+    public int getLowerNumeral() { return this.lowerNumeral; }
+    public int getResolution() { return this.resolution; }
 
-    public int getUpperNumeral() {
-        return this.upperNumeral;
-    }
-
-    public int getLowerNumeral() {
-        return this.lowerNumeral;
-    }
-
-    public int getResolution() {
-        return this.resolution;
-    }
-
-    // TODO: this is just a quick fix until range is implemented
-    public long getTick() {
-        return this.event.getTick();
-    }
+    @Override
+    public Range getRange() { return new Range(this.range); }
 
     @Override
     public String toString() {
-        return this.upperNumeral + "/" + this.lowerNumeral + " " + this.range;
+        return this.upperNumeral + "/" + this.lowerNumeral;
+    }
+
+
+
+    @Override
+    public long start() {
+        return this.range.getLow();
+    }
+
+    @Override
+    public void setRange(Range range) {
+        this.range = range;
+    }
+
+
+    // TODO: this is just a quick fix until getRange() is implemented
+    public long getTick() {
+        return this.event.getTick();
     }
 
 

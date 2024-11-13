@@ -14,16 +14,19 @@ public abstract class Event<T extends MidiMessage> {
 
     private final MidiEvent event;
     private final MessageType type;
-    private final long tick;
     private final T message;
     private int trackIndex;
     private TrackNameEvent trackNameEvent;
+
+    private final Long tick;
+    private Long nextEventTick;
 
     Event(MidiEvent event) {
         this.event = event;
         this.tick = event.getTick();
         this.message = (T) event.getMessage();
         this.type = assignType(this.getMessage());
+        this.nextEventTick = null;
     }
 
     public static Event<?> createEvent(MidiEvent event) throws InvalidMidiDataException {
@@ -100,6 +103,10 @@ public abstract class Event<T extends MidiMessage> {
                 dataString(),
                 this.tick
         );
+    }
+
+    public void setNextEventTick(long val) {
+        this.nextEventTick = val;
     }
 
     public final MidiEvent getMidiEvent() {

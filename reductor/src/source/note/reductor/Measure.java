@@ -2,79 +2,54 @@ package reductor;
 
 import java.util.ArrayList;
 
+// TODO: see Main comment concerning Buckets
 
 public class Measure implements Ranged {
 
     private Notes notes;
-
     private int measureNumber;
-    private final Range range;
-
     private final TimeSignature timeSig;
-    private final int upperNumeral;
-    private final int lowerNumeral;
-
     private boolean isPickup;
-    private final boolean isRepeat;
+    private Range range;
 
-    Measure(Range range, int measureNumber, TimeSignature timeSignature, ArrayList<Note> notes) {
+    Measure(Range range, int measureNumber, TimeSignature timeSignature, Notes notes) {
 
+        assert notes != null; // TODO: remove once refactor is done
+
+        this.notes = notes;
         this.range = range;
         this.timeSig = timeSignature;
-        this.upperNumeral = timeSignature.getUpperNumeral();
-        this.lowerNumeral = timeSignature.getLowerNumeral();
         this.isPickup = false;
-        this.isRepeat = false;
         this.measureNumber = measureNumber;
-
-        if (notes == null) {
-            this.notes = null;
-        } else {
-            this.notes = new Notes(notes);
-        }
-
     }
 
-    public int size() {
-        if (notes == null) { return 0; }
-        return this.notes.size();
-    }
+    public int size() { return this.notes.size(); }
+    public long length() { return this.getRange().length(); }
+    public TimeSignature getTimeSignature() { return this.timeSig; } // TODO: deep copy?
 
-    public long length() {
-        return this.getRange().length();
-    }
+    public boolean isPickup() { return this.isPickup; }
+    public void setIsPickup(boolean val) { this.isPickup = val; }
 
-    public TimeSignature getTimeSignature() {
-        return this.timeSig; // todo deep copy?
-    }
+    public Notes getNotes() { return this.notes; }
+    public void setNotes(Notes notes) { this.notes = notes; }
+
+    public int getMeasureNumber() { return measureNumber; }
+    public void setMeasureNumber(int measureNumber) { this.measureNumber = measureNumber; }
 
     @Override
-    public Range getRange() {
-        return new Range(this.range);
-    }
-
-    public boolean isPickup() {
-        return this.isPickup;
-    }
-
-    void setMeasureNumber(int val) {
-        this.measureNumber = val;
-    }
-
-    void setIsPickup(boolean val) {
-        this.isPickup = val;
-    }
-
-    void setNotes(Notes notes) {
-        this.notes = notes;
-    }
+    public Range getRange() { return new Range(this.range); }
 
     @Override
     public String toString() {
-        return this.range + ": " + this.upperNumeral + "/" + this.lowerNumeral + " and " + this.size() + " notes"; // todo idk man
+        return this.range + ": " + this.timeSig + " and " + this.size() + " notes";
     }
 
-    public static long getMeasureSize(int upperNumeral, int lowerNumeral, int resolution) {
+
+    public static long getMeasureSize(TimeSignature timeSig) {
+        return getMeasureSize(timeSig.getUpperNumeral(), timeSig.getLowerNumeral(), timeSig.getResolution());
+    }
+
+    private static long getMeasureSize(int upperNumeral, int lowerNumeral, int resolution) {
 
         // These need to be floats for stuff like 3/8 or 7/8
         float upper = (float) upperNumeral;
@@ -108,9 +83,16 @@ public class Measure implements Ranged {
 
     }
 
-    public static long getMeasureSize(TimeSignature timeSig) {
-        return getMeasureSize(timeSig.getUpperNumeral(), timeSig.getLowerNumeral(), timeSig.getResolution());
+    @Override
+    public long start() {
+        return this.range.getLow();
     }
+
+    @Override
+    public void setRange(Range range) {
+        this.range = range;
+    }
+
 
 
 }

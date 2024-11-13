@@ -67,34 +67,34 @@ public class Piece {
 
 
 
-    private static void assignRanges(ArrayList<? extends Ranged> events) {
-
-        events.sort(Comparator.comparingLong(Ranged::start));
-
-        Queue<Ranged> queue = new ArrayDeque<>(events);
-
-        Ranged curr;
-        Ranged next;
-        long startTick;
-        long endTick;
-        while (!queue.isEmpty()) {
-
-            curr = queue.remove();
-            startTick = curr.start();
-
-            if (!queue.isEmpty()) {
-                endTick = queue.peek().start();
-            } else {
-                // Overcompensate in order to make the last range completely inclusive.
-                endTick = Piece.LENGTH + 1;
-            }
-
-            Range range = new Range(startTick, endTick - 1);
-            curr.setRange(range);
-
-        }
-
-    }
+    //private static void assignRanges(ArrayList<? extends Ranged> events) {
+    //
+    //    events.sort(Comparator.comparingLong(Ranged::start));
+    //
+    //    Queue<Ranged> queue = new ArrayDeque<>(events);
+    //
+    //    Ranged curr;
+    //    Ranged next;
+    //    long startTick;
+    //    long endTick;
+    //    while (!queue.isEmpty()) {
+    //
+    //        curr = queue.remove();
+    //        startTick = curr.start();
+    //
+    //        if (!queue.isEmpty()) {
+    //            endTick = queue.peek().start();
+    //        } else {
+    //            // Overcompensate in order to make the last range completely inclusive.
+    //            endTick = Piece.LENGTH + 1;
+    //        }
+    //
+    //        Range range = new Range(startTick, endTick - 1);
+    //        curr.setRange(range);
+    //
+    //    }
+    //
+    //}
 
 
 

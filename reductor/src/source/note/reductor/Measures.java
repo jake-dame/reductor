@@ -18,6 +18,7 @@ public class Measures {
     private Measures(ArrayList<TimeSignature> list) {
         this.timeSigs = list;
         this.pieceLength = Piece.LENGTH;
+        this.assignTimeSigRanges();
         this.measures = this.createEmptyMeasures();
         this.fillMeasures();
         //this.zeroIndexed = this.probablyHasPickup();
@@ -32,34 +33,34 @@ public class Measures {
     }
 
 
-    //// TODO: I'm not sure this belongs in this class whether you keep it or not. It needs the full list, yes, but
-    ////  could maybe be a static method in TimeSignature
-    //private void assignTimeSigRanges() {
-    //
-    //    Queue<TimeSignature> queue = new ArrayDeque<>(this.timeSigs);
-    //
-    //    TimeSignature curr;
-    //    TimeSignature next;
-    //    long startTick;
-    //    long endTick;
-    //    while (!queue.isEmpty()) {
-    //
-    //        curr = queue.remove();
-    //        startTick = curr.getTick();
-    //
-    //        if (!queue.isEmpty()) {
-    //            endTick = queue.peek().getTick();
-    //        } else {
-    //            // overcompensate in order to make the last time signature completely inclusive
-    //            endTick = pieceLength + 1;
-    //        }
-    //
-    //        Range range = new Range(startTick, endTick - 1);
-    //        curr.setRange(range);
-    //
-    //    }
-    //
-    //}
+    // TODO: I'm not sure this belongs in this class whether you keep it or not. It needs the full list, yes, but
+    //  could maybe be a static method in TimeSignature
+    private void assignTimeSigRanges() {
+
+        Queue<TimeSignature> queue = new ArrayDeque<>(this.timeSigs);
+
+        TimeSignature curr;
+        TimeSignature next;
+        long startTick;
+        long endTick;
+        while (!queue.isEmpty()) {
+
+            curr = queue.remove();
+            startTick = curr.getTick();
+
+            if (!queue.isEmpty()) {
+                endTick = queue.peek().getTick();
+            } else {
+                // overcompensate in order to make the last time signature completely inclusive
+                endTick = pieceLength + 1;
+            }
+
+            Range range = new Range(startTick, endTick - 1);
+            curr.setRange(range);
+
+        }
+
+    }
 
     private ArrayList<Measure> createEmptyMeasures() {
 

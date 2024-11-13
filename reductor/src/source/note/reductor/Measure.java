@@ -10,7 +10,7 @@ public class Measure implements Ranged {
     private int measureNumber;
     private final TimeSignature timeSig;
     private boolean isPickup;
-    private Range range;
+    private final Range range;
 
     Measure(Range range, int measureNumber, TimeSignature timeSignature, Notes notes) {
 
@@ -82,17 +82,6 @@ public class Measure implements Ranged {
         return (long) measureInTicks;
 
     }
-
-    @Override
-    public long start() {
-        return this.range.getLow();
-    }
-
-    @Override
-    public void setRange(Range range) {
-        this.range = range;
-    }
-
 
 
 }

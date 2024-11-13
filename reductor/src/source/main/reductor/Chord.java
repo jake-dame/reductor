@@ -126,16 +126,6 @@ public class Chord implements Ranged, Comparable<Chord> {
     }
 
     @Override
-    public long start() {
-        return this.range.getLow();
-    }
-
-    @Override
-    public void setRange(Range range) {
-        this.range = range;
-    }
-
-    @Override
     public int compareTo(Chord o) {
         return this.range.compareTo(o.getRange());
     }

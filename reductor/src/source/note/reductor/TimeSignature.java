@@ -28,6 +28,7 @@ public class TimeSignature implements Ranged {
 
     @Override
     public Range getRange() { return new Range(this.range); }
+    public void setRange(Range range) { this.range = range; }
 
     @Override
     public String toString() {
@@ -36,15 +37,6 @@ public class TimeSignature implements Ranged {
 
 
 
-    @Override
-    public long start() {
-        return this.range.getLow();
-    }
-
-    @Override
-    public void setRange(Range range) {
-        this.range = range;
-    }
 
 
     // TODO: this is just a quick fix until getRange() is implemented

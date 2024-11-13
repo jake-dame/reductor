@@ -8,7 +8,7 @@ import java.util.Objects;
  */
 public class Note implements Ranged, Comparable<Note> {
 
-    private Range range;
+    private final Range range;
     private int pitch;
     private final int originalChannel;
     private int assignedChannel;
@@ -110,17 +110,6 @@ public class Note implements Ranged, Comparable<Note> {
         return new Range(this.range);
 
     }
-
-    @Override
-    public long start() {
-        return this.range.getLow();
-    }
-
-    @Override
-    public void setRange(Range range) {
-        this.range = range;
-    }
-
 
     public long getDuration() {
 

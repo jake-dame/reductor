@@ -610,16 +610,6 @@ public class IntervalTree<T extends Ranged> {
             return new Range(this.range);
         }
 
-        @Override
-        public long start() {
-            return this.range.getLow();
-        }
-
-        @Override
-        public void setRange(Range range) {
-            this.range = range;
-        }
-
         /// The number of elements this node holds
         int size() {
             return this.elements.size();

@@ -74,16 +74,5 @@ public class Range implements Comparable<Range>, Ranged {
         return this.low <= tick  &&  tick <= this.high;
     }
 
-    @Override
-    public long start() {
-        return this.getLow();
-    }
-
-    @Override
-    public void setRange(Range range) {
-        throw new RuntimeException("no");
-    }
-
-
 
 }

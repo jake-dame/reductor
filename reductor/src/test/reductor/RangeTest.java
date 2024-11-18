@@ -10,16 +10,16 @@ public class RangeTest {
     @Test
     void construction() {
         Range range = new Range(0, 1);
-        assertEquals(0, range.getLow(), "low should match first arg");
-        assertEquals(1, range.getHigh(), "high should match second arg");
+        assertEquals(0, range.low(), "low should match first arg");
+        assertEquals(1, range.high(), "high should match second arg");
     }
 
     @Test
     void copyConstruction() {
         Range original = new Range(0, 1);
         Range copy = new Range(original);
-        assertEquals(original.getLow(), copy.getLow(), "copy low should match original low");
-        assertEquals(original.getHigh(), copy.getHigh(), "copy high should match original high");
+        assertEquals(original.low(), copy.low(), "copy low should match original low");
+        assertEquals(original.high(), copy.high(), "copy high should match original high");
     }
 
     @Test

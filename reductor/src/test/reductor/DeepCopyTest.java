@@ -15,7 +15,7 @@ class DeepCopyTest {
 
     /// Helper for {@link DeepCopy#copySequence(Sequence)}
     @ParameterizedTest
-    @MethodSource("reductor.Files#getFiles")
+    @MethodSource("reductor.Files#getOkFiles")
     void testCopySequence(File midiFile) {
         //System.out.println(midiFile.getName());
         Sequence sequenceIn;
@@ -40,8 +40,8 @@ class DeepCopyTest {
             }
         }
         //Piece piece = new Piece(midiFile.getPath());
-        //assertEquals(piece.notes.size(), piece.noteOnEvents.size());
-        //assertEquals(piece.tree.toList().size(), piece.notes.size());
+        //assertEquals(piece.noteList.size(), piece.noteOnEvents.size());
+        //assertEquals(piece.tree.toList().size(), piece.noteList.size());
     }
 
     /// Helper for {@link #testCopySequence(File)}

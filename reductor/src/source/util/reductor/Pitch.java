@@ -2,6 +2,7 @@ package reductor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public class Pitch {
@@ -15,8 +16,11 @@ public class Pitch {
     //static final Map<Integer, String> pitches;
 
     static {
+
         semitonesStoI = Map.of("c", 0, "d", 2, "e", 4, "f", 5, "g", 7, "a", 9, "b", 11);
+
         accidentalsStoI = Map.of("bb", -2, "b", -1, "", 0, "#", 1, "x", 2);
+
         //pitches = Map.ofEntries(
         //        Map.entry(0, "c"),
         //        Map.entry(1, "c"),
@@ -32,6 +36,7 @@ public class Pitch {
         //        Map.entry(11, "b"),
         //        Map.entry(12, "c")
         //);
+
         pitchesItoS = new HashMap<>();
         for (int num = 0; num < 128; num++) {
             String pitch = switch (num % 12) {
@@ -51,10 +56,10 @@ public class Pitch {
             };
             pitchesItoS.put(num, pitch);
         }
+
     }
 
-    private Pitch() {
-    }
+    private Pitch() { }
 
     /**
      * Converts a MIDI pitch integer value to a string (currently: non-diatonic spelling is always the sharped degree (Ionian mode)).
@@ -65,20 +70,27 @@ public class Pitch {
      * @throws IllegalArgumentException If the passed value is not in {@code [0, 127]}.
      */
     static String toStr(Number val, boolean showRegister) {
+
         int intValue = val.intValue() & 0xFF;
+
         if (intValue > 127) {
             throw new IllegalArgumentException("pitch values must be between 0 and 127");
         }
+
         String pitchStr = pitchesItoS.get(intValue);
+
         if (showRegister) {
             return pitchStr;
         } else {
+
             if (pitchStr.charAt(pitchStr.length() - 2) == '-') {
                 return pitchStr.substring(0, pitchStr.length() - 2);
             } else {
                 return pitchStr.substring(0, pitchStr.length() - 1);
             }
+
         }
+
     }
 
     /**
@@ -97,10 +109,13 @@ public class Pitch {
      * @throws IllegalArgumentException If the input string is invalid.
      */
     static int toInt(String str) {
+
         if (str == null || str.isEmpty() || str.length() > 5) {
             throw new IllegalArgumentException("string is null, empty, or too long");
         }
+
         str = str.toLowerCase().trim();
+
         // Clunky but checks special cases: valid enharmonic spellings of min/max.
         switch (str) {
             case "b#-2", "dbb-1":
@@ -110,16 +125,19 @@ public class Pitch {
             case "fx9", "abb9":
                 return 127;
         }
+
         Integer semitone = semitonesStoI.get(str.substring(0, 1));
+
         if (semitone == null) {
             throw new IllegalArgumentException("invalid pitch; valid pitches are in upper or lower ['a','g']");
         }
-        if (str.length() == 1) {
-            // It's just a pitch, so just return the pitch.
-            return semitone;
-        }
+
+        // It's just a pitch, so return it early
+        if (str.length() == 1) { return semitone; }
+
         // Trim off the pitch char.
         str = str.substring(1);
+
         // Default register should just be -1.
         int register = -1;
         String accidental;
@@ -149,7 +167,9 @@ public class Pitch {
                 accidental = str;
             }
         }
+
         Integer accidentalAdjustment = accidentalsStoI.get(accidental);
+
         if (accidentalAdjustment == null) {
             throw new IllegalArgumentException("invalid accidental; can be one of the following: \"#\", \"b\", \"x\", or \"bb\"");
         }
@@ -162,5 +182,9 @@ public class Pitch {
         return semitone + ((register + 1) * 12) + accidentalAdjustment;
     }
 
+    static boolean isWhiteKey(int pitch) {
+        Set<Integer> whiteKeys = Set.of(0, 2, 4, 5, 7, 9, 11);
+        return whiteKeys.contains(pitch % 12);
+    }
 
 }

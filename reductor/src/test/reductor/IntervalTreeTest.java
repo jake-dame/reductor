@@ -14,6 +14,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /// and query
 class IntervalTreeTest<T extends Ranged> {
 
+    static {
+        Context context = Context.createContext(480, 480);
+    }
+
     /*
         For list of T with ranges:
             + [5,30], [7,20], [10,15], [10,17], [10,20], [10,22], [10,25], [12,30], [15,20]
@@ -155,11 +159,11 @@ class IntervalTreeTest<T extends Ranged> {
             }
         }
         // This is needed because for ArrayLists to be considered equal, their elements need to be equal and in the
-        // same order. Notes have a different compareTo() than Ranges.
+        // same order. NoteList have a different compareTo() than Ranges.
         var comp = new Comparator<Note>() {
             @Override
             public int compare(Note n1, Note n2) {
-                if (n1.getPitch() != n2.getPitch()) {
+                if (n1.pitch() != n2.pitch()) {
                     return n1.compareTo(n2);
                 } else {
                     return n1.getRange().compareTo(n2.getRange());
@@ -186,14 +190,14 @@ class IntervalTreeTest<T extends Ranged> {
     }
 
     @Test
-    void getMax() {
+    void getLastTick() {
 
         ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
         distinctPlusQuasiDups.addAll(distinctElems);
         distinctPlusQuasiDups.addAll(quasiDupElems);
         IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
 
-        assertEquals(30L, tree.getMax());
+        assertEquals(30L, tree.getLastTick());
 
     }
 
@@ -205,7 +209,7 @@ class IntervalTreeTest<T extends Ranged> {
         distinctPlusQuasiDups.addAll(quasiDupElems);
         IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
 
-        Range window = new Range(tree.getMax() + 1, tree.getMax() + 2);
+        Range window = new Range(tree.getLastTick() + 1, tree.getLastTick() + 2);
         assertTrue(tree.query(window).isEmpty());
 
     }
@@ -227,7 +231,7 @@ class IntervalTreeTest<T extends Ranged> {
         }
         long leftMax = checkMaxes(node.left);
         long rightMax = checkMaxes(node.right);
-        long thisMax = node.getRange().getHigh();
+        long thisMax = node.getRange().high();
         long maxOfSubtreesAndThis = Math.max(thisMax, Math.max(leftMax, rightMax));
         assertEquals(node.getMax(), maxOfSubtreesAndThis);
         return maxOfSubtreesAndThis;

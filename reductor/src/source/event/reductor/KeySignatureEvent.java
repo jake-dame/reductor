@@ -19,7 +19,7 @@ public class KeySignatureEvent extends MetaEvent {
 
     @Override
     String dataString() {
-        return KeyContext.getKeySignature(this.getMessage().getData());
+        return Conversion.toKeySignature(this.getMidiEvent()).toString();
     }
 
     void setData(int numAccidentals, int mode) {

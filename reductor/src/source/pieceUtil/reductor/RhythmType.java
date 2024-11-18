@@ -99,7 +99,7 @@ public enum RhythmType {
              2. Triplet (perfectly divided into thirds between upper and lower value)
                  + Furthermore, this would require look-behind/-ahead to see if neighbors were of
                        similar value (can't even rely on exact, due to staccatos or tie-overs)
-             3. Tied notes could be literally any combination (just select GCF or something)
+             3. Tied noteList could be literally any combination (just select GCF or something)
 
              And if it still doesn't match any of those categories perfectly, it could be:
                  + closer to upper value could be portato or breath

@@ -10,8 +10,7 @@ import java.util.ArrayList;
  */
 public class DeepCopy {
 
-    private DeepCopy() {
-    }
+    private DeepCopy() { }
 
     /**
      * Makes a deep copy of a {@link javax.sound.midi.Sequence}.

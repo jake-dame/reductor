@@ -62,10 +62,10 @@ public class Rhythm {
                 + "This note is some species of EIGHTH note: tied, dotted, tripleted, etc.
          2.) However, due to how triplets work, a triplet EIGHTH is actually defined by being part of a trio that fits
           into a QUARTER note, i.e., the next biggest rhythm value.
-                + Triplet HALF notes fit into a WHOLE note
-                + Triple QUARTER notes fit into a HALF note
+                + Triplet HALF noteList fit into a WHOLE note
+                + Triple QUARTER noteList fit into a HALF note
                 + etc.
-         3.) But, because the actual duration of triplet notes are LESS than their species version (i.e. a triplet
+         3.) But, because the actual duration of triplet noteList are LESS than their species version (i.e. a triplet
          EIGHTH is smaller in duration than an EIGHTH), they actually get assigned the next smallest base/species (e
          .g. a triplet EIGHTH gets assigned as "some form of SIXTEENTH")
          4.) To check for triplet values, we need to check if something is exactly (or within some threshold of)
@@ -111,21 +111,10 @@ public class Rhythm {
         return str + " " + this.base;
     }
 
-    public boolean isTriplet() {
-        return isTriplet;
-    }
-
-    public boolean isDotted() {
-        return isDotted;
-    }
-
-    public boolean isTied() {
-        return isTied;
-    }
-
-    public boolean isOrnament() {
-        return isOrnament;
-    }
+    public boolean isTriplet() { return isTriplet; }
+    public boolean isDotted() { return isDotted; }
+    public boolean isTied() { return isTied; }
+    public boolean isOrnament() { return isOrnament; }
 
 
 }

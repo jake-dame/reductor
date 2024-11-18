@@ -2,8 +2,6 @@ package reductor;
 
 import javax.sound.midi.*;
 
-import static reductor.Constants.NOTE_OFF;
-
 
 /**
  * This is a wrapper class for a {@link javax.sound.midi.MidiEvent}
@@ -40,7 +38,7 @@ public abstract class Event<T extends MidiMessage> {
                 case NOTE_ON -> {
                     int velocity = sm.getData2();
                     if (velocity == 0) {
-                        sm.setMessage(NOTE_OFF, sm.getChannel(), sm.getData1(), sm.getData2());
+                        sm.setMessage(EventType.NOTE_OFF.getTypeCode(), sm.getChannel(), sm.getData1(), sm.getData2());
                         yield new NoteOffEvent(event);
                     } else {
                         yield new NoteOnEvent(event);

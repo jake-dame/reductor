@@ -16,8 +16,7 @@ import static reductor.Files.MIDI_FILES_OUT_DIR;
  */
 public class Util {
 
-    private Util() {
-    }
+    private Util() { }
 
     /**
      * Opens a valid MIDI file with GarageBand.
@@ -84,14 +83,14 @@ public class Util {
     }
 
     private static void makePianoShortMessage(ShortMessage sm) throws InvalidMidiDataException {
-        if (sm.getCommand() == Constants.PROGRAM_CHANGE) {
+        if (sm.getCommand() == EventType.PROGRAM_CHANGE.getTypeCode()) {
             final int ACOUSTIC_GRAND_PIANO = 0x0;
             sm.setMessage(sm.getCommand(), sm.getChannel(), ACOUSTIC_GRAND_PIANO, sm.getData2());
         }
     }
 
     private static void makePianoMetaMessage(MetaMessage mm) throws InvalidMidiDataException {
-        if (mm.getType() == Constants.TRACK_NAME) {
+        if (mm.getType() == EventType.TRACK_NAME.getTypeCode()) {
             mm.setMessage(mm.getType(), new byte[]{'P', 'i', 'a', 'n', 'o'}, 5);
         }
     }

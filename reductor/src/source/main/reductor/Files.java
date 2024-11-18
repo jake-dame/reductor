@@ -41,7 +41,7 @@ public class Files {
     public static final String BEETHOVEN_5_IV = addFile("beethoven_5_iv.mid", OK_FILES);
     public static final String BIZET_PEARL_FISHERS_DUET = addFile("bizet_pearl_fishers_duet.mid", OK_FILES);
     public static final String BYRD_AVE_VERUM = addFile("byrd_avc.mid", NO_TIME_SIG_FILES);
-    public static final String BRAHMS_CLAR_QUINTET_I = addFile("brahms_clar_quintet_i.mid", OK_FILES);
+    //public static final String BRAHMS_CLAR_QUINTET_I = addFile("brahms_clar_quintet_i.mid", OK_FILES); // dbl note off
     public static final String DVORAK_CZECH_FINALE = addFile("dvorak_czech_finale.mid", OK_FILES);
     public static final String DVORAK_CZECH_ROMANZE = addFile("dvorak_czech_romanze.mid", OK_FILES);
     public static final String DVORAK_QUAR_10_III = addFile("dvorak_quar_10_iii.mid", OK_FILES);
@@ -56,7 +56,7 @@ public class Files {
     public static final String LISZT_SYMPHONY_5 = addFile("liszt_symphony_5.mid", OK_FILES);
     public static final String MAHLER_6_I = addFile("mahler_6_i.mid", OK_FILES);
     public static final String MOZART_DIE_ENTFUHRUNG = addFile("mozart_die_entfuhrung.mid", OK_FILES);
-    public static final String MOZART_LUCIO_SILLA = addFile("mozart_lucio_silla.mid", OK_FILES);
+    //public static final String MOZART_LUCIO_SILLA = addFile("mozart_lucio_silla.mid", OK_FILES); // dbl note off
     public static final String MOZART_COSI_OVERTURE = addFile("mozart_cosi_overture.mid", OK_FILES);
     public static final String MOZART_MASS_KYRIE = addFile("mozart_mass_kyrie.mid", NO_TIME_SIG_FILES);
     public static final String MOZART_SOAVE_SIL_VENTO = addFile("mozart_soave_sil_vento.mid", OK_FILES);
@@ -83,17 +83,17 @@ public class Files {
     /// SATB large intervals, duration test
     public static final String TEST_1 = addFile("Test1.mid", TEST_FILES);
 
-    /// zadok pattern, 2-measures, overlapping voices
+    /// zadok pattern, 2-measureList, overlapping voices
     public static final String TEST_2 = addFile("Test2.mid", TEST_FILES);
 
     /// don't delete quite yet, enharmonic spelling test
     public static final String TEST_PITCH = addFile("TestPitch.mid", TEST_FILES);
 
     /// piano: 2 C5 tied wholes, 4 C5 halfs USING 2-VOICE FEATURE
-    public static final String TEST_3 = addFile("Test3.mid", TEST_FILES); // overlapping notes
+    public static final String TEST_3 = addFile("Test3.mid", TEST_FILES); // overlapping noteList
 
     /// same as Test3, not using 2-voice feature
-    public static final String TEST_3_TRY_2 = addFile("Test3Try2.mid", TEST_FILES); // overlapping notes
+    public static final String TEST_3_TRY_2 = addFile("Test3Try2.mid", TEST_FILES); // overlapping noteList
 
     /// two c wholes tied in RH, ascending quarters C3...B3, D4
     public static final String TEST_3_TRY_3 = addFile("Test3Try3.mid", TEST_FILES);
@@ -113,6 +113,12 @@ public class Files {
     /// Overlapping test (4 measure string quartet in C)
     public static final String OVERLAPPING_TEST = addFile("overlapping_test.mid", TEST_FILES);
 
+    /// Complex test; see .mscz file
+    public static final String COLUMN_TEST = addFile("column_test.mid", TEST_FILES);
+
+    /// Complex test; see .mscz file
+    public static final String ORNAMENT_TEST = addFile("ornament_test.mid", TEST_FILES);
+
     public static final String OVERLAPPING_TEST_2 = addFile("overlapping_test_2.mid", TEST_FILES);
     public static final String OVERLAPPING_TEST_3 = addFile("overlapping_test_3.mid", TEST_FILES);
     public static final String OVERLAPPING_TEST_4 = addFile("overlapping_test_4.mid", TEST_FILES);
@@ -122,8 +128,11 @@ public class Files {
     public static final String OVERLAPPING_ASCENDING_SCALE = addFile("overlapping_ascending_scale.mid", TEST_FILES);
     public static final String BEETHOVEN_7_FUGUE = addFile("beethoven_7_fugue_full.mid", TEST_FILES);
     public static final String MEASURE_SIZE_TEST = addFile("measure_size_test.mid", TEST_FILES);
-    public static final String MEASURE_STACK_TEST = addFile("measure_stack_test.mid", TEST_FILES);
-    public static final String BEETHOVEN_7_FUGUE_PIANO = addFile("beethoven_7_fugue_piano.mid", TEST_FILES); // overlapping notes
+    public static final String PICKUP_MEASURE_TEST = addFile("pickup_measure_test.mid", TEST_FILES);
+    public static final String BEETHOVEN_7_FUGUE_PIANO = addFile("beethoven_7_fugue_piano.mid", TEST_FILES); // overlapping noteList
+
+    public static final String CHOPIN_PREL_e = addFile("chopin_prel_e.mid", TEST_FILES);
+    public static final String CHOPIN_PREL_c = addFile("chopin_prel_c.mid", TEST_FILES);
 
 
     private Files() { }

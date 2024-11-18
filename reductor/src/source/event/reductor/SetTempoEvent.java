@@ -21,7 +21,7 @@ public class SetTempoEvent extends MetaEvent {
 
     void setBPM(int bpm) throws InvalidMidiDataException {
         byte[] newData = convertBPMToMicroseconds(bpm);
-        this.getMessage().setMessage(Constants.SET_TEMPO, newData, newData.length);
+        this.getMessage().setMessage(EventType.SET_TEMPO.getTypeCode(), newData, newData.length);
     }
 
     /**

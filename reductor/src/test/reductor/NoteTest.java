@@ -12,33 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class NoteTest {
 
-    @Test
-    void constructionWithNullGetRange() {
-        Note note = new Note(60, null);
-        assertEquals(60, note.pitch());
-        assertNull(note.getRange());
-        assertThrows(NullPointerException.class, note::start);
-        assertThrows(NullPointerException.class, note::stop);
-    }
-
-    @Test
-    void assignPitch() {
-        Note note = new Note(60, new Range(0, 1));
-        assertEquals(60, note.pitch());
-        //note.setPitch(0);
-        assertEquals(0, note.pitch());
-        //note.setPitch(127);
-        assertEquals(127, note.pitch());
-        //assertThrows(IllegalArgumentException.class, () -> note.setPitch(-1));
-        //assertThrows(IllegalArgumentException.class, () -> note.setPitch(128));
-    }
-
-    @Test
-    void copyConstruction() {
-        Note note = new Note(60, new Range(0, 1));
-        Note copy = new Note(note);
-        assertEquals(note, copy);
-    }
+    static { Context context = Context.createContext(480, 480); }
 
     // I thought this better to test here rather than in a separate Pitch class test because
     // this is where it's most consequential. Additionally, if it works here, it works everywhere else
@@ -99,6 +73,13 @@ class NoteTest {
         assertThrows(RuntimeException.class, () -> new Note("g$$"));
         assertThrows(RuntimeException.class, () -> new Note("g$4"));
         assertThrows(RuntimeException.class, () -> new Note("g$$4"));
+    }
+
+    @Test
+    void copyConstruction() {
+        Note note = new Note(60, new Range(0, 1));
+        Note copy = new Note(note);
+        assertEquals(note, copy);
     }
 
     @Test

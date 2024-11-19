@@ -111,10 +111,11 @@ public class Rhythm {
         return str + " " + this.base;
     }
 
-    public boolean isTriplet() { return isTriplet; }
-    public boolean isDotted() { return isDotted; }
-    public boolean isTied() { return isTied; }
-    public boolean isOrnament() { return isOrnament; }
+    public boolean isTriplet() { return this.isTriplet; }
+    public boolean isDotted() { return this.isDotted; }
+    public boolean isTied() { return this.isTied; }
+    public boolean isOrnament() { return this.isOrnament; }
+    public long getDuration() { return this.actualDuration; }
 
 
 }

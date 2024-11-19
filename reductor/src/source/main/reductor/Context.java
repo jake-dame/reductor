@@ -45,7 +45,7 @@ public class Context {
         return Context.INSTANCE.resolution;
     }
 
-    public static long lastTick() {
+    public static long finalTick() {
         if (Context.INSTANCE == null) {
             throw new RuntimeException("context has not been initialized, can't get last tick");
         }

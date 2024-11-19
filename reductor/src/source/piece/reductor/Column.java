@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// i.e. looking at all the notes played at one time, and their relationships to each other pitch-wise
 /// It is not for looking at neighboring notes. Notes held from before can be in a Column, but no new notes shoulud
 /// begin within a Column's range.
-public class Column implements Ranged, Noted {
+public class Column implements Ranged, Noted, Comparable<Column> {
 
     /// The noteList that comprise this {@code Column} in ascending order by pitch
     private final NoteList notes;
@@ -87,7 +87,7 @@ public class Column implements Ranged, Noted {
 
     /// Create a Column with a default range (the default quarter note, \[0,480])
     public Column(ArrayList<Note> notes) {
-        this(new ArrayList<>(notes), new Range(0,480));
+        this(new ArrayList<>(notes), new Range());
     }
 
     /// Create an empty Column with a specified range.
@@ -111,7 +111,7 @@ public class Column implements Ranged, Noted {
     public void assignHoldovers() {
         //for (Note note : this.notes.getBackingList()) {
         //    if (note.start() < this.range.low()) {
-        //        this.notes.getBackingList().remove(note);
+        //        this.notes.remove(note);
         //        Note newNote = new Note(note);
         //        newNote.setIsHeld(true);
         //        this.notes.add( new Note(note) );
@@ -144,46 +144,61 @@ public class Column implements Ranged, Noted {
         final int SPAN_MAX = 14; // major 9th. I can't reach a 10th of any kind except double black keys
         final int NOTES_MAX = 6; // I have yet to come across a piano chord with 7+ notes
 
+        // Fill up LH (start from bottom)
         int i = 0;
         int anchorPitch = notes.get(i).pitch();
         while (i < size) {
-            Note note = notes.get(i);
-            int spanFromAnchor = Math.abs(note.pitch() - anchorPitch);
+            Note currNote = notes.get(i);
+            int distanceFromAnchor = Math.abs(currNote.pitch() - anchorPitch);
 
-            if (SPAN_MAX < spanFromAnchor) { break; }
+            if (SPAN_MAX < distanceFromAnchor) { break; }
             if (NOTES_MAX == LH.size()) { break; }
 
-            LH.add(note);
-            i++;
+            LH.add(currNote); i++;
         }
         this.leftThumb = i - 1;
 
+        // Fill up RH (start from top)
         i = size - 1;
         anchorPitch = notes.get(i).pitch();
         while (0 < i) {
-            Note note = notes.get(i);
-            int distanceFromAnchor = anchorPitch - note.pitch();
+            Note currNote = notes.get(i);
+            int distanceFromAnchor = Math.abs(currNote.pitch() - anchorPitch);
 
             if (SPAN_MAX < distanceFromAnchor) { break; }
-            if (NOTES_MAX < RH.size()) { break; }
-            if (i <= this.leftThumb ) { break; }
+            if (NOTES_MAX == RH.size()) { break; }
+            if (i <= this.leftThumb ) { break; } // also
 
-            RH.add(note);
-            i--;
+            RH.add(currNote); i--;
         }
         this.rightThumb = i + 1;
 
-        // Grab what notes are left over between the two hands, if any
-        for (i = this.leftThumb  + 1; i < this.rightThumb; i++) {
-            Note note = notes.get(i);
-            this.middle.add(note);
+        // Grab what notes are left over between the two hands, if any, and give them to "middle"
+        for (i = this.leftThumb + 1; i <= this.rightThumb - 1; i++) {
+            this.middle.add( this.notes.get(i) );
         }
 
-        // This would have to be done either, just backwards, if starting top-down
+        // If there were only enough notes for LH, but they are all above middle C, transfer them to RH
         if (RH.isEmpty()  &&  MIDDLE_C < LH.getLowNote().pitch()) {
             for (i = 0; i < LH.size(); i++) { RH.add( LH.getNotes().get(i) ); }
-            while (LH.size() != 0) { LH.notes.getBackingList().removeFirst(); }
+            while (0 < LH.size()) { LH.notes.remove(0); }
         }
+
+        //// If both hands are playing relatively close to each other but the density of each group is thinner, it
+        //// probably means the notes are meant to be evenly distributed between the hands
+        //// See: Mozart K545 i or Liszt-Beethoven Symphony 3 scherzo
+        //if (getOverallSpan() <= 3 * 12) {
+        //    this.redistributeHands();
+        //}
+
+    }
+
+    private void redistributeHands() {
+
+
+
+
+
 
     }
 
@@ -193,9 +208,7 @@ public class Column implements Ranged, Noted {
         this.notes.add(index, other);
     }
 
-    public Note remove(int index) {
-        return this.notes.getBackingList().remove(index);
-    }
+    public Note remove(int index) {return this.notes.remove(index); }
 
     public int size() { return this.notes.size(); }
     public boolean isEmpty() { return this.notes.isEmpty(); }
@@ -210,40 +223,37 @@ public class Column implements Ranged, Noted {
     public boolean isPure() { return this.isPure; }
     public boolean isTwoHanded() { return middle.isEmpty(); }
 
-    public int getMedian() {
+    public int getOverallSpan() {
+        return this.getHighNote().pitch() - this.getLowNote().pitch();
+    }
+
+    public int getMedianPitch() {
         return this.notes.get( this.notes.size() / 2 ).pitch();
     }
 
-    public int getMean()  {
+    public int getMeanPitch()  {
         int sum = 0;
         for (Note note : this.notes.getBackingList()) { sum += note.pitch(); }
         return sum / this.notes.size();
     }
 
-    public int getSplitPoint() {
+    ///
+    public int getSplitPointPitch() {
 
-        int dist = this.notes.get(this.rightThumb).pitch()
-                - this.notes.get(this.rightThumb).pitch();
+        int rhThumbPitch = this.notes.get(this.rightThumb).pitch();
+        int lhThumbPitch = this.notes.get(this.leftThumb).pitch();
+        int dist = rhThumbPitch - lhThumbPitch;
 
-        if (dist > 0) {
-            return dist / 2;
+        if (-1 < dist) {
+            // Halfway between the thumbs
+            return rhThumbPitch - (int) (dist / 2);
         }
 
+        // If the thumbs cross
         return -1;
     }
 
-    public Range getActualRange() {
-
-        long min = 0;
-        long max = 1;
-
-        for (Note note : this.notes.getBackingList()) {
-            if (note.start() < min) { min = note.start(); }
-            if (max < note.stop()) { max = note.stop(); }
-        }
-
-        return new Range(min, max);
-    }
+    public Range getActualRange() { return Range.concatenate(this.notes.getBackingList()); }
 
     @Override
     public Range getRange() { return new Range(this.range); }
@@ -253,6 +263,9 @@ public class Column implements Ranged, Noted {
 
     @Override
     public void setNotes(ArrayList<Note> notes) { }
+
+    @Override
+    public int compareTo(Column other) { return this.range.compareTo(other.range); }
 
     @Override
     public String toString() { return this.range.toString() + this.notes; }

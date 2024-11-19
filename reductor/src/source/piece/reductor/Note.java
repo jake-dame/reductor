@@ -1,20 +1,21 @@
 package reductor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * Represents a musical note, including pitch and duration.
  */
-public final class Note implements Ranged, Comparable<Note>, Noted {
+public final class Note implements Ranged, Noted, Comparable<Note> {
 
 
     private final Range range;
-    private final long length; // TODO: can be removed eventually
+    private final long length; // can be removed eventually
 
     private int pitch;
 
-    private Rhythm rhythm;
+    private final Rhythm rhythm;
 
     private boolean isHeld;
 
@@ -35,7 +36,7 @@ public final class Note implements Ranged, Comparable<Note>, Noted {
         this.length = this.range.length();
 
         assignPitch(other.pitch);
-        this.rhythm = other.rhythm;
+        this.rhythm = new Rhythm(this.length, Context.resolution());
         this.instrument = other.instrument;
         this.isHeld = other.isHeld;
     }
@@ -46,7 +47,13 @@ public final class Note implements Ranged, Comparable<Note>, Noted {
      * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
      * @see Pitch#toInt
      */
-    Note(String str) { this(Pitch.toInt(str), new Range()); }
+    Note(String str) {
+        this(Pitch.toInt(str), new Range());
+    }
+
+    Note(int pitch) {
+        this(pitch, new Range());
+    }
 
     /**
      * Constructor which takes a string to assign pitch, and a {@code Range}
@@ -54,7 +61,9 @@ public final class Note implements Ranged, Comparable<Note>, Noted {
      * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
      * @see Note#Note(String)
      */
-    Note(String str, Range range) { this(Pitch.toInt(str), range); }
+    Note(String str, Range range) {
+        this(Pitch.toInt(str), range);
+    }
 
     /// Copy constructor
     Note(Note other) { this(other, other.getRange()); }
@@ -62,7 +71,7 @@ public final class Note implements Ranged, Comparable<Note>, Noted {
     private void assignPitch(int val) {
         if (val < 0 || val > 127) { throw new IllegalArgumentException("invalid pitch for note; must be in [0,127]"); }
         this.pitch = val;
-        //this.pitch = clampToPianoRange(val); // can make decision later
+        //this.pitch = Pitch.clampToPianoRange(val); // can make decision later
     }
 
 
@@ -96,22 +105,6 @@ public final class Note implements Ranged, Comparable<Note>, Noted {
     @Override
     public Range getRange() { return this.range != null ? new Range(this.range) : null; }
 
-    //@Override
-    //public boolean equals(Object o) {
-    //    if (this == o) {
-    //        return true;
-    //    }
-    //    if (!(o instanceof Note note)) {
-    //        return false;
-    //    }
-    //    return pitch == note.pitch && length == note.length && Objects.equals(range, note.range) && Objects.equals(instrument, note.instrument);
-    //}
-    //
-    //@Override
-    //public int hashCode() {
-    //    return Objects.hash(range, pitch, length, instrument);
-    //}
-
     @Override
     public String toString() {
 
@@ -127,21 +120,10 @@ public final class Note implements Ranged, Comparable<Note>, Noted {
     * STATIC
     * ====*/
 
-    public static int clampToPianoRange(int pitch) {
-
-        final int PIANO_MAX_PITCH = 108;
-        final int PIANO_MIN_PITCH = 21;
-        final int OCTAVE = 12;
-
-        if (pitch < PIANO_MIN_PITCH) {
-            while (pitch < PIANO_MIN_PITCH) { pitch += OCTAVE; }
-        }
-
-        if (pitch > PIANO_MAX_PITCH) {
-            while (pitch > PIANO_MAX_PITCH) { pitch -= OCTAVE;}
-        }
-
-        return pitch;
+    public static ArrayList<Note> toList(List<String> strings) {
+        ArrayList<Note> out = new ArrayList<>();
+        for (String str : strings) { out.add(new Note(str)); }
+        return out;
     }
 
     /*===

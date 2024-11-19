@@ -3,10 +3,10 @@ package reductor;
 import java.util.Map;
 
 
-public class KeySignature {
+public class KeySignature implements Ranged {
 
-    static final Map<Integer, String> mapMajor;
-    static final Map<Integer, String> mapMinor;
+    private static final Map<Integer, String> mapMajor;
+    private static final Map<Integer, String> mapMinor;
 
 
     static {
@@ -53,12 +53,14 @@ public class KeySignature {
     private final int mode;
     private final int accidentals;
 
+    private final Range range;
 
-    public KeySignature(int accidentals, int mode) {
+    public KeySignature(int accidentals, int mode, Range range) {
 
         assert -7 <= accidentals  &&  accidentals <= 7;
         assert mode == 0  ||  mode == 1;
 
+        this.range = new Range(range);
         this.mode = mode;
         this.accidentals = accidentals;
     }
@@ -66,16 +68,23 @@ public class KeySignature {
 
     /// Copy constructor
     public KeySignature(KeySignature other) {
+        this.range = new Range(other.range);
         this.mode = other.mode;
         this.accidentals = other.accidentals;
     }
 
     public int getTonic() {
+
+        // This is weird but it works with what I have
         String keyString = this.isMajor()
                 ? mapMajor.get(this.accidentals)
-                :  mapMinor.get(this.accidentals);
+                : mapMinor.get(this.accidentals);
+
         return Pitch.toInt(keyString + "-1");
     }
+
+    public int getMode() { return mode; }
+    public int getAccidentals() { return accidentals; }
 
     boolean isMajor() { return this.mode == 0; }
     boolean isMinor() { return !isMajor(); }
@@ -85,10 +94,16 @@ public class KeySignature {
     boolean isFlat() { return !isSharp(); }
 
     @Override
-    public String toString() {
+    public Range getRange() { return new Range(this.range); }
+
+    @Override
+    public String toString() { return toString(this.mode, this.accidentals); }
+
+
+    public static String toString(int mode, int accidentals) {
         return mode == 0
-                ? String.format("%s Major", mapMajor.get(this.accidentals))
-                : String.format("%s minor", mapMinor.get(this.accidentals));
+                ? String.format("%s Major", mapMajor.get(accidentals))
+                : String.format("%s minor", mapMinor.get(accidentals));
     }
 
 }

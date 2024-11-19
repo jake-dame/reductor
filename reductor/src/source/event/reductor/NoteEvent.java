@@ -5,20 +5,15 @@ import javax.sound.midi.MidiEvent;
 
 public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteEvent> {
 
-    // todo this COULD be parameterized by velocity since release velocity is ignored in this program (and most others)
     private final int pitch;
     private final int velocity;
     NoteEvent partner;
-    private KeySignatureEvent keySignature;
-    private TimeSignatureEvent timeSignature;
 
     NoteEvent(MidiEvent event) {
         super(event);
         this.pitch = this.getMessage().getData1();
         this.velocity = this.getMessage().getData2();
         this.partner = null;
-        this.keySignature = null;
-        this.timeSignature = null;
     }
 
     // This is a static method of the abstract class because it seemed less error-prone to do this
@@ -59,22 +54,5 @@ public abstract class NoteEvent extends ChannelEvent implements Comparable<NoteE
     public int getVelocity() {
         return velocity;
     }
-
-    public KeySignatureEvent getKeySignature() {
-        return keySignature;
-    }
-
-    public TimeSignatureEvent getTimeSignature() {
-        return timeSignature;
-    }
-
-    public void setKeySignature(KeySignatureEvent keySignature) {
-        this.keySignature = keySignature;
-    }
-
-    public void setTimeSignature(TimeSignatureEvent timeSignature) {
-        this.timeSignature = timeSignature;
-    }
-
 
 }

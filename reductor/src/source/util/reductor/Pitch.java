@@ -7,6 +7,25 @@ import java.util.Set;
 
 public class Pitch {
 
+    public static final int MIN = 0; // C-1
+    public static final int MAX = 127; // G9
+
+    public static final int PIANO_MIN = 21; // A0
+    public static final int PIANO_MAX = 108; // C8
+
+    public static final int m2 = 1;
+    public static final int M2 = 2;
+    public static final int m3 = 3;
+    public static final int M3 = 4;
+    public static final int P4 = 5;
+    public static final int TT = 6;
+    public static final int P5 = 7;
+    public static final int m6 = 8;
+    public static final int M6 = 9;
+    public static final int m7 = 10;
+    public static final int M7 = 11;
+    public static final int OCTAVE = 12;
+
     //static final Map<Integer, String> semitonesItoS;
     static final Map<String, Integer> semitonesStoI;
     //static final Map<Integer, String> accidentalsItoS;
@@ -186,5 +205,19 @@ public class Pitch {
         Set<Integer> whiteKeys = Set.of(0, 2, 4, 5, 7, 9, 11);
         return whiteKeys.contains(pitch % 12);
     }
+
+    //public static <T extends Noted> T clampToPianoRange(T container) {
+    //    for (Note note : container.getNotes()) {
+    //        int pitch = note.pitch();
+    //
+    //    }
+    //}
+    //
+    public static int clampToPianoRange(int pitch) {
+        if (pitch < PIANO_MIN) { while (pitch < PIANO_MIN){pitch += OCTAVE;} }
+        if (pitch > PIANO_MAX) { while (pitch > PIANO_MAX){pitch -= OCTAVE;} }
+        return pitch;
+    }
+
 
 }

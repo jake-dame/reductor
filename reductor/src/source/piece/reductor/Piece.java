@@ -1,7 +1,10 @@
 package reductor;
 
+import javax.sound.midi.InvalidMidiDataException;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.TreeSet;
 
 
@@ -16,7 +19,20 @@ public class Piece implements Ranged, Noted {
     final NoteList noteList;
     final MeasureList measureList;
 
-    Piece(ArrayList<Note> notes, ArrayList<TimeSignature> timeSigs) {
+    final ArrayList<TimeSignature> timeSigs;
+    final ArrayList<KeySignature> keySigs;
+    ArrayList<Tempo> tempi; //acshually
+
+    Piece(
+            ArrayList<Note> notes,
+            ArrayList<TimeSignature> timeSignatures,
+            ArrayList<KeySignature> keySignatures,
+            ArrayList<Tempo> tempos
+    ) {
+
+        this.timeSigs = new ArrayList<>(timeSignatures);
+        this.keySigs = new ArrayList<>(keySignatures);
+        this.tempi = new ArrayList<>(tempos);
 
         this.noteList = new NoteList(notes);
 
@@ -36,6 +52,19 @@ public class Piece implements Ranged, Noted {
         long minTick = this.tree.getFirstTick();
         long maxTick = this.tree.getLastTick();
         return new Range(minTick, maxTick + 1);
+    }
+
+    public void scaleTempo(float scale) {
+
+        ArrayList<Tempo> newTempi = new ArrayList<>();
+
+        for (Tempo tempo : this.tempi) {
+            int newBpm = (int) (tempo.getBpm() * scale);
+            Tempo newTempo = new Tempo(newBpm, tempo.getRange());
+            newTempi.add(newTempo);
+        }
+
+        this.tempi = newTempi;
     }
 
     @Override
@@ -244,5 +273,6 @@ public class Piece implements Ranged, Noted {
     //
     //    return this.queryWithRanges(regions);
     //}
+
 
 }

@@ -2,6 +2,9 @@ package reductor;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -79,6 +82,20 @@ public class RangeTest {
         Range target = new Range(100, 200);
         assertEquals(-1, target.compareTo(new Range(100, 201)), "target should be considered less than other");
         assertEquals(1, target.compareTo(new Range(100, 199)), "target should be considered greater than other");
+    }
+
+    @Test
+    void concatenate() {
+
+        ArrayList<Range> ranges = new ArrayList<>( List.of(
+                new Range(100, 200),
+                new Range(200, 400),
+                new Range(200, 300),
+                new Range(0, 1),
+                new Range(10, 20)
+        ));
+
+        assertEquals(new Range(0, 400), Range.concatenate(ranges));
     }
 
 

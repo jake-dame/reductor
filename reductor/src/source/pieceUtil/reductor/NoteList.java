@@ -43,7 +43,7 @@ public class NoteList {
 
 
     /// Can get a map of these noteList by a method reference to any of the Note class methods. e.g. To get a map of
-    /// NoteList keyed on channel, you would pass Note::getOriginalChannel().
+    /// NoteList keyed on duration, you would pass Note::getOriginalChannel().
     public <T> Map<T, List<Note>> getMap(Function<Note, T> methodRef) {
         return notes.stream().collect(Collectors.groupingBy(methodRef));
     }
@@ -71,6 +71,9 @@ public class NoteList {
     public boolean add(Note note) { return this.notes.add(note); }
     public void add(int index, Note note) { this.notes.add(index, note); }
     public boolean addAll(Collection<? extends Note> notes) { return this.notes.addAll(notes); }
+
+    public boolean remove(Note note) { return this.notes.remove(note); }
+    public Note remove(int index) { return this.notes.remove(index); }
 
     public Note get(int index) { return this.notes.get(index); }
     public Note getFirst() { return this.notes.isEmpty() ? null : this.notes.getFirst(); }

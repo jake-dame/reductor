@@ -1,17 +1,21 @@
 package reductor;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 
 
 public class DevelopmentHelper {
 
-    private DevelopmentHelper() { }
+    MidiFile midiFile;
+    Context context;
 
-    public static Piece getPiece(String filepath) throws InvalidMidiDataException {
+    public DevelopmentHelper() { }
 
-        MidiFile midiFile = MidiFile.createMidiFile(filepath);
+    public Piece getPiece(String filepath) throws InvalidMidiDataException {
+
+        this.midiFile = MidiFile.createMidiFile(filepath);
 
         // debug
         long len = midiFile.sequence.getTickLength();
@@ -21,13 +25,22 @@ public class DevelopmentHelper {
         var firstNoteOff = midiFile.events.noteOffEvents.getFirst();
         var lastNoteOn = midiFile.events.noteOnEvents.getLast();
         var lastNoteOff = midiFile.events.noteOffEvents.getLast();
+
+        System.out.print("\nnoteOnEvents: ");
+        for (NoteOnEvent note : midiFile.events.noteOnEvents) {
+            System.out.print(note.getPartner().getTick() - note.getTick() + ", ");
+        }
         // debug
 
+        this.context = Context.createContext(midiFile.sequence.getResolution(), midiFile.sequence.getTickLength());
+
         ArrayList<Note> notes = Conversion.toNotes(midiFile.getNoteEvents());
-        ArrayList<TimeSignature> timeSigs = Conversion.toTimeSigs(midiFile.getTimeSignatureEvents());
+        ArrayList<TimeSignature> timeSigs = Conversion.assignRanges(midiFile.events.timeSignatureEvents, TimeSignature.class);
+        ArrayList<KeySignature> keySigs = Conversion.assignRanges(midiFile.events.keySignatureEvents, KeySignature.class);
+        ArrayList<Tempo> tempos = Conversion.assignRanges(midiFile.events.setTempoEvents, Tempo.class);
 
-        Piece piece = new Piece(notes, timeSigs);
-
+        Piece piece = new Piece(notes, timeSigs, keySigs, tempos);
+        System.out.println();
         // dev
 
         assert piece.noteList.size() == midiFile.events.noteOnEvents.size();
@@ -47,6 +60,33 @@ public class DevelopmentHelper {
 
 
         return piece;
+    }
+
+    public static ArrayList<MidiEvent> getAddbacks(Piece piece) throws InvalidMidiDataException {
+
+        ArrayList<MidiEvent> addbacks = new ArrayList<>();
+
+        ArrayList<MidiEvent> timeSigEvents = new ArrayList<>();
+        ArrayList<MidiEvent> keySigEvents = new ArrayList<>();
+        ArrayList<MidiEvent> tempoEvents = new ArrayList<>();
+
+        for (TimeSignature timeSig : piece.timeSigs) {
+            timeSigEvents.add( Conversion.fromTimeSignature(timeSig));
+        }
+
+        for (KeySignature keySig : piece.keySigs) {
+            keySigEvents.add( Conversion.fromKeySignature(keySig));
+        }
+
+        for (Tempo tempo : piece.tempi) {
+            tempoEvents.add( Conversion.fromTempo(tempo));
+        }
+
+        addbacks.addAll(timeSigEvents);
+        addbacks.addAll(keySigEvents);
+        addbacks.addAll(tempoEvents);
+
+        return addbacks;
     }
 
 }

@@ -1,6 +1,5 @@
 package reductor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,7 +34,7 @@ public final class Range implements Comparable<Range>, Ranged {
 
     /// Default constructor
     Range() {
-        this(0, 1);
+        this(0, 480);
     }
 
 
@@ -111,8 +110,8 @@ public final class Range implements Comparable<Range>, Ranged {
             );
         } else if (offset > 0) {
             return new Range(
-                    Math.min(other.low + offset, Context.lastTick() - 1),
-                    Math.min(other.high + offset, Context.lastTick())
+                    Math.min(other.low + offset, Context.finalTick() - 1),
+                    Math.min(other.high + offset, Context.finalTick())
             );
         } else {
             return new Range(other);
@@ -120,13 +119,26 @@ public final class Range implements Comparable<Range>, Ranged {
 
     }
 
-    /// Given multiple ranges, constructs a single range encompassing them.
-    public static Range concatenate(List<Range> ranges) {
-        if (ranges.isEmpty()) { throw new RuntimeException("can't concatenate empty list"); }
-        ArrayList<Range> copy = new ArrayList<>(ranges);
-        copy.sort(null);
-        return new Range(copy.getFirst().low, copy.getLast().high);
+    /// If Java had operator overloading, this would be equivalent to: newRange += 480
+    /// Except also makes a new instance because Ranges are immutable
+    public static Range add(Range range, long addend) {
+        return new Range(range.low + addend, range.high + addend);
     }
+
+    /// Given multiple ranges, constructs a single range encompassing them.
+    public static <T extends Ranged> Range concatenate(List<T> rangedElems) {
+        if (rangedElems.isEmpty()) { throw new RuntimeException("can't concatenate empty list"); }
+
+        long min = Long.MAX_VALUE;
+        long max = Long.MIN_VALUE;
+        for (T elem : rangedElems) {
+            if (elem.getRange().low() < min) { min = elem.getRange().low(); }
+            if (elem.getRange().high() > max) { max = elem.getRange().high(); }
+        }
+
+        return new Range(min, max);
+    }
+
 
 
 }

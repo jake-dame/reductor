@@ -20,17 +20,9 @@ public class MidiFile {
     final Events events;
 
     private MidiFile(Sequence sequence, File file, Integer fileType) throws InvalidMidiDataException {
-
         this.sequence = sequence;
-
-        Context.createContext(sequence.getResolution(), sequence.getTickLength());
-
-        long len = Context.lastTick();
-
         this.file = file;
-
         this.events = new Events(this.sequence);
-
     }
 
     public static MidiFile createMidiFile(String filepath) throws InvalidMidiDataException {

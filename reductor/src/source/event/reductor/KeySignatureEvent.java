@@ -18,24 +18,6 @@ public class KeySignatureEvent extends MetaEvent {
     }
 
     @Override
-    String dataString() {
-        return Conversion.toKeySignature(this.getMidiEvent()).toString();
-    }
-
-    void setData(int numAccidentals, int mode) {
-        if (numAccidentals < -7 || numAccidentals > 7) {
-            throw new IllegalArgumentException("invalid number of accidentals to set; should be in [-7,7]: " + numAccidentals);
-        }
-        if (mode < 0 || mode > 1) {
-            throw new IllegalArgumentException("invalid mode to set; should be in [0,1]: " + mode);
-        }
-        byte[] newData = new byte[]{(byte) numAccidentals, (byte) mode};
-        try {
-            getMessage().setMessage(this.getMessage().getType(), newData, newData.length);
-        } catch (InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    String dataString() { return KeySignature.toString(this.mode, this.accidentals); }
 
 }

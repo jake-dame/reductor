@@ -1,9 +1,8 @@
 package reductor;
 
 import javax.sound.midi.*;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static reductor.Files.*;
 
@@ -26,6 +25,9 @@ public class Main {
     // to thumb span supposed to be?)
 
     // TODO:
+    // Pitch#isValidPitch
+
+    // TODO:
     // Decide whether to prevent duplicates or not in query. If so, can pass a Set through and add to set. If
     // set already contains(), don't re-add to out list. Or add to Set anyway and convert to List at end?
 
@@ -35,10 +37,6 @@ public class Main {
 
     // TODO:
     // String constructor for KeySignature class? If time
-
-    // TODO:
-    // TimeSignatureEvent move that logic for to AND from to Conversion class
-    // Same with KeySignature to MidiEvent
 
     // TODO:
     // Design choice: callbacks and registering during a big loop
@@ -113,15 +111,50 @@ public class Main {
             //}
             //==================================================
 
-            Piece piece = DevelopmentHelper.getPiece(CHOPIN_PREL_c);
+            DevelopmentHelper dh = new DevelopmentHelper();
 
-            var cols = piece.getColumns();
+            Piece piece = dh.getPiece(CHOPIN_PREL_e);
+            //Piece piece = dh.getPiece("midis/in/trythis.mid");
 
-            ArrayList<Note> out = new ArrayList<>();
-            for (Column col : cols) { out.addAll( col.getLH().getNotes() ); }
+            ArrayList<Column> cols = piece.getColumns();
 
-            Sequence seq = Conversion.toSequence( Conversion.toMidiEvents(out), Context.resolution() );
-            Util.write(seq, "chopin_20_LH");
+            ArrayList<Note> RH = new ArrayList<>();
+            for (Column col : cols) {
+                if (col.getRH().getNotes().isEmpty()) { continue; } // TODO: fix
+                RH.addAll(col.getRH().getNotes());
+            }
+
+            ArrayList<Chord> LH = new ArrayList<>();
+            for (Column col : cols) {
+                if (col.getLH().getNotes().isEmpty()) { continue; } // TODO: fix
+                LH.add( new Chord(col.getLH().getNotes()) );
+            }
+
+            ArrayList<Note> arpeggiatedChords = new ArrayList<>();
+            for (Chord chord : LH) { arpeggiatedChords.addAll( Chord.arpeggiate(chord) ); }
+
+            // print
+            boolean print = arpeggiatedChords.size() == 42;
+            if (print) {
+                System.out.print("\nnotes: ");
+                for (Note note : piece.noteList.getBackingList()) { System.out.print(note.stop() - note.start() + ", "); }
+                System.out.print("\narpOut: ");
+                for (Note note : arpeggiatedChords) {System.out.print(note.stop() - note.start() + ", "); }
+            }
+            // print
+
+            ArrayList<MidiEvent> RHNotes = Conversion.toMidiEvents(RH);
+            ArrayList<MidiEvent> LHNotes = Conversion.toMidiEvents(arpeggiatedChords);
+            //ArrayList<MidiEvent> addbacks = DevelopmentHelper.getAddbacks(piece);
+            ArrayList<MidiEvent> addbacks = dh.midiFile.events.getAddBacks();
+
+            //piece.scaleTempo(1);
+
+            Sequence seq = Conversion.toSequence(Context.resolution(), List.of( RHNotes, LHNotes, addbacks) );
+            //Events events = new Events(seq);
+
+            //Util.play(seq);
+            Util.write(seq, "conv_test");
 
         } catch (InvalidMidiDataException e) {
             e.printStackTrace();

@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Represents a musical note, including pitch and duration.
  */
-public final class Note implements Ranged, Noted, Comparable<Note> {
+public class Note implements Ranged, Noted, Comparable<Note> {
 
 
     private final Range range;
@@ -21,24 +21,12 @@ public final class Note implements Ranged, Noted, Comparable<Note> {
 
     /// Primary constructor
     Note(int pitch, Range range) {
+        this.pitch = Pitch.validatePitch(pitch);
         this.range = range;
         this.length = this.range.length();
-
-        assignPitch(pitch);
         this.rhythm = new Rhythm(this.length, Context.resolution());
         this.instrument = "";
         this.isHeld = false;
-    }
-
-    /// Copy constructor with another range.
-    Note(Note other, Range range) {
-        this.range = range;
-        this.length = this.range.length();
-
-        assignPitch(other.pitch);
-        this.rhythm = new Rhythm(this.length, Context.resolution());
-        this.instrument = other.instrument;
-        this.isHeld = other.isHeld;
     }
 
     /**
@@ -51,45 +39,54 @@ public final class Note implements Ranged, Noted, Comparable<Note> {
         this(Pitch.toInt(str), new Range());
     }
 
-    Note(int pitch) {
-        this(pitch, new Range());
-    }
-
     /**
      * Constructor which takes a string to assign pitch, and a {@code Range}
      *
      * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
-     * @see Note#Note(String)
+     * @see Pitch#toInt
      */
     Note(String str, Range range) {
         this(Pitch.toInt(str), range);
     }
 
-    /// Copy constructor
-    Note(Note other) { this(other, other.getRange()); }
 
-    private void assignPitch(int val) {
-        if (val < 0 || val > 127) { throw new IllegalArgumentException("invalid pitch for note; must be in [0,127]"); }
-        this.pitch = val;
-        //this.pitch = Pitch.clampToPianoRange(val); // can make decision later
+
+    /// Copy constructor
+    Note(Note other) {
+        this(other, other.getRange());
     }
 
+    Note(int pitch) {
+        this(pitch, new Range());
+    }
+
+    Note(Note other, Range range) {
+        this.pitch = Pitch.validatePitch(other.pitch);
+        this.range = range;
+        this.length = this.range.length();
+        this.rhythm = new Rhythm(this.length, Context.resolution());
+        this.instrument = other.instrument;
+        this.isHeld = other.isHeld;
+    }
 
     public long length() { return this.length; }
 
     public int pitch() { return this.pitch; }
+    private void setPitch(int val) { this.pitch = Pitch.validatePitch(pitch); }
+
+    private void shift(int intervallicDistance) {
+        var shiftedPitch = this.pitch + intervallicDistance;
+        this.pitch = Pitch.validatePitch(shiftedPitch);
+    }
 
     public long start() { return this.range.low(); }
     public long stop() { return this.range.high(); }
 
-    //public <T extends Noted & Ranged> boolean isHeld(T container) {
-    //    return this.range.low() < container.getRange().low();
-    //}
-
+    public boolean isHeld() { return isHeld; }
     public void setIsHeld(boolean val) { this.isHeld = val; }
 
     public boolean isWhiteKey() { return Pitch.isWhiteKey(this.pitch); }
-    public boolean isBlackKey() { return !isWhiteKey(); } // not necessary but nice to have mnemonically
+    public boolean isBlackKey() { return Pitch.isBlackKey(this.pitch); }
 
     public void octaveUp() { this.pitch = pitch + 12; }
     public void octaveDown() { this.pitch = pitch - 12; }
@@ -113,13 +110,13 @@ public final class Note implements Ranged, Noted, Comparable<Note> {
                 : Pitch.toStr(this.pitch, true);
 
         return this.range + " " + pitchStr;
-
     }
 
     /*======
     * STATIC
     * ====*/
 
+    /// Given something like List.of("C", "E", "G", "Bb"), pops out a bunch of Note objects.
     public static ArrayList<Note> toList(List<String> strings) {
         ArrayList<Note> out = new ArrayList<>();
         for (String str : strings) { out.add(new Note(str)); }

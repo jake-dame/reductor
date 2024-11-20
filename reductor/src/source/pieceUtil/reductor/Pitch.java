@@ -5,14 +5,28 @@ import java.util.Map;
 import java.util.Set;
 
 
+/**
+ * Utility class that handles a lot of pitch-related stuff, for both MIDI and piano-ranged pitches, including pitch
+ * validation, conversion between string and int, and register calculations.
+ */
 public class Pitch {
 
-    public static final int MIN = 0; // C-1
-    public static final int MAX = 127; // G9
+    /// Pitch: C-1
+    public static final int MIDI_MIN = 0;
+    /// Pitch: G9
+    public static final int MIDI_MAX = 127;
 
-    public static final int PIANO_MIN = 21; // A0
-    public static final int PIANO_MAX = 108; // C8
+    /// Pitch: A0
+    public static final int PIANO_MIN = 21;
+    /// Pitch: C8
+    public static final int PIANO_MAX = 108;
 
+    /*
+     INTERVALS
+
+     e.g. note.add(Pitch.M3)
+          or note.add(-Pitch.M3)
+    */
     public static final int m2 = 1;
     public static final int M2 = 2;
     public static final int m3 = 3;
@@ -26,13 +40,12 @@ public class Pitch {
     public static final int M7 = 11;
     public static final int OCTAVE = 12;
 
-    //static final Map<Integer, String> semitonesItoS;
-    static final Map<String, Integer> semitonesStoI;
-    //static final Map<Integer, String> accidentalsItoS;
-    static final Map<String, Integer> accidentalsStoI;
+
+    // Yes, this actually stores all 128 valid pitches. No, I am not interested in doing this programmatically.
     static final Map<Integer, String> pitchesItoS;
-    //static final Map<String, Integer> pitchesStoI;
-    //static final Map<Integer, String> pitches;
+
+    static final Map<String, Integer> semitonesStoI;
+    static final Map<String, Integer> accidentalsStoI;
 
     static {
 
@@ -40,24 +53,8 @@ public class Pitch {
 
         accidentalsStoI = Map.of("bb", -2, "b", -1, "", 0, "#", 1, "x", 2);
 
-        //pitches = Map.ofEntries(
-        //        Map.entry(0, "c"),
-        //        Map.entry(1, "c"),
-        //        Map.entry(2, "d"),
-        //        Map.entry(3, "d"),
-        //        Map.entry(4, "e"),
-        //        Map.entry(5, "f"),
-        //        Map.entry(6, "f"),
-        //        Map.entry(7, "g"),
-        //        Map.entry(8, "g"),
-        //        Map.entry(9, "a"),
-        //        Map.entry(10, "a"),
-        //        Map.entry(11, "b"),
-        //        Map.entry(12, "c")
-        //);
-
         pitchesItoS = new HashMap<>();
-        for (int num = 0; num < 128; num++) {
+        for (int num = MIDI_MIN; num <= MIDI_MAX; num++) {
             String pitch = switch (num % 12) {
                 case 0 -> "C" + (num / 12 - 1);
                 case 1 -> "C#" + (num / 12 - 1);
@@ -71,14 +68,91 @@ public class Pitch {
                 case 9 -> "A" + (num / 12 - 1);
                 case 10 -> "A#" + (num / 12 - 1);
                 case 11 -> "B" + (num / 12 - 1);
-                default -> "";
+                default -> "not a pitch";
             };
             pitchesItoS.put(num, pitch);
         }
 
     }
 
+
     private Pitch() { }
+
+
+    /**
+     * Checks whether a given integer represents a valid MIDI pitch or not (i.e. is in [0,127]).
+     *
+     * @return Just returns the same pitch back to you, so it can be used like a setter of sorts too.
+     * @param pitch The value to validate as a pitch.
+     * @throws IllegalArgumentException if the pitch is invalid.
+     */
+    public static int validatePitch(int pitch) {
+
+        if(pitch < MIDI_MIN || MIDI_MAX < pitch) {
+            throw new IllegalArgumentException("valid pitch values are in [0,127], not: " + pitch);
+        }
+
+        return pitch;
+    }
+
+    /**
+     *
+     * @param pitch A pitch that exists on the piano (i.e. in [21,108])
+     * @return True if the pitch is a white key on the piano; false if it is a black key.
+     * @throws IllegalArgumentException if the pitch does not exist on a piano (even though it may be a valid MIDI
+     * pitch)
+     */
+    public static boolean isWhiteKey(int pitch) {
+
+        if (pitch < PIANO_MIN  ||  PIANO_MAX < pitch) {
+            throw new IllegalArgumentException(
+                    "that's not a white key or a black key because it doesn't exist on a piano"
+            );
+        }
+
+        return Set.of(0, 2, 4, 5, 7, 9, 11).contains(pitch % 12);
+    }
+
+    /**
+     * @see Pitch#isWhiteKey
+     */
+    public static boolean isBlackKey(int pitch) {
+        return !isWhiteKey(pitch);
+    }
+
+    /**
+     * Clamps a pitch value to be within piano range (does not change the semitone, only the register).
+     *
+     * @param pitch A pitch to clamp to be within the range that exists on a standard piano
+     * @return The same pitch, but either up/down an octave(s) to be within piano range.
+     */
+    public static int clampToPianoRange(int pitch) {
+        while (pitch < PIANO_MIN) { pitch += OCTAVE; }
+        while (PIANO_MAX < pitch) { pitch -= OCTAVE; }
+        return pitch;
+    }
+
+    /**
+     * Returns the register (octave) that a passed pitch is in. For information on valid registers, see
+     * {@link Pitch#toInt}
+     *
+     * @param pitch A valid pitch value
+     * @return The register the pitch exists in.
+     * @see Pitch#toInt
+     */
+    public int getRegister(int pitch) {
+
+        validatePitch(pitch);
+
+        // e.g. 60 (middle C, or C4)
+        int register = -1;
+        while (0 <= pitch) {
+            pitch -= 12; // 60, 48, 36, 24, 12, 0, break
+            register++;  // -1,  0,  1,  2,  3, 4, n/a
+        }
+
+        return register;
+    }
 
     /**
      * Converts a MIDI pitch integer value to a string (currently: non-diatonic spelling is always the sharped degree (Ionian mode)).
@@ -88,13 +162,12 @@ public class Pitch {
      * @return The string representation of {@code val}.
      * @throws IllegalArgumentException If the passed value is not in {@code [0, 127]}.
      */
-    static String toStr(Number val, boolean showRegister) {
+    static String toStr(Number val, boolean showRegister) throws IllegalArgumentException {
 
+        // This, plus the Number type, makes it so bytes (from raw MIDI data) can also be used
         int intValue = val.intValue() & 0xFF;
 
-        if (intValue > 127) {
-            throw new IllegalArgumentException("pitch values must be between 0 and 127");
-        }
+        validatePitch(intValue);
 
         String pitchStr = pitchesItoS.get(intValue);
 
@@ -102,6 +175,9 @@ public class Pitch {
             return pitchStr;
         } else {
 
+            // Because pitchesItoS includes the register, it has to be trimmed off.
+
+            // This is for the single case of the -1 register
             if (pitchStr.charAt(pitchStr.length() - 2) == '-') {
                 return pitchStr.substring(0, pitchStr.length() - 2);
             } else {
@@ -200,24 +276,5 @@ public class Pitch {
         */
         return semitone + ((register + 1) * 12) + accidentalAdjustment;
     }
-
-    static boolean isWhiteKey(int pitch) {
-        Set<Integer> whiteKeys = Set.of(0, 2, 4, 5, 7, 9, 11);
-        return whiteKeys.contains(pitch % 12);
-    }
-
-    //public static <T extends Noted> T clampToPianoRange(T container) {
-    //    for (Note note : container.getNotes()) {
-    //        int pitch = note.pitch();
-    //
-    //    }
-    //}
-    //
-    public static int clampToPianoRange(int pitch) {
-        if (pitch < PIANO_MIN) { while (pitch < PIANO_MIN){pitch += OCTAVE;} }
-        if (pitch > PIANO_MAX) { while (pitch > PIANO_MAX){pitch -= OCTAVE;} }
-        return pitch;
-    }
-
 
 }

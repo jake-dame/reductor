@@ -4,7 +4,7 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
 
 
-public class SetTempoEvent extends MetaEvent {
+public final class SetTempoEvent extends MetaEvent {
 
     SetTempoEvent(MidiEvent event) {
         super(event);

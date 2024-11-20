@@ -90,10 +90,10 @@ public class Files {
     public static final String TEST_PITCH = addFile("TestPitch.mid", TEST_FILES);
 
     /// piano: 2 C5 tied wholes, 4 C5 halfs USING 2-VOICE FEATURE
-    public static final String TEST_3 = addFile("Test3.mid", TEST_FILES); // overlapping noteList
+    public static final String TEST_3 = addFile("Test3.mid", TEST_FILES); // overlapping notes
 
     /// same as Test3, not using 2-voice feature
-    public static final String TEST_3_TRY_2 = addFile("Test3Try2.mid", TEST_FILES); // overlapping noteList
+    public static final String TEST_3_TRY_2 = addFile("Test3Try2.mid", TEST_FILES); // overlapping notes
 
     /// two c wholes tied in RH, ascending quarters C3...B3, D4
     public static final String TEST_3_TRY_3 = addFile("Test3Try3.mid", TEST_FILES);

@@ -32,15 +32,26 @@ public enum EventType {
     CHANNEL_PRESSURE(0xD0),
     PITCH_BEND(0xE0);
 
+
     private final int typeCode;
+
 
     EventType(int typeCode) {
         this.typeCode = typeCode;
     }
 
-    public int getTypeCode() {
-        return this.typeCode;
+
+    public int getTypeCode() { return this.typeCode; }
+
+    public boolean isMeta() { return this.ordinal() < 14; }
+    public boolean isChannel() { return !isMeta(); }
+
+
+    @Override
+    public String toString() {
+        return this.name() + " (0x" + Integer.toHexString(this.typeCode) + ")"; // todo this vs this.name() (see doc)
     }
+
 
     public static EventType getEnumType(MidiEvent midiEvent) {
 
@@ -52,9 +63,7 @@ public enum EventType {
         }
 
         for (EventType enumType : EventType.values()) {
-            if (enumType.typeCode == value) {
-                return enumType;
-            }
+            if (enumType.typeCode == value) { return enumType; }
         }
 
         throw new RuntimeException(
@@ -63,9 +72,4 @@ public enum EventType {
 
     }
 
-
-    @Override
-    public String toString() {
-        return this.name() + " (0x" + Integer.toHexString(this.typeCode) + ")"; // todo this vs this.name() (see doc)
-    }
 }

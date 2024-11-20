@@ -30,12 +30,12 @@ class PieceTest {
     @BeforeEach
     void setUp() {
 
-        try {
-            pieceNoPickup = DevelopmentHelper.getPiece(CHOPIN_PREL_c);
-            piecePickup = DevelopmentHelper.getPiece(CHOPIN_PREL_e);
-        } catch (InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
+        //try {
+        //    //pieceNoPickup = DevelopmentHelper.getPiece(CHOPIN_PREL_c);
+        //    //piecePickup = DevelopmentHelper.getPiece(CHOPIN_PREL_e);
+        //} catch (InvalidMidiDataException e) {
+        //    throw new RuntimeException(e);
+        //}
 
     }
 

@@ -11,27 +11,29 @@ import javax.sound.midi.*;
 public abstract class Event<T extends MidiMessage> {
 
     private final MidiEvent event;
-    private final MessageType type;
+    private final EventType type;
     private final T message;
     private int trackIndex;
-    private TrackNameEvent trackNameEvent;
+    private String trackName;
+
 
     private final Long tick;
+
 
     Event(MidiEvent event) {
         this.event = event;
         this.tick = event.getTick();
         this.message = (T) event.getMessage();
-        this.type = assignType(this.getMessage());
+        this.type = EventType.getEnumType(event);
     }
+
 
     public static Event<?> createEvent(MidiEvent event) throws InvalidMidiDataException {
         MidiMessage message = event.getMessage();
         int typeCode;
-        MessageType type;
+        EventType type;
         if (message instanceof ShortMessage sm) {
-            typeCode = sm.getCommand();
-            type = MessageType.getEnumType(typeCode);
+            type = EventType.getEnumType(event);
             return switch (type) {
                 case NOTE_ON -> {
                     int velocity = sm.getData2();
@@ -52,8 +54,7 @@ public abstract class Event<T extends MidiMessage> {
                 default -> throw new RuntimeException();
             };
         } else if (message instanceof MetaMessage mm) {
-            typeCode = mm.getType();
-            type = MessageType.getEnumType(typeCode);
+            type = EventType.getEnumType(event);
             return switch (type) {
                 case TEXT -> new TextEvent(event);
                 case COPYRIGHT_NOTICE -> new CopyrightNoticeEvent(event);
@@ -78,60 +79,27 @@ public abstract class Event<T extends MidiMessage> {
         }
     }
 
-    private MessageType assignType(MidiMessage message) {
-        int typeCode;
-        if (message instanceof ShortMessage sm) {
-            typeCode = sm.getCommand();
-        } else if (message instanceof MetaMessage mm) {
-            typeCode = mm.getType();
-        } else {
-            throw new RuntimeException("encountered a sysex or invalid message type");
-        }
-        return MessageType.getEnumType(typeCode);
-    }
-
     abstract String dataString();
 
     @Override
     public final String toString() {
-        return String.format("(Tr%d): %s (%d)",
+        return String.format("{track %d (%s), tick %d -> %s",
                 this.trackIndex,
-                dataString(),
-                this.tick
+                this.getTrackName(),
+                this.tick,
+                dataString()
         );
     }
 
-    public final MidiEvent getMidiEvent() {
-        return event;
-    }
+    public final MidiEvent getMidiEvent() { return event; }
+    public final T getMessage() { return message; }
+    public final EventType getType() { return type; }
+    public final long getTick() { return this.tick; }
 
-    public final T getMessage() {
-        return message;
-    }
+    public String getTrackName() { return this.trackName != null ? trackName : "null"; }
+    public final void setTrackName(String trackName) { this.trackName = trackName; }
 
-    public final MessageType getType() {
-        return type;
-    }
-
-    public final long getTick() {
-        return this.tick;
-    }
-
-    public final int getTrackIndex() {
-        return trackIndex;
-    }
-
-    public String getTrackName() {
-        return trackNameEvent != null ? trackNameEvent.getName() : "null";
-    }
-
-    public final void setTrackIndex(int trackIndex) {
-        this.trackIndex = trackIndex;
-    }
-
-    public final void setTrackNameEvent(TrackNameEvent trackNameEvent) {
-        this.trackNameEvent = trackNameEvent;
-    }
-
+    public final int getTrackIndex() { return trackIndex; }
+    public final void setTrackIndex(int trackIndex) { this.trackIndex = trackIndex; }
 
 }

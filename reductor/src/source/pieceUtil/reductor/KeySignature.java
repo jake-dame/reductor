@@ -1,5 +1,6 @@
 package reductor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -7,6 +8,9 @@ public class KeySignature implements Ranged {
 
     private static final Map<Integer, String> mapMajor;
     private static final Map<Integer, String> mapMinor;
+
+    private static final Map<String, Integer> reverseMapMajor;
+    private static final Map<String, Integer> reverseMapMinor;
 
 
     static {
@@ -47,6 +51,16 @@ public class KeySignature implements Ranged {
                 Map.entry(7, "A#")
         );
 
+        reverseMapMajor = new HashMap<>();
+        for (Map.Entry<Integer, String> entry : mapMajor.entrySet()) {
+            reverseMapMajor.put(entry.getValue(), entry.getKey());
+        }
+
+        reverseMapMinor = new HashMap<>();
+        for (Map.Entry<Integer, String> entry : mapMinor.entrySet()) {
+            reverseMapMinor.put(entry.getValue(), entry.getKey());
+        }
+
     }
 
 
@@ -71,6 +85,44 @@ public class KeySignature implements Ranged {
         this.range = new Range(other.range);
         this.mode = other.mode;
         this.accidentals = other.accidentals;
+    }
+
+    /// Must be in form of either: key, no space, M = major, m = minor like "C#M" or "am"
+    /// Case of key does not matter
+    public KeySignature(String str, Range range) {
+
+        if (str == null || str.isEmpty() || (str.length() != 2 && str.length() != 3)) {
+            throw new IllegalArgumentException("string is null, empty, or too short/long");
+        }
+
+        char modeChar;
+        if (str.length() == 2) {
+            modeChar = str.charAt(1);
+            str = str.substring(0,1);
+        } else {
+            modeChar = str.charAt(2);
+            str = str.substring(0,2);
+        }
+
+        int mode = switch(modeChar) {
+            case 'M' -> 0;
+            case 'm' -> 1;
+            default -> throw new RuntimeException("invalid mode: '" + modeChar + "'");
+        };
+
+        // Uppercase the first one so "b" for flat doesn't get uppercased too
+        char[] chars = str.toCharArray();
+        chars[0] = Character.toUpperCase(chars[0]);
+
+        String keyString = new String(chars);
+
+        int key = mode == 0
+                ? reverseMapMajor.get(keyString)
+                : reverseMapMinor.get(keyString);
+
+        this.mode = mode;
+        this.accidentals = key;
+        this.range = range;
     }
 
     public int getTonic() {

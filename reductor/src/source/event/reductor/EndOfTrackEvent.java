@@ -3,16 +3,14 @@ package reductor;
 import javax.sound.midi.MidiEvent;
 
 
-public class EndOfTrackEvent extends MetaEvent {
+public final class EndOfTrackEvent extends MetaEvent {
 
     EndOfTrackEvent(MidiEvent event) {
         super(event);
     }
 
-    @Override
-    String dataString() {
-        return "eot";
-    }
 
+    @Override
+    String dataString() { return ""; }
 
 }

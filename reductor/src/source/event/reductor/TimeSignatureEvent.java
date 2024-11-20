@@ -1,16 +1,15 @@
 package reductor;
 
-import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
-import java.util.Objects;
 
 
-public class TimeSignatureEvent extends MetaEvent {
+public final class TimeSignatureEvent extends MetaEvent {
 
     private final int upperNumeral;
     private final int lowerNumeral;
     private final long clockTicksPerTick;
-    private final long thirtySecondsPerBeat;
+    private final long thirtySecondNotesPerBeat;
+
 
     TimeSignatureEvent(MidiEvent event) {
         super(event);
@@ -24,15 +23,16 @@ public class TimeSignatureEvent extends MetaEvent {
 
         this.clockTicksPerTick = data[2] & 0xFF;
 
-        this.thirtySecondsPerBeat = data[3] & 0xFF;
-        System.out.println("(from TimeSignatureEvent) clockTicksPerTick: " + clockTicksPerTick);
-        System.out.println("(from TimeSignatureEvent) thirtySecondsPerBeat: " + thirtySecondsPerBeat);
+        this.thirtySecondNotesPerBeat = data[3] & 0xFF;
     }
-
-    @Override
-    String dataString() { return upperNumeral + "/" + lowerNumeral; }
 
     public int getUpperNumeral() { return upperNumeral; }
     public int getLowerNumeral() { return lowerNumeral; }
+    public long getClockTicksPerQuarter() { return clockTicksPerTick; }
+    public long getThirtySecondNotesPerBeat() { return thirtySecondNotesPerBeat; }
+
+
+    @Override
+    String dataString() { return upperNumeral + "/" + lowerNumeral; }
 
 }

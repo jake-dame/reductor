@@ -4,25 +4,21 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
 
 
-public class TextEvent extends MetaEvent {
+public final class TextEvent extends MetaEvent {
+
+    private final String text;
+
 
     TextEvent(MidiEvent event) {
         super(event);
+        this.text = new String(this.getMessage().getData());
     }
+
+
+    public String getText() { return this.text; }
+
 
     @Override
-    String dataString() {
-        return new String(this.getMessage().getData());
-    }
-
-    void setData(String text) {
-        byte[] newData = text.getBytes();
-        try {
-            this.getMessage().setMessage(this.getMessage().getType(), newData, newData.length);
-        } catch (InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    String dataString() { return this.text; }
 
 }

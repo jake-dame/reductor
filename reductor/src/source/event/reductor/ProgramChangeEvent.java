@@ -4,11 +4,12 @@ import javax.sound.midi.MidiEvent;
 import java.util.Map;
 
 
-public class ProgramChangeEvent extends ChannelEvent {
+public final class ProgramChangeEvent extends ChannelEvent {
 
     public static final Map<Integer, String> instruments;
 
     static {
+
         instruments = Map.ofEntries(
                 Map.entry(0x0, "acoustic grand piano"),
                 Map.entry(0x6, "harpsichord"),
@@ -48,27 +49,37 @@ public class ProgramChangeEvent extends ChannelEvent {
                 Map.entry(0x4F, "ocarina"),
                 Map.entry(0x6C, "kalimba")
         );
+
     }
 
-    int instrumentCode;
+    private final int instrumentCode;
 
     ProgramChangeEvent(MidiEvent event) {
         super(event);
         this.instrumentCode = this.getMessage().getData1();
     }
 
+
+    public int getInstrumentCode() { return this.instrumentCode; }
+
+
     @Override
     String dataString() {
         return super.dataString() + instrumentCodeToString(this.instrumentCode);
     }
 
-    String instrumentCodeToString(int instrumentCode) {
+
+    public static String instrumentCodeToString(int instrumentCode) {
+
         String instrument = instruments.get(instrumentCode);
+
         if (instrument == null) {
-            throw new RuntimeException("Found new instrument code: 0x" + Integer.toHexString(instrumentCode));
+            throw new RuntimeException(
+                    "Found new instrument code: 0x" + Integer.toHexString(instrumentCode)
+            );
         }
+
         return instrument;
     }
-
 
 }

@@ -14,32 +14,41 @@ import static reductor.Files.MIDI_FILES_OUT_DIR;
  * <p>
  * Some of this is purely for debugging or specific to my machine.
  */
-public class Util {
+public final class Util {
+
+    public static final String MUSESCORE = "MuseScore 4.app";
+    public static final String GARAGEBAND = "GarageBand.app";
+
 
     private Util() { }
 
+
     /**
-     * Opens a valid MIDI file with GarageBand.
+     * Opens a valid MIDI file with a particular app.
      *
-     * @param file The file to open with GarageBand
+     * @param file The MIDI file to open
+     * @param app The name of the application like {@code "appName.app"}
      */
-    static void openWithGarageBand(File file) {
-        checkMidiFileExtension(file);
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                    "open",
-                    "-a",
-                    "/Applications/GarageBand.app",
-                    file.getAbsolutePath()
-            );
-            processBuilder.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+    static void openWith(File file, String app) throws IOException {
+
+        if (!app.equals(GARAGEBAND)  &&  !app.equals(MUSESCORE)) {
+            throw new RuntimeException("selected app not supported");
         }
+
+        checkMidiFileExtension(file);
+
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                "open",
+                "-a",
+                "/Applications/" + app,
+                file.getAbsolutePath()
+        );
+
+        processBuilder.start();
     }
 
     /**
-     * Helper for {@link Util#openWithGarageBand}. Checks if a file has the correct
+     * Helper for {@link Util#openWith}. Checks if a file has the correct
      * {@code .mid} extension.
      *
      * @param file The file to check.
@@ -53,105 +62,74 @@ public class Util {
         }
     }
 
-
-    public static void makePiano(Sequence in) throws InvalidMidiDataException {
-
-        Sequence out = new Sequence(in.getDivisionType(), in.getResolution());
-
-        Track[] inTracks = in.getTracks();
-
-        for (Track inTrack : inTracks) {
-            for (int i = 0; i < inTrack.size(); i++) {
-                MidiEvent inEvent = inTrack.get(i);
-                MidiMessage inMessage = inEvent.getMessage();
-
-                // Process
-                if (inMessage instanceof ShortMessage sm) {
-                    makePianoShortMessage(sm);
-                }
-
-                if (inMessage instanceof MetaMessage mm) {
-                    makePianoMetaMessage(mm);
-                }
-
-                // Add to out
-
-
-            }
-        }
-
-    }
-
-    private static void makePianoShortMessage(ShortMessage sm) throws InvalidMidiDataException {
-        if (sm.getCommand() == EventType.PROGRAM_CHANGE.getTypeCode()) {
-            final int ACOUSTIC_GRAND_PIANO = 0x0;
-            sm.setMessage(sm.getCommand(), sm.getChannel(), ACOUSTIC_GRAND_PIANO, sm.getData2());
-        }
-    }
-
-    private static void makePianoMetaMessage(MetaMessage mm) throws InvalidMidiDataException {
-        if (mm.getType() == EventType.TRACK_NAME.getTypeCode()) {
-            mm.setMessage(mm.getType(), new byte[]{'P', 'i', 'a', 'n', 'o'}, 5);
-        }
-    }
-
     /**
      * A wrapper for the {@link javax.sound.midi.Sequencer}'s {@code play()} function.
      *
      * @param sequence The {@link javax.sound.midi.Sequence} to play
      */
-    static void play(Sequence sequence) {
-        Sequencer sequencer;
-        try {
-            sequencer = MidiSystem.getSequencer();
-            sequencer.setSequence(sequence);
-            sequencer.open();
-        } catch (MidiUnavailableException | InvalidMidiDataException e) {
-            throw new RuntimeException(e);
-        }
+    static void play(Sequence sequence) throws MidiUnavailableException, InvalidMidiDataException {
+
+        Sequencer sequencer = MidiSystem.getSequencer();
+        sequencer.setSequence(sequence);
+        sequencer.open();
         sequencer.start();
+
         while (true) {
             if (!sequencer.isRunning()) {
                 sequencer.close();
                 return;
             }
         }
+
     }
 
     /**
      * Given a {@link javax.sound.midi.Sequence}, writes out a valid {@code .mid} file to
-     * this project's out directory. Currently, prepends "OUT_" if the name has no other
-     * project-specific prefix.
+     * this project's out directory.
      *
      * @param sequence The {@link javax.sound.midi.Sequence} object to write out
      * @param name     A name to give the file
      * @return The File object pertaining to the new file
      */
-    static File write(Sequence sequence, String name) {
-
-
-        // TODO: double-check that the way you writing files out (type 1: single-track) isn't screwing up musescore stuff
-
+    static File write(Sequence sequence, String name) throws IOException {
 
         if (name.contains(".")) {
             throw new RuntimeException("file name should not contain '.'");
         }
+
         File outFile = new File(MIDI_FILES_OUT_DIR + name + ".mid");
-        assert sequence.getTracks().length > 0;
-        int fileType;
-        if (sequence.getTracks().length == 1) {
-            fileType = 0;
-        } else {
-            fileType = 1;
+
+        // Append a unique int to out file
+        int counter = 1;
+        while (outFile.exists()) {
+            outFile = new File(MIDI_FILES_OUT_DIR + name + "_" + counter + ".mid");
+            counter++;
         }
-        try {
-            MidiSystem.write(sequence, fileType, outFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        assert outFile.exists();
+
+        // TODO: double-check that the way you writing files out (type 1: single-track) isn't screwing up musescore stuff
+
+        // Assuming this program will never write a 2 file type (multiple sequences)
+        int fileType = sequence.getTracks().length == 1 ? 0 : 1;
+
+        MidiSystem.write(sequence, fileType, outFile);
+
+        if (!outFile.exists()) { throw new IOException("write out failed"); }
+
         return outFile;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /// You must provide note events, this just parses and prints them.
     static void printNoteEvents(ArrayList<MidiEvent> events) {

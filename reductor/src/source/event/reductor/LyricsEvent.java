@@ -4,18 +4,21 @@ import javax.sound.midi.MidiEvent;
 import java.util.Arrays;
 
 
-public class LyricsEvent extends MetaEvent {
+public final class LyricsEvent extends MetaEvent {
 
-    String lyrics;
+    private final String lyrics;
+
 
     LyricsEvent(MidiEvent event) {
         super(event);
-        this.lyrics = Arrays.toString(this.getMessage().getData());
+        this.lyrics = new String(this.getMessage().getData());
     }
 
+
+    public String getLyrics() { return this.lyrics; }
+
+
     @Override
-    String dataString() {
-        return lyrics;
-    }
+    String dataString() { return lyrics; }
 
 }

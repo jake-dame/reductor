@@ -3,11 +3,10 @@ package reductor;
 import javax.sound.midi.MidiEvent;
 
 
-public class NoteOffEvent extends NoteEvent {
+public final class NoteOffEvent extends NoteEvent {
 
     NoteOffEvent(MidiEvent event) {
         super(event);
     }
-
 
 }

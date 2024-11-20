@@ -6,18 +6,103 @@ import java.util.*;
 
 public class Conversion {
 
-    public static ArrayList<Note> toNotes(ArrayList<NoteOnEvent> noteOnEvents) {
-        ArrayList<Note> out = new ArrayList<>();
-        noteOnEvents.forEach( on -> out.add( toNote(on) ) );
-        return out;
+    public static ArrayList<Note> toNotes(ArrayList<NoteOnEvent> noteOnEvents, ArrayList<NoteOffEvent> noteOffEvents) throws UnpairedNoteException {
+
+        // Defensive stuff
+        ArrayList<NoteOnEvent> noteOnEventsCopy = new ArrayList<>(noteOnEvents);
+        ArrayList<NoteOffEvent> noteOffEventsCopy = new ArrayList<>(noteOffEvents);
+
+        noteOnEventsCopy.sort(Comparator.comparingLong(NoteOnEvent::getTick));
+        noteOffEventsCopy.sort(Comparator.comparingLong(NoteOffEvent::getTick));
+
+        // Would like easy removals, and don't really need random access during the algorithm
+        LinkedList<NoteOnEvent> ons = new LinkedList<>(noteOnEvents);
+        LinkedList<NoteOffEvent> offs = new LinkedList<>(noteOffEvents);
+
+        ArrayList<Note> outNotes = new ArrayList<>();
+
+        /*
+         This is just a matching/pairing algorithm, with a few MIDI-specific edge cases to look for:
+             1. Stuck notes: note on events that are not paired by the end of the list of offs
+
+                 1.1 Semi-stuck notes: notes that are stuck for a time:
+                         A quarter note C @ 0 --> never turned off
+                         A quarter note C @ 480 --> never turned off
+                         A quarter note C @ 960 --> never turned off
+                         A quarter note C @ 1440 --> turned off @ 1919
+
+                     Each quarter is not turned off except the last, and the last off event turns ALL of them off.
+                     Although each is "effectively" turned off because MIDI does not allow multiple note events of
+                     the same pitch to occur simultaneously (see the note about Case 3 below), the implication here
+                     is that the on event never received an off event means two things:
+                         1.1.1 This algorithm would treat the first three as stuck notes AND
+                         1.1.2 Their constructed Ranges would not be [0, 479], but [0, 480] without special care!
+
+
+             2. Redundant offs: extraneous offs sent for ons that have already been shut off
+             3. Extra ons: when two notes with the same pitch are turned on at the same tick:
+                     On channel 1 -- A whole note C @ 0 --> _should_ be turned off @ 1919
+                     On channel 1 -- A quarter note C @ 0 --> _should_ turned off @ 479
+                 What really happens is that whichever note on for C enters the byte stream last will be the one
+                 chosen, and the other note (depending on the software used to produce the midi file) will
+                 immediately turn off the other note (though this isn't necessary). So:
+                    The "C" (regardless of who started it) will be turned off at 479, because there is not a separate
+                     channel for the whole note
+                 In this algorithm, since I want a Range of [0,0] from being created, both the whole note's on and
+                 off will be unpaired (both at tick 0), _as well as_ the whole notes extraneous off at 1919.
+                 This occurs when multiple-features in notation software allow this sort of thing (like in a piano
+                 score), OR the reverse (see the next paragraph).
+
+             Case 3 is interesting because MIDI spec does not handle or allow two on events corresponding to the same
+             pitch to happen. This won't matter if they are on different channels, of course, but when combining to
+             the same channel, or track (as in the case of reduction -- a violin and trumpet both starting C's at the
+             same time -- extra care needs to be taken. This is a job for the reverse conversion algorithm below.
+         */
+
+        NoteOnEvent on;
+        NoteOffEvent off;
+        Iterator<NoteOnEvent> onsIterator = ons.iterator();
+        Iterator<NoteOffEvent> offsIterator = offs.iterator();
+
+        while(onsIterator.hasNext()) {
+            on = onsIterator.next();
+
+            while(offsIterator.hasNext()) {
+                off = offsIterator.next();
+
+                if (on.getPitch() == off.getPitch()) {
+
+                    if (off.getTick() != on.getTick()) {
+                        Range range = new Range(on.getTick(), off.getTick());
+                        Note note = new Note(on.getPitch(), range);
+                        outNotes.add(note);
+                    }
+
+                    // Overlapping pairs (on @ 0, off @ 0) removed here as well
+                    onsIterator.remove();
+                    offsIterator.remove();
+                    break;
+                }
+            }
+
+        }
+
+        // For testing / debugging purposes
+        ArrayList<NoteOnEvent> unpairedOns = new ArrayList<>(ons);
+        ArrayList<NoteOffEvent> unpairedOffs = new ArrayList<>(offs);
+
+        if (!ons.isEmpty()) {
+            //throw new UnpairedNoteException("unpaired note on", new Throwable(unpairedOns.toString()));
+        }
+
+        if (!offs.isEmpty()) {
+            //throw new UnpairedNoteException("unpaired note off", new Throwable(unpairedOffs.toString()));
+        }
+
+        return outNotes;
     }
 
-    public static Note toNote(NoteOnEvent on) {
-        Range range = new Range(on.getTick(), on.getPartner().getTick());
-        return new Note(on.getPitch(), range, on.getTrackName());
-    }
-
-    public  static <T extends Noted> ArrayList<MidiEvent> toMidiEvents(List<T> notedElems) throws InvalidMidiDataException {
+    public static <T extends Noted> ArrayList<MidiEvent> toMidiEvents(List<T> notedElems) throws InvalidMidiDataException {
 
         final ArrayList<MidiEvent> out = new ArrayList<>();
         final int MEDIAN_VELOCITY = 64;
@@ -92,7 +177,7 @@ public class Conversion {
         throw new IllegalArgumentException("bytes representing modes must be 0 (major) or 1 (minor)");
     }
 
-    public static MidiEvent fromKeySignature(KeySignature keySignature) throws InvalidMidiDataException {
+    public static MidiEvent toKeySignatureEvent(KeySignature keySignature) throws InvalidMidiDataException {
         byte[] bytes = new byte[]{(byte) keySignature.getAccidentals(), (byte) keySignature.getMode()};
 
         MetaMessage message = new MetaMessage(
@@ -133,7 +218,7 @@ public class Conversion {
         return new Tempo( convertMicrosecondsToBPM(data), range );
     }
 
-    public static MidiEvent fromTempo(Tempo tempo) throws InvalidMidiDataException {
+    public static MidiEvent toTempoEvent(Tempo tempo) throws InvalidMidiDataException {
 
         byte[] bytes = Conversion.convertBPMToMicroseconds(tempo.getBpm());
 
@@ -243,7 +328,7 @@ public class Conversion {
 
     }
 
-    public static MidiEvent fromTimeSignature(TimeSignature timeSignature) throws InvalidMidiDataException {
+    public static MidiEvent toTimeSignatureEvent(TimeSignature timeSignature) throws InvalidMidiDataException {
 
         int upperNumeral = timeSignature.getUpperNumeral();
         int lowerNumeral = timeSignature.getLowerNumeral();
@@ -283,9 +368,9 @@ public class Conversion {
     }
 
 
-    /* ============
-    * ASSIGN RANGES
-    * ===========*/
+    /* ====
+     * MISC
+     * ==*/
 
 
     public static <E extends Event<?>, C extends Ranged> ArrayList<C>
@@ -333,57 +418,48 @@ public class Conversion {
         return out;
     }
 
+    public static ArrayList<MidiEvent> getAddbacks(Piece piece) throws InvalidMidiDataException {
+
+        ArrayList<MidiEvent> addbacks = new ArrayList<>();
+
+        ArrayList<MidiEvent> timeSigEvents = new ArrayList<>();
+        ArrayList<MidiEvent> keySigEvents = new ArrayList<>();
+        ArrayList<MidiEvent> tempoEvents = new ArrayList<>();
+
+        for (TimeSignature timeSig : piece.timeSigs) {
+            timeSigEvents.add( Conversion.toTimeSignatureEvent(timeSig) );
+        }
+
+        for (KeySignature keySig : piece.keySigs) {
+            keySigEvents.add( Conversion.toKeySignatureEvent(keySig) );
+        }
+
+        for (Tempo tempo : piece.tempi) {
+            tempoEvents.add( Conversion.toTempoEvent(tempo) );
+        }
+
+        addbacks.addAll(timeSigEvents);
+        addbacks.addAll(keySigEvents);
+        addbacks.addAll(tempoEvents);
+
+        return addbacks;
+    }
+
+    /*
+     Any of the "text-based" events (Text, Lyrics, etc.) will follow the exact same pattern as toTrackNameEvent()
+     */
+
+    public static MidiEvent toTrackNameEvent(String trackName) throws InvalidMidiDataException {
+
+        byte[] bytes = trackName.getBytes();
+
+        MetaMessage message = new MetaMessage(
+                EventType.TRACK_NAME.getTypeCode(),
+                bytes,
+                bytes.length
+        );
+
+        return new MidiEvent(message, 0);
+    }
 
 }
-
-
-//// TODO: make this more like the tempo and key signature ones, and decouple the range assignment. Just have this
-////  be object creation as well as checking for invalid data.
-//static ArrayList<TimeSignature> toTimeSigs(ArrayList<TimeSignatureEvent> timeSignatureEvents) throws RuntimeException {
-//
-//    if (timeSignatureEvents.isEmpty()) {
-//        throw new RuntimeException("this program only supports MIDI files with time signature data");
-//    }
-//
-//    // ensure these are in ascending order by tick, otherwise the range creation loop won't work
-//    timeSignatureEvents.sort(Comparator.comparingLong(TimeSignatureEvent::getTick));
-//
-//    ArrayList<TimeSignature> out = new ArrayList<>();
-//
-//    int size = timeSignatureEvents.size();
-//    for (int i = 0; i < size; i++) {
-//
-//        var event = timeSignatureEvents.get(i);
-//
-//        long tick = event.getTick();
-//        long nextTick;
-//
-//        if (i == size - 1) {
-//            nextTick = Context.finalTick() + 1;
-//        } else {
-//            nextTick = timeSignatureEvents.get(i+1).getTick();
-//        }
-//
-//        Range range = new Range(tick, nextTick - 1);
-//
-//        TimeSignature timeSig = new TimeSignature(
-//                Context.resolution(),
-//                event.getUpperNumeral(),
-//                event.getLowerNumeral(),
-//                range
-//        );
-//
-//        out.add(timeSig);
-//    }
-//
-//    return out;
-//
-//}
-
-//public static Sequence toSequencePlusAddbacks(List<Column> columns, ArrayList<MidiEvent> addBacks) throws InvalidMidiDataException {
-//    ArrayList<MidiEvent> midiEvents = new ArrayList<>(addBacks);
-//    for (Column column : columns) {
-//        midiEvents.addAll( column.getNotes().toMidiEvents() );
-//    }
-//    return toSequence(midiEvents);
-//}

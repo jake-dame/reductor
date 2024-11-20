@@ -3,16 +3,18 @@ package reductor;
 import javax.sound.midi.MidiEvent;
 
 
-public class CopyrightNoticeEvent extends MetaEvent {
+public final class CopyrightNoticeEvent extends MetaEvent {
+
+    private final String copyrightNotice;
+
 
     CopyrightNoticeEvent(MidiEvent event) {
         super(event);
+        this.copyrightNotice = new String(this.getMessage().getData());
     }
+
 
     @Override
-    String dataString() {
-        return new String(this.getMessage().getData());
-    }
-
+    String dataString() { return this.copyrightNotice; }
 
 }

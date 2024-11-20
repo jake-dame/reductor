@@ -4,11 +4,12 @@ import javax.sound.midi.MidiEvent;
 import java.util.Map;
 
 
-public class ControlChangeEvent extends ChannelEvent {
+public final class ControlChangeEvent extends ChannelEvent {
 
     public static final Map<Integer, String> controllers;
 
     static {
+
         controllers = Map.ofEntries(
                 Map.entry(0x0, "bank select (coarse)"),
                 Map.entry(0x1, "modulation wheel (coarse)"),
@@ -34,16 +35,22 @@ public class ControlChangeEvent extends ChannelEvent {
                 Map.entry(0x78, "all sound off"),
                 Map.entry(0x79, "all controllers off")
         );
+
     }
 
-    int controllerCode;
-    int controllerValue;
+
+    private final int controllerCode;
+    private final int controllerValue;
+
 
     ControlChangeEvent(MidiEvent event) {
         super(event);
         this.controllerCode = this.getMessage().getData1();
         this.controllerValue = this.getMessage().getData2();
     }
+
+    public int getControllerCode() { return controllerCode; }
+    public int getControllerValue() { return controllerValue; }
 
     @Override
     String dataString() {
@@ -52,13 +59,18 @@ public class ControlChangeEvent extends ChannelEvent {
                 + ", " + this.controllerValue;
     }
 
-    String contollerCodeToString(int controllerCode) {
+
+    public static String contollerCodeToString(int controllerCode) {
+
         String instrument = controllers.get(controllerCode);
+
         if (instrument == null) {
-            throw new RuntimeException("Found new controller code: 0x" + Integer.toHexString(controllerCode));
+            throw new RuntimeException(
+                    "Found new controller code: 0x" + Integer.toHexString(controllerCode)
+            );
         }
+
         return instrument;
     }
-
 
 }

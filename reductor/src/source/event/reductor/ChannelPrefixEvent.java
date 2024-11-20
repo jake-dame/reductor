@@ -9,9 +9,8 @@ public class ChannelPrefixEvent extends MetaEvent {
         super(event);
     }
 
+
     @Override
-    String dataString() {
-        return "not implemented";
-    }
+    String dataString() { return ""; } // TODO
 
 }

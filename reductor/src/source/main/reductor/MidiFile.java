@@ -83,38 +83,9 @@ public class MidiFile {
         return this.sequence;
     }
 
+    /// 0 == single track; 1 == multiple tracks; 2 == multiple sequences (rare)
     public int getFileType() throws InvalidMidiDataException, IOException {
         return MidiSystem.getMidiFileFormat(this.file).getType();
     }
-
-    /* BLACK-BOX INTERFACE STUFF*/
-
-    // "I don't care what you do with this data after the fact, I've done my job"
-
-    // This is the _idea_ behind the final black box interface but obviously for now the design is a mess
-
-    // This is everything a Piece could possibly need from MIDI data for reduction operations
-    // I'm not sure how to include addBacks in the final design, but those are note technically reduction-related
-    // (but they do still make the final product sound, look, and perform better)
-
-    public ArrayList<NoteOnEvent> getNoteEvents() {
-        return this.events.noteOnEvents;
-    }
-
-    public ArrayList<TimeSignatureEvent> getTimeSignatureEvents() {
-        return this.events.timeSignatureEvents;
-    }
-
-    // Not _absolutely_ necessary since this is mostly an afterthought in MIDI protocol
-    public ArrayList<KeySignatureEvent> getKeySignatureEvents() {
-        return this.events.keySignatureEvents;
-    }
-
-    public int getResolution() {
-        return this.sequence.getResolution();
-    }
-
-    // getDivisionType could be needed later but because this program doesn't really plan to support anything other
-    // than PPQ, it won't even allow SMPTE files to come through
 
 }

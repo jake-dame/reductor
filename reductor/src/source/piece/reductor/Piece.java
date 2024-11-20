@@ -240,39 +240,5 @@ public class Piece implements Ranged, Noted {
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //public Bucket getBucket(Range startStop) {
-    //    return this.queryWithRanges((ArrayList<Range>) List.of( window )).getFirst();
-    //}
-
-    //public ArrayList<Bucket> getBuckets(Range startStop, long windowSize) {
-    //    ArrayList<Range> ranges = getRanges(startStop, windowSize);
-    //    return this.queryWithRanges(ranges);
-    //}
-
-    //// this should be Bucket or NoteList, not column
-    //// get a bunch of easily reducible regions (clearly separate hands) or the areas where hands are messy
-    //// there will be different reduction strategies for the two different cases
-    //public ArrayList<Column> getRegions(boolean easilyReducible) {
-    //
-    //    ArrayList<Range> regions = new ArrayList<>();
-    //    for (int i = 0; i < this.columns.size(); i++) {
-    //
-    //        Column column = this.columns.get(i);
-    //        ArrayList<Range> ranges = null;
-    //        while (column.hasClearlySeparateHands() == easilyReducible) {
-    //            ranges.add(column.getRange());
-    //        }
-    //
-    //        if (ranges != null) {
-    //            regions.add(Range.concatenate(ranges));
-    //        }
-    //
-    //    }
-    //
-    //    return this.queryWithRanges(regions);
-    //}
-
 
 }

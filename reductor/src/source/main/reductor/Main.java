@@ -1,6 +1,7 @@
 package reductor;
 
 import javax.sound.midi.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +74,7 @@ public class Main {
 
     // option + return creates a local variable for "Result is ignored" stuff
     // cmd + l now selects line
+    // TIL the number after @ in the debugger is the object's hashCode. JVM abstracts mem management away.
 
     public static void main(String[] args) {
 
@@ -153,13 +155,18 @@ public class Main {
             Sequence seq = Conversion.toSequence(Context.resolution(), List.of( RHNotes, LHNotes, addbacks) );
             //Events events = new Events(seq);
 
-            //Util.play(seq);
             Util.write(seq, "conv_test");
+            Util.play(seq);
 
         } catch (InvalidMidiDataException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (UnpairedNoteException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (MidiUnavailableException e) {
+            throw new RuntimeException(e);
         }
-
     }
 
 

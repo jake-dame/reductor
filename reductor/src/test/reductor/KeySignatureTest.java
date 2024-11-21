@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class KeySignatureTest {
 
+    static { Context context = Context.createContext(); }
 
     @Test
     void constructFromString() {

@@ -1,10 +1,7 @@
 package reductor;
 
-import javax.sound.midi.InvalidMidiDataException;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.TreeSet;
 
 
@@ -140,7 +137,7 @@ public class Piece implements Ranged, Noted {
     //
     //    ArrayList<Column> out = new ArrayList<>();
     //
-    //    //long windowSize = RhythmType.getDuration(RhythmType.ONE_TWENTY_EIGHTH, Context.resolution());
+    //    //long windowSize = RhythmBase.getDuration(RhythmBase.ONE_TWENTY_EIGHTH, Context.resolution());
     //    long windowSize = 1;
     //
     //    long windowMin = this.range.low();
@@ -198,7 +195,7 @@ public class Piece implements Ranged, Noted {
 
         TreeSet<Column> set = new TreeSet<>(comp);
 
-        ArrayList<Range> ranges = getRanges(this.range, RhythmType.getDuration(RhythmType.ONE_TWENTY_EIGHTH, Context.resolution()));
+        ArrayList<Range> ranges = getRanges(this.range, RhythmBase.getDuration(RhythmBase.ONE_TWENTY_EIGHTH));
 
         for (Range range : ranges) {
             ArrayList<Note> matches = this.tree.query(range);

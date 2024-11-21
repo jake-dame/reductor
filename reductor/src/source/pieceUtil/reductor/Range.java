@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 
-public final class Range implements Comparable<Range>, Ranged {
+public class Range implements Comparable<Range>, Ranged {
 
     /// This range's low/lesser/left endpoint.
     private final long low;

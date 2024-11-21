@@ -154,6 +154,12 @@ public class Pitch {
         return register;
     }
 
+    public static int shift(int pitch, int intervallicDistance) {
+        var shiftedPitch = pitch + intervallicDistance;
+        return Pitch.validatePitch(shiftedPitch);
+    }
+
+
     /**
      * Converts a MIDI pitch integer value to a string (currently: non-diatonic spelling is always the sharped degree (Ionian mode)).
      *

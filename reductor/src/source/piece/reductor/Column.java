@@ -191,6 +191,8 @@ public class Column implements Ranged, Noted, Comparable<Column> {
         //    this.redistributeHands();
         //}
 
+        // TODO: loop through all, assign scores, and say LH should be here, RH should be here, the "unreachable area"
+
     }
 
     private void redistributeHands() {

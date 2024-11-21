@@ -261,6 +261,54 @@ public class IntervalTree<T extends Ranged> {
     }
 
 
+    ArrayList<T> getColumns(Range window) {
+
+        if (root == null) { return new ArrayList<>(); }
+        if (window == null) { throw new NullPointerException(); }
+
+        ArrayList<T> matches = new ArrayList<>();
+
+        query(root, window, matches);
+
+        //while(!this.queriedNodes.isEmpty()) {
+        //    var guy = queriedNodes.pop();
+        //    guy.queried = false;
+        //}
+
+        return new ArrayList<>(matches);
+
+    }
+
+    /*
+
+                [0,
+
+        [0,240]
+        G, B,  E
+
+
+     */
+
+
+    private ArrayList<T> getColumns(Node node, Range window, ArrayList<T> matches) {
+
+        if (window.overlaps(node.getRange())) { matches.addAll(node.elements); }
+
+        if (node.left == null  &&  node.right == null) { return matches; }
+
+        if (node.left != null  &&  window.low() <= node.left.getMax()) {
+            query(node.left, window, matches);
+        }
+
+        if (node.right != null  &&  window.high() >= node.getRange().low()) {
+            query(node.right, window, matches);
+        }
+
+        // Return from this path/branch, but may need to keep going on other paths -- return above too.
+        return matches;
+
+    }
+
     /* ====
      * OTHER
      * ===*/

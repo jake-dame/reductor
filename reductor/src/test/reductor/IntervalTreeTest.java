@@ -8,15 +8,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static reductor.RhythmBase.*;
 
 
 /// Unit tests for {@link reductor.IntervalTree}. Tests construction (which inherently tests insertion),
 /// and query
 class IntervalTreeTest<T extends Ranged> {
 
-    static {
-        Context context = Context.createContext(480, 480);
-    }
+    static { Context context = Context.createContext(); }
 
     /*
         For list of T with ranges:
@@ -198,7 +197,6 @@ class IntervalTreeTest<T extends Ranged> {
         IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
 
         assertEquals(30L, tree.getLastTick());
-
     }
 
     @Test
@@ -211,7 +209,6 @@ class IntervalTreeTest<T extends Ranged> {
 
         Range window = new Range(tree.getLastTick() + 1, tree.getLastTick() + 2);
         assertTrue(tree.query(window).isEmpty());
-
     }
 
     // These two methods are used to iterate over every node in the tree
@@ -248,6 +245,21 @@ class IntervalTreeTest<T extends Ranged> {
             }
         }
         return true;
+    }
+
+    @Test
+    void getColumns() {
+
+        ArrayList<Note> notes = new ArrayList<>();
+
+        // RH
+        var note1 = new MutableNote().setStart(0).setRhythm(DOTTED_EIGHTH).setPitch("B3");
+        var note2 = new MutableNote().setStart(note1.stop() + 1).setRhythm(SIXTEENTH).setPitch("B4");
+
+        // LH
+        var note3 = new MutableNote().setStart(note2.stop() + 1).setRhythm(EIGHTH).setPitch("G3");
+        var chord = new MutableChord().setRoot(note3).add("B4").add("E4");
+
     }
 
 

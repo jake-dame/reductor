@@ -9,7 +9,7 @@ import java.util.Map;
 
 class BoxTest {
 
-    static { Context context = Context.createContext(480, 480); }
+    static { Context context = Context.createContext(); }
 
     @Test
     void test1() {

@@ -24,12 +24,21 @@ public class Context {
 
     public static Context INSTANCE;
 
+    public static long DEFAULT_LAST_TICK = Long.MAX_VALUE;
+    public static int DEFAULT_RESOLUTION = 480;
+
     private final long lastTick;
     private final int resolution;
 
-    public Context(int resolution, long lastTick) {
+    private Context(int resolution, long lastTick) {
         this.lastTick = lastTick;
         this.resolution = resolution;
+    }
+
+    public static Context createContext() {
+        //if (INSTANCE != null) { throw new IllegalStateException("tried to make a new context"); }
+        INSTANCE = new Context(DEFAULT_RESOLUTION, DEFAULT_LAST_TICK);
+        return INSTANCE;
     }
 
     public static Context createContext(int resolution, long lastTick) {

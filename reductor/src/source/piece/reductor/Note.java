@@ -74,11 +74,6 @@ public class Note implements Ranged, Noted, Comparable<Note> {
     public int pitch() { return this.pitch; }
     private void setPitch(int val) { this.pitch = Pitch.validatePitch(pitch); }
 
-    private void shift(int intervallicDistance) {
-        var shiftedPitch = this.pitch + intervallicDistance;
-        this.pitch = Pitch.validatePitch(shiftedPitch);
-    }
-
     public long start() { return this.range.low(); }
     public long stop() { return this.range.high(); }
 

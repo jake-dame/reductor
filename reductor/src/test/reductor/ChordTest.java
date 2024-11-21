@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ChordTest {
 
-    static { Context context = Context.createContext(480, 480); }
+    static { Context context = Context.createContext(); }
 
     @Test
     void arpeggiate() {

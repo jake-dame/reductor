@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RangeTest {
 
+    static { Context context = Context.createContext(); }
+
     @Test
     void construction() {
         Range range = new Range(0, 1);

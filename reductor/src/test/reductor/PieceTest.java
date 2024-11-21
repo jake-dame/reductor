@@ -12,6 +12,8 @@ import static reductor.Files.CHOPIN_PREL_e;
 
 class PieceTest {
 
+    static { Context context = Context.createContext(); }
+
     Piece pieceNoPickup;
     /*
      FACT SHEET for Chopin Prelude Op.28 No. 20 in C minor

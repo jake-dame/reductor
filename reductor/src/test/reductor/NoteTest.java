@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class NoteTest {
 
-    static { Context context = Context.createContext(480, 480); }
+    static { Context context = Context.createContext(); }
 
     // I thought this better to test here rather than in a separate Pitch class test because
     // this is where it's most consequential. Additionally, if it works here, it works everywhere else

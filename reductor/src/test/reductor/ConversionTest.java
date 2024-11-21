@@ -18,7 +18,7 @@ class ConversionTest {
     static final int D4 = 62;
     static final int E4 = 64;
 
-    static { Context context = Context.createContext(480, 42); }
+    static { Context context = Context.createContext(); }
 
     ArrayList<NoteOnEvent> ons;
     ArrayList<NoteOffEvent> offs;

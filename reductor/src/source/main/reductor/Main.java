@@ -15,8 +15,11 @@ public class Main {
     // 1. Note containers vs note primitives
     // 2. Mutability of Note and note containers
     // 3. Inclusive-exclusive Range and query() stuff
-    // 4. Implement channel hopping stuff in Conversion, nowhere else
     // 5. Column construction messiness
+
+
+    // TODO:
+    // implement channel hopping stuff in Conversion
 
     // TODO:
     // Hand class (extends Column??)
@@ -24,9 +27,6 @@ public class Main {
     // LeftHand extends Hand
     // Because columnar pitch analysis stuff is going to be inverted for both right and left (like where is the 2nd
     // to thumb span supposed to be?)
-
-    // TODO:
-    // Pitch#isValidPitch
 
     // TODO:
     // Decide whether to prevent duplicates or not in query. If so, can pass a Set through and add to set. If

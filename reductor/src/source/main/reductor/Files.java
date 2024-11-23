@@ -114,10 +114,24 @@ public class Files {
     public static final String OVERLAPPING_TEST = addFile("overlapping_test.mid", TEST_FILES);
 
     /// Complex test; see .mscz file
-    public static final String COLUMN_TEST = addFile("column_test.mid", TEST_FILES);
+    public static final String COLUMN_TEST_1 = addFile("column_test_1.mid", TEST_FILES);
+
+    public static final String COLUMN_TEST_2 = addFile("column_test_2.mid", TEST_FILES);
+
+    /// In 2/4: C4 (8th), C4 (8th)  |  C4 (qtr), C4 (qtr)  |  C4 (qtr), D4 (qtr)
+    public static final String TICKS_TEST = addFile("ticks_test.mid", TEST_FILES);
+    /* Reading the actual bytes in the SMF from the .mid file that MuseScore produced showed that even with
+    well-separated notes (like 8th → 8th rest → 8th → 8th rest), the note off event is still sent at -1 the real
+    duration (so note on at 0, note off at 239).*/
+
+    /// Papageno pickup pattern, 3 measures, 4/4, first measures is "full" with 3 qtr rests and 1 qtr pickup
+    public static final String PSEUDO_ANACRUSIS_TEST = addFile("pseudo_anacrusis_test.mid", TEST_FILES);
 
     /// Complex test; see .mscz file
     public static final String ORNAMENT_TEST = addFile("ornament_test.mid", TEST_FILES);
+
+    // See documentation in {@link reductor.PieceTest#getMeasureRanges}
+    public static final String MEASURE_SIZE_TEST = addFile("measure_size_test.mid", TEST_FILES);
 
     public static final String OVERLAPPING_TEST_2 = addFile("overlapping_test_2.mid", TEST_FILES);
     public static final String OVERLAPPING_TEST_3 = addFile("overlapping_test_3.mid", TEST_FILES);
@@ -127,7 +141,6 @@ public class Files {
     public static final String OVERLAPPING_TEST_7 = addFile("overlapping_test_7.mid", TEST_FILES);
     public static final String OVERLAPPING_ASCENDING_SCALE = addFile("overlapping_ascending_scale.mid", TEST_FILES);
     public static final String BEETHOVEN_7_FUGUE = addFile("beethoven_7_fugue_full.mid", TEST_FILES);
-    public static final String MEASURE_SIZE_TEST = addFile("measure_size_test.mid", TEST_FILES);
     public static final String PICKUP_MEASURE_TEST = addFile("pickup_measure_test.mid", TEST_FILES);
     public static final String BEETHOVEN_7_FUGUE_PIANO = addFile("beethoven_7_fugue_piano.mid", TEST_FILES); // overlapping noteList
 

@@ -4,7 +4,13 @@ import javax.sound.midi.*;
 import java.util.*;
 
 
+/**
+ * This utility class provides the necessary conversion methods to/from MIDI data to reductor in-house classes.
+ * In the future, this could become an interface, with different implementing classes handling different kinds of
+ * data (e.g. MusicXML).
+ */
 public class Conversion {
+
 
     public static ArrayList<Note> toNotes(ArrayList<NoteOnEvent> noteOnEvents, ArrayList<NoteOffEvent> noteOffEvents) throws UnpairedNoteException {
 
@@ -62,11 +68,12 @@ public class Conversion {
         NoteOnEvent on;
         NoteOffEvent off;
         Iterator<NoteOnEvent> onsIterator = ons.iterator();
-        Iterator<NoteOffEvent> offsIterator = offs.iterator();
+        //Iterator<NoteOffEvent> offsIterator = offs.iterator();
 
         while(onsIterator.hasNext()) {
             on = onsIterator.next();
 
+            Iterator<NoteOffEvent> offsIterator = offs.iterator();
             while(offsIterator.hasNext()) {
                 off = offsIterator.next();
 
@@ -92,11 +99,11 @@ public class Conversion {
         ArrayList<NoteOffEvent> unpairedOffs = new ArrayList<>(offs);
 
         if (!ons.isEmpty()) {
-            //throw new UnpairedNoteException("unpaired note on", new Throwable(unpairedOns.toString()));
+            throw new UnpairedNoteException("unpaired note on", new Throwable(unpairedOns.toString()));
         }
 
         if (!offs.isEmpty()) {
-            //throw new UnpairedNoteException("unpaired note off", new Throwable(unpairedOffs.toString()));
+            throw new UnpairedNoteException("unpaired note off", new Throwable(unpairedOffs.toString()));
         }
 
         return outNotes;
@@ -330,8 +337,8 @@ public class Conversion {
 
     public static MidiEvent toTimeSignatureEvent(TimeSignature timeSignature) throws InvalidMidiDataException {
 
-        int upperNumeral = timeSignature.getUpperNumeral();
-        int lowerNumeral = timeSignature.getLowerNumeral();
+        int upperNumeral = timeSignature.getNumerator();
+        int lowerNumeral = timeSignature.getDenominator();
 
         if (upperNumeral > 128 || upperNumeral < 1) {
             throw new IllegalArgumentException("invalid upperNumeral: " + upperNumeral);
@@ -373,6 +380,25 @@ public class Conversion {
      * ==*/
 
 
+    //public static ArrayList<TimeSignature> hi(ArrayList<TimeSignatureEvent> timeSignatureEvents) {
+    //
+    //    if (timeSignatureEvents == null  ||  timeSignatureEvents.isEmpty()) { return new ArrayList<>(); }
+    //    ArrayList<TimeSignatureEvent> events = new ArrayList<>(timeSignatureEvents);
+    //
+    //    Set<Long> set = new HashSet<>();
+    //    for (TimeSignatureEvent event : events) { set.add(event.getTick()); }
+    //
+    //    ArrayList<Range> ranges = Range.getRangesFromPoints(set, Context.finalTick());
+    //
+    //    ArrayList<TimeSignature> out = new ArrayList<>();
+    //
+    //    for (int i = 0; i < ranges.size(); i++) {
+    //        out.add(toTimeSignature(events.get(i).getMidiEvent(), ranges.get(i)));
+    //    }
+    //
+    //    return out;
+    //}
+
     public static <E extends Event<?>, C extends Ranged> ArrayList<C>
     assignRanges(List<E> midiEvents, Class<C> classToConvertTo) {
 
@@ -405,14 +431,14 @@ public class Conversion {
             // and what Piece needs, which is that standard range.high() is nextTick - 1.
             Range range = new Range(tick, nextTick - 1);
 
-            C newGuy = switch (classToConvertTo.getSimpleName()) {
+            C instance = switch (classToConvertTo.getSimpleName()) {
                 case "TimeSignature" -> classToConvertTo.cast(toTimeSignature(event.getMidiEvent(), range));
                 case "KeySignature" -> classToConvertTo.cast(toKeySignature(event.getMidiEvent(), range));
                 case "Tempo" -> classToConvertTo.cast(toTempo(event.getMidiEvent(), range));
                 default -> throw new RuntimeException("invalid class for using assignRanges function: " + classToConvertTo);
             };
 
-            out.add(newGuy);
+            out.add(instance);
         }
 
         return out;
@@ -426,15 +452,15 @@ public class Conversion {
         ArrayList<MidiEvent> keySigEvents = new ArrayList<>();
         ArrayList<MidiEvent> tempoEvents = new ArrayList<>();
 
-        for (TimeSignature timeSig : piece.timeSigs) {
+        for (TimeSignature timeSig : piece.getTimeSignatures()) {
             timeSigEvents.add( Conversion.toTimeSignatureEvent(timeSig) );
         }
 
-        for (KeySignature keySig : piece.keySigs) {
+        for (KeySignature keySig : piece.getKeySignatures()) {
             keySigEvents.add( Conversion.toKeySignatureEvent(keySig) );
         }
 
-        for (Tempo tempo : piece.tempi) {
+        for (Tempo tempo : piece.getTempos()) {
             tempoEvents.add( Conversion.toTempoEvent(tempo) );
         }
 

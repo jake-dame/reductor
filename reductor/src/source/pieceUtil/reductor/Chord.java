@@ -17,7 +17,7 @@ public class Chord implements Noted, Ranged {
     Chord(ArrayList<Note> notes) {
         this.notes = notes;
         this.range = Range.concatenate(notes);
-        this.rhythm = new Rhythm(this.range.length(), Context.resolution());
+        this.rhythm = new Rhythm(this.range.length());
     }
 
     Chord(Note... notes) {
@@ -25,7 +25,7 @@ public class Chord implements Noted, Ranged {
         for (Note note : notes) { list.add( new Note(note) ); }
         this.notes = list;
         this.range = Range.concatenate(this.notes);
-        this.rhythm = new Rhythm(this.range.length(), Context.resolution());
+        this.rhythm = new Rhythm(this.range.length());
     }
 
     Chord(int... pitches) {
@@ -33,7 +33,7 @@ public class Chord implements Noted, Ranged {
         for (int pitch : pitches) { notes.add(new Note(pitch)); }
         this.notes = notes;
         this.range = Range.concatenate(notes);
-        this.rhythm = new Rhythm(this.range.length(), Context.resolution());
+        this.rhythm = new Rhythm(this.range.length());
     }
 
     // I-III-V
@@ -93,9 +93,6 @@ public class Chord implements Noted, Ranged {
 
     @Override
     public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes); }
-
-    @Override
-    public void setNotes(ArrayList<Note> notes) { }
 
     @Override
     public Range getRange() { return new Range(this.range); }

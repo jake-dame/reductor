@@ -34,21 +34,21 @@ public class KeySignature implements Ranged {
         );
 
         mapMinor = Map.ofEntries(
-                Map.entry(-7, "Ab"),
-                Map.entry(-6, "Eb"),
-                Map.entry(-5, "Bb"),
-                Map.entry(-4, "F"),
-                Map.entry(-3, "C"),
-                Map.entry(-2, "G"),
-                Map.entry(-1, "D"),
-                Map.entry(0, "A"),
-                Map.entry(1, "E"),
-                Map.entry(2, "B"),
-                Map.entry(3, "F#"),
-                Map.entry(4, "C#"),
-                Map.entry(5, "G#"),
-                Map.entry(6, "D#"),
-                Map.entry(7, "A#")
+                Map.entry(-7, "ab"),
+                Map.entry(-6, "eb"),
+                Map.entry(-5, "bb"),
+                Map.entry(-4, "f"),
+                Map.entry(-3, "c"),
+                Map.entry(-2, "g"),
+                Map.entry(-1, "d"),
+                Map.entry(0, "a"),
+                Map.entry(1, "e"),
+                Map.entry(2, "b"),
+                Map.entry(3, "f#"),
+                Map.entry(4, "c#"),
+                Map.entry(5, "g#"),
+                Map.entry(6, "d#"),
+                Map.entry(7, "a#")
         );
 
         reverseMapMajor = new HashMap<>();
@@ -71,8 +71,7 @@ public class KeySignature implements Ranged {
 
     public KeySignature(int accidentals, int mode, Range range) {
 
-        assert -7 <= accidentals  &&  accidentals <= 7;
-        assert mode == 0  ||  mode == 1;
+        validateKeySignature(mode, accidentals);
 
         this.range = new Range(range);
         this.mode = mode;
@@ -87,42 +86,20 @@ public class KeySignature implements Ranged {
         this.accidentals = other.accidentals;
     }
 
-    /// Must be in form of either: key, no space, M = major, m = minor like "C#M" or "am"
-    /// Case of key does not matter
+    /// Case-sensitive. Upper for major, lower for minor.
     public KeySignature(String str, Range range) {
 
-        if (str == null || str.isEmpty() || (str.length() != 2 && str.length() != 3)) {
+        this.range = range;
+
+        if (str == null || str.isEmpty() || 2 < str.length()) {
             throw new IllegalArgumentException("string is null, empty, or too short/long");
         }
 
-        char modeChar;
-        if (str.length() == 2) {
-            modeChar = str.charAt(1);
-            str = str.substring(0,1);
-        } else {
-            modeChar = str.charAt(2);
-            str = str.substring(0,2);
-        }
+        this.mode = Character.isUpperCase(str.charAt(0)) ? 0 : 1;
 
-        int mode = switch(modeChar) {
-            case 'M' -> 0;
-            case 'm' -> 1;
-            default -> throw new RuntimeException("invalid mode: '" + modeChar + "'");
-        };
-
-        // Uppercase the first one so "b" for flat doesn't get uppercased too
-        char[] chars = str.toCharArray();
-        chars[0] = Character.toUpperCase(chars[0]);
-
-        String keyString = new String(chars);
-
-        int key = mode == 0
-                ? reverseMapMajor.get(keyString)
-                : reverseMapMinor.get(keyString);
-
-        this.mode = mode;
-        this.accidentals = key;
-        this.range = range;
+        this.accidentals = this.mode == 0
+                ? reverseMapMajor.get(str)
+                : reverseMapMinor.get(str);
     }
 
     public int getTonic() {
@@ -156,6 +133,18 @@ public class KeySignature implements Ranged {
         return mode == 0
                 ? String.format("%s Major", mapMajor.get(accidentals))
                 : String.format("%s minor", mapMinor.get(accidentals));
+    }
+
+    public static void validateKeySignature(int mode, int accidentals) {
+
+        if ( accidentals < -7 || 7 < accidentals) {
+            throw new IllegalArgumentException("number of accidentals should be in [-7,7]");
+        }
+
+        if (mode < 0  ||  1 < mode ) {
+            throw new IllegalArgumentException("mode should be 0 for major or 1 for minor");
+        }
+
     }
 
 }

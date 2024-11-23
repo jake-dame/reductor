@@ -2,10 +2,14 @@ package reductor;
 
 import org.junit.jupiter.api.Test;
 
+import javax.sound.midi.InvalidMidiDataException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static reductor.Files.COLUMN_TEST_2;
 
 
 public class RangeTest {
@@ -33,6 +37,14 @@ public class RangeTest {
         assertThrows(IllegalArgumentException.class, () -> new Range(10, 10), "should throw on high == low");
         assertThrows(IllegalArgumentException.class, () -> new Range(-1, 9), "should throw on negative low");
         assertThrows(IllegalArgumentException.class, () -> new Range(1, -9), "should throw on negative high");
+    }
+
+    /// This may seem stupid to test, but if you ever change inclusivity properties for Range...
+    @Test
+    void length() {
+        assertEquals(10, new Range(0,10).length());
+        assertEquals(9, new Range(1,10).length());
+        assertEquals(9, new Range(0,9).length());
     }
 
     @SuppressWarnings("SimplifiableAssertion")
@@ -67,6 +79,52 @@ public class RangeTest {
     }
 
     @Test
+    void containsRange() {
+
+        Range target1 = new Range(0,100);
+        Range target2  = new Range(100,200);
+
+        // left endpoint edges: zero
+        assertTrue(target1.contains( new Range(0,50) ));
+        assertTrue(target1.contains( new Range(1,50) ));
+
+        // exact alignment
+        assertTrue(target1.contains( new Range(0,100) ));
+        assertTrue(new Range(0,100).contains(target1));
+
+        // right endpoint edges
+        assertTrue(target1.contains( new Range(50,99) ));
+        assertTrue(target1.contains( new Range(50,100) ));
+        assertFalse(target1.contains( new Range(50,101) ));
+
+        // both endpoint edges
+        assertFalse(target2.contains( new Range(99,101) ));
+        assertTrue(target2.contains( new Range(100,200) ));
+        assertTrue(target2.contains( new Range(101,199) ));
+
+        // left endpoint: non-zero
+        assertFalse(target2.contains( new Range(99,150) ));
+        assertTrue(target2.contains( new Range(100,150) ));
+        assertTrue(target2.contains( new Range(101,150) ));
+    }
+
+    @Test
+    void containsPoint() {
+
+        Range target = new Range(0,479);
+
+        // 0
+        assertFalse(target.contains(-1));
+        assertTrue(target.contains(0));
+        assertTrue(target.contains(1));
+
+        // 480
+        assertTrue(target.contains(479));
+        assertFalse(target.contains(480));
+        assertFalse(target.contains(481));
+    }
+
+    @Test
     void compareToEquality() {
         Range target = new Range(100, 200);
         assertEquals(0, target.compareTo(new Range(100, 200)), "target should be considered equal with other");
@@ -98,6 +156,104 @@ public class RangeTest {
         ));
 
         assertEquals(new Range(0, 400), Range.concatenate(ranges));
+    }
+
+    @Test
+    void splitOverlapping() {
+
+        Range r1 = new Range(0,20);
+        Range r2 = new Range(10,30);
+
+        var actual = Range.splitOverlapping(r1, r2);
+
+        Range e1 = new Range(0,10);
+        Range e2 = new Range(10,20);
+        Range e3 = new Range(20,30);
+        ArrayList<Range> expected = new ArrayList<>( List.of(e1, e2, e3));
+
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    void fromStartTicks() {
+
+        /*
+         For a piece with 1 quarter, 3 triplet (8ths), and 3 8ths, all occurring in the same beat:
+
+            List: [0, 480], [0, 160], [160, 320], [320, 480], [0, 240], [240, 480]
+             len:    480       160        160         160        240        240
+
+                        0                      480
+            RH quarter: |-----------------------|
+                               160     320
+            RH (trips): |-------|-------|-------|
+                                   240
+            LH (8ths):  |-----------|-----------|
+                        ↑       ↑   ↑   ↑       ↑
+                        |       |   |   |       |
+                        0      160 240 320     480
+
+
+            So, columns should be: [0, 160], [160, 240], [240, 320], [320, 480]
+         */
+
+        Range quarter = new Range(0, 480-1);
+        Range trip1 = new Range(0, 160-1);
+        Range trip2 = new Range(160, 320-1);
+        Range trip3 = new Range(320, 480-1);
+        Range eighth1 = new Range(0, 240-1);
+        Range eighth2 = new Range(240, 480-1);
+
+        ArrayList<Range> noteRanges = new ArrayList<>( List.of(
+                quarter, trip1, trip2, trip3, eighth1, eighth2
+        ));
+
+        ArrayList<Range> expected = new ArrayList<>( List.of(
+                new Range(0, 160-1),
+                new Range(160,240-1),
+                new Range(240, 320-1),
+                new Range(320, 480-1)
+        ));
+
+        IntervalTree<Range> tree = new IntervalTree<>(noteRanges);
+        ArrayList<Range> list = tree.toListOfRanges();
+
+        Set<Long> set = new HashSet<>();
+        for (Range range : list) {
+            set.add(range.low());
+        }
+
+        ArrayList<Range> actual = Range.fromStartTicks(set, 480L);
+
+        assertEquals(expected, actual);
+
+    }
+
+    @Test
+    void fromStartTicksWithFile() throws InvalidMidiDataException, UnpairedNoteException {
+
+
+        DevelopmentHelper dh = new DevelopmentHelper();
+        Piece piece = dh.getPiece(COLUMN_TEST_2);
+
+        var cols = piece.getColumns();
+
+        ArrayList<Range> actual = new ArrayList<>();
+
+        for (Column col : cols) {
+            actual.add(col.getRange());
+        }
+
+        actual.sort(null);
+
+        ArrayList<Range> expected = new ArrayList<>( List.of(
+                new Range(0, 160-1),
+                new Range(160,240-1),
+                new Range(240, 320-1),
+                new Range(320, 480-1)
+        ));
+
+        assertEquals(expected, actual);
     }
 
 

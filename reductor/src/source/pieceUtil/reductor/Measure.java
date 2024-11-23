@@ -5,7 +5,8 @@ import java.util.ArrayList;
 
 public class Measure implements Ranged, Noted {
 
-    private final NoteList noteList;
+    private final Bucket notes;
+    private ArrayList<Column> columns;
 
     private final Range range;
 
@@ -17,16 +18,25 @@ public class Measure implements Ranged, Noted {
     private boolean isPickup;
 
     /// Primary constructor
-    Measure(Range range, TimeSignature timeSignature, NoteList noteList) {
-        this.noteList = noteList;
+    Measure(ArrayList<Column> columns, Range range, TimeSignature timeSig) {
+
+        this.columns = new ArrayList<>(columns);
+        this.columns.sort(null);
+
+        ArrayList<Note> notes = new ArrayList<>();
+        for (Column col : columns) {
+            notes.addAll(col.getNotes());
+        }
+        this.notes = new Bucket(notes);
+
         this.range = range;
-        this.timeSig = timeSignature;
+        this.timeSig = timeSig;
         this.isPickup = false;
     }
 
     /// Copy constructor
     Measure(Measure other) {
-        this.noteList = new NoteList(other.noteList);
+        this.notes = new Bucket(other.notes);
         this.measureNumber = other.measureNumber;
         this.range = other.range;
         this.timeSig = other.timeSig;
@@ -34,9 +44,9 @@ public class Measure implements Ranged, Noted {
         this.isPickup = other.isPickup;
     }
 
-    public int size() { return this.noteList.size(); }
+    public int size() { return this.notes.size(); }
 
-    public boolean isEmpty() { return this.noteList.isEmpty(); }
+    public boolean isEmpty() { return this.notes.isEmpty(); }
 
     public long length() { return this.getRange().length(); }
 
@@ -52,15 +62,15 @@ public class Measure implements Ranged, Noted {
     public KeySignature getKeySignature() { return new KeySignature(this.keySig); }
     public void setKeySignature(KeySignature keySignature) { this.keySig = keySignature; }
 
+    public Column getColumn(int index) {
+        return this.columns.get(index);
+    }
 
     @Override
     public Range getRange() { return new Range(this.range); }
 
     @Override
-    public ArrayList<Note> getNotes() { return new ArrayList<>(this.noteList.getBackingList()); }
-
-    @Override
-    public void setNotes(ArrayList<Note> notes) { }
+    public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes); }
 
     @Override
     public String toString() {

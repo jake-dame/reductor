@@ -1,60 +1,66 @@
 package reductor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+//import java.util.HashMap;
+//import java.util.List;
+//import java.util.Map;
 
 
-/// A box consists of columns and is meant to look at notes/chords horizontally. It can look at just the RH or just
-/// the LH, or the whole length of the columns that were passed to it during construction.
-public class Box implements Ranged, Noted {
+/**
+ * A box is a container for Noted elements (particularly compound ones like Column or Chord).
+ */
+public class Box<T extends Noted & Ranged> implements Ranged, Noted, Comparable<Box<T>> {
 
     Range range;
 
-    ArrayList<Column> columns;
+    ArrayList<T> elems;
 
     int floor;
     int ceiling;
 
-    Box(List<Column> columns) {
-        this.columns = new ArrayList<>(columns);
-        this.columns.sort(null);
-        this.range = Range.concatenate(this.columns);
+    Box(ArrayList<T> elems) {
+        this.elems = new ArrayList<>(elems);
+        this.elems.sort(null);
+        this.range = Range.concatenate(this.elems);
         this.findFloorAndCeiling();
     }
 
+    /**
+     * Find the lowest and highest pitches in this Box.
+     */
     private void findFloorAndCeiling() {
         int floor = Integer.MAX_VALUE;
         int ceiling = Integer.MIN_VALUE;
-        for (Column col : this.columns) {
-            if (col.getLowNote().pitch() < floor) { floor = col.getLowNote().pitch(); }
-            if (col.getHighNote().pitch() > ceiling) { ceiling = col.getHighNote().pitch(); }
+        for (T elem : this.elems) {
+            for (Note note : elem.getNotes()) {
+                if (note.pitch() < floor) { floor = note.pitch(); }
+                if (note.pitch() > ceiling) { ceiling = note.pitch(); }
+            }
         }
     }
 
-    public static Map<String, Box> getBoxes(List<Column> columns) {
+    //public static Map<String, Box> getBoxes(List<Column> columns) {
+    //
+    //    Map<String, Box> boxesMap = new HashMap<>();
+    //
+    //    ArrayList<Column> LHCols = new ArrayList<>();
+    //    ArrayList<Column> middleCols = new ArrayList<>();
+    //    ArrayList<Column> RHCols  = new ArrayList<>();
+    //
+    //    for (Column col : columns) {
+    //        LHCols.add( col.getLH() );
+    //        middleCols.add( col.getMiddle() );
+    //        RHCols.add( col.getRH() );
+    //    }
+    //
+    //    boxesMap.put("LH", new Box(LHCols));
+    //    boxesMap.put("middle", new Box(middleCols));
+    //    boxesMap.put("RH", new Box(RHCols));
+    //
+    //    return boxesMap;
+    //}
 
-        Map<String, Box> boxesMap = new HashMap<>();
-
-        ArrayList<Column> LHCols = new ArrayList<>();
-        ArrayList<Column> middleCols = new ArrayList<>();
-        ArrayList<Column> RHCols  = new ArrayList<>();
-
-        for (Column col : columns) {
-            LHCols.add( col.getLH() );
-            middleCols.add( col.getMiddle() );
-            RHCols.add( col.getRH() );
-        }
-
-        boxesMap.put("LH", new Box(LHCols));
-        boxesMap.put("middle", new Box(middleCols));
-        boxesMap.put("RH", new Box(RHCols));
-
-        return boxesMap;
-    }
-
-    public Range getActualRange() { return Range.concatenate(this.getNotes()); }
+    //public Range getActualRange() { return Range.concatenate(this.elems); }
 
     @Override
     public Range getRange() { return new Range(this.range); }
@@ -62,12 +68,11 @@ public class Box implements Ranged, Noted {
     @Override
     public ArrayList<Note> getNotes() {
         ArrayList<Note> notes = new ArrayList<>();
-        for (Column col : this.columns) { notes.addAll(col.getNotes()); }
+        for (T elem : this.elems) { notes.addAll(elem.getNotes()); }
         return notes;
     }
 
     @Override
-    public void setNotes(ArrayList<Note> notes) { }
-
+    public int compareTo(Box other) { return this.range.compareTo(other.range); }
 
 }

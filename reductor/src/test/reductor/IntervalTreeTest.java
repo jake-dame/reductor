@@ -4,11 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reductor.IntervalTree.Node;
 
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static reductor.RhythmBase.*;
 
 
 /// Unit tests for {@link reductor.IntervalTree}. Tests construction (which inherently tests insertion),
@@ -176,8 +174,7 @@ class IntervalTreeTest<T extends Ranged> {
 
     @Test
     void queryNullTree() {
-        IntervalTree<Note> tree = new IntervalTree<>(distinctElems);
-        tree.root = null;
+        IntervalTree<Note> tree = new IntervalTree<>();
         assertEquals(new ArrayList<>(), tree.query(new Range(0, 100)), "query on a null tree should return an empty " +
                 "list");
     }
@@ -211,55 +208,83 @@ class IntervalTreeTest<T extends Ranged> {
         assertTrue(tree.query(window).isEmpty());
     }
 
-    // These two methods are used to iterate over every node in the tree
-    // and, for each node, check its entire subtree to determine if the node indeed
-    // stores the highest right endpoint (i.e., node.range().high()) stored in its subtree
-    // as its node.max field
-    //
-    // In order to do this correctly, POST-ORDER traversal is used (as the max of both left and right
-    // are needed before checking this node's max)
-    void checkMaxes(IntervalTree<Note> tree) {
-        checkMaxes(tree.root);
+    @Test
+    void queryWithPoint() {
+
+        Range qtr1 = new Range(0,479); // quarter on beat 1
+        Range qtrSync = new Range(240, 719); // syncopated quarter
+        Range qtr2 = new Range(480,959); // quarter on beat 2
+
+        ArrayList<Range> ranges = new ArrayList<>( List.of(qtr1, qtrSync, qtr2) );
+
+        IntervalTree<Range> tree = new IntervalTree<>(ranges);
+
+        // 0
+        assertEquals(List.of(), tree.query(-1));
+        assertEquals(List.of(qtr1), tree.query(0));
+        assertEquals(List.of(qtr1), tree.query(1));
+
+        // 240
+        assertEquals(List.of(qtr1), tree.query(239));
+        assertEquals(List.of(qtr1, qtrSync), tree.query(240));
+        assertEquals(List.of(qtr1, qtrSync), tree.query(241));
+
+        // 480
+        assertEquals(List.of(qtr1, qtrSync), tree.query(479));
+        assertEquals(List.of(qtrSync, qtr2), tree.query(480));
+        assertEquals(List.of(qtrSync, qtr2), tree.query(481));
+
+        // 720
+        assertEquals(List.of(qtrSync, qtr2), tree.query(719));
+        assertEquals(List.of(qtr2), tree.query(720));
+        assertEquals(List.of(qtr2), tree.query(721));
+
+        // 960
+        assertEquals(List.of(qtr2), tree.query(959));
+        assertEquals(List.of(), tree.query(960));
+        assertEquals(List.of(), tree.query(961));
     }
 
+
+    /*
+     These two methods are used to iterate over every node in the tree
+     and, for each node, check its entire subtree to determine if the node indeed
+     stores the highest right endpoint (i.e., node.range().high()) stored in its subtree
+     as its node.max field
+
+     In order to do this correctly, POST-ORDER traversal is used (as the max of both left and right
+     are needed before checking this node's max)
+    */
+
+    private void checkMaxes(IntervalTree<Note> tree) { checkMaxes(tree.getRoot()); }
+
     private long checkMaxes(Node node) {
-        if (node == null) {
-            return -1;
-        }
+
+        if (node == null) { return -1; }
+
         long leftMax = checkMaxes(node.left);
         long rightMax = checkMaxes(node.right);
         long thisMax = node.getRange().high();
+
         long maxOfSubtreesAndThis = Math.max(thisMax, Math.max(leftMax, rightMax));
+
         assertEquals(node.getMax(), maxOfSubtreesAndThis);
+
         return maxOfSubtreesAndThis;
     }
 
     // Testing helper function that returns true if the passed tree's elements are indeed in order
     private boolean isInOrder(IntervalTree<Note> tree) {
+
         ArrayList<Note> inOrderList = tree.toList();
+
         for (int i = 1; i < inOrderList.size(); i++) {
             Note prev = inOrderList.get(i - 1);
             Note curr = inOrderList.get(i);
-            if (curr.getRange().compareTo(prev.getRange()) < 0) {
-                return false;
-            }
+            if (curr.getRange().compareTo(prev.getRange()) < 0) { return false; }
         }
+
         return true;
-    }
-
-    @Test
-    void getColumns() {
-
-        ArrayList<Note> notes = new ArrayList<>();
-
-        // RH
-        var note1 = new MutableNote().setStart(0).setRhythm(DOTTED_EIGHTH).setPitch("B3");
-        var note2 = new MutableNote().setStart(note1.stop() + 1).setRhythm(SIXTEENTH).setPitch("B4");
-
-        // LH
-        var note3 = new MutableNote().setStart(note2.stop() + 1).setRhythm(EIGHTH).setPitch("G3");
-        var chord = new MutableChord().setRoot(note3).add("B4").add("E4");
-
     }
 
 

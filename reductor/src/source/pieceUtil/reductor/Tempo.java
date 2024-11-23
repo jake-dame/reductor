@@ -2,18 +2,15 @@ package reductor;
 
 public class Tempo implements Ranged {
 
-    private final int bpm;
-
     private final Range range;
 
+    private int bpm;
+
+
+    /// Primary constructor
     Tempo(int bpm, Range range) {
         this.bpm = bpm;
         this.range = new Range(range);
-    }
-
-    Tempo(Tempo other, int bpm) {
-        this.bpm = bpm;
-        this.range = new Range(other.range);
     }
 
     /// Copy constructor
@@ -23,9 +20,12 @@ public class Tempo implements Ranged {
     }
 
     public int getBpm() { return this.bpm; }
+    public void setBpm(int val) {
+        if (val < 0) { val = 0; }
+        this.bpm = val;
+    }
 
     @Override
     public Range getRange() { return new Range(this.range); }
-
 
 }

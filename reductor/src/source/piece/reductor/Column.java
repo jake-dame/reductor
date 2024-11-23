@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Column implements Ranged, Noted, Comparable<Column> {
 
     /// The noteList that comprise this {@code Column} in ascending order by pitch
-    private final NoteList notes;
+    private final Bucket notes;
 
     /// The Range this column was created with and intended to represent, although due to notes whose durations are
     /// either shorter or longer than this, the actual range may vary. To get the actual range, use
@@ -48,12 +48,14 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /// Given a list of {@link Note} objects, constructs a {@link Column} object
     public Column(ArrayList<Note> notes, Range range) {
         this.range = new Range(range);
-        this.notes = new NoteList(notes);
-        this.notes.getBackingList().sort(Comparator.comparingInt(Note::pitch));
+        this.notes = new Bucket(notes);
+        this.notes.sort(Comparator.comparingInt(Note::pitch));
+
         this.isPure = this.assignIsPure();
         this.LH = new Column(this.range, false);
         this.middle = new Column(this.range, false);
         this.RH = new Column(this.range, false);
+
         this.assignHands();
         this.assignHoldovers();
 
@@ -63,7 +65,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /// Copy constructor.
     public Column(Column other) {
         this.range = new Range(other.range);
-        this.notes =  new NoteList(other.notes);
+        this.notes =  new Bucket(other.notes);
         this.isPure = other.isPure;
         this.LH = new  Column(other.LH, false);
         this.middle = new Column(other.middle, false);
@@ -75,13 +77,13 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /// constructor
     private Column(Range range, boolean createHandColumns) {
         this.range = new Range(range);
-        this.notes = new NoteList();
+        this.notes = new Bucket();
         this.isPure = this.assignIsPure();
     }
 
     private Column(Column other, boolean createHandColumns) {
         this.range = new Range(other.range);
-        this.notes = new NoteList(other.notes);
+        this.notes = new Bucket(other.notes);
         this.isPure = other.isPure;
     }
 
@@ -102,24 +104,35 @@ public class Column implements Ranged, Noted, Comparable<Column> {
 
     /// Helper to determine whether this Column of Notes is pure or not.
     private boolean assignIsPure() {
-        for (Note note : this.notes.getBackingList()) {
+        for (Note note : this.notes) {
             if (this.range.compareTo(note.getRange()) != 0) { return false; }
         }
         return true;
     }
 
     public void assignHoldovers() {
-        //for (Note note : this.notes.getBackingList()) {
-        //    if (note.start() < this.range.low()) {
-        //        this.notes.remove(note);
-        //        Note newNote = new Note(note);
-        //        newNote.setIsHeld(true);
-        //        this.notes.add( new Note(note) );
-        //    }
-        //    if (this.range.low() < note.start()) {
-        //        System.out.println("note started " + (note.start() - this.range.low())+ " ticks after column start");
-        //    }
-        //}
+        ArrayList<Note> toAdd = new ArrayList<>();
+        ArrayList<Note> toRemove = new ArrayList<>();
+
+        for (Note note : new ArrayList<>(this.notes)) { // Use a copy of the list to iterate safely
+            if (note.start() < this.range.low()) {
+                toRemove.add(note); // Mark the note for removal
+                Note newNote = new Note(note);
+                newNote.setIsHeld(true);
+                toAdd.add(newNote); // Add the modified note to the temporary list
+            }
+
+
+
+
+            if (this.range.low() < note.start()) {
+                System.out.println("this column has range" + this.range + " and this note:  " + note + " " + note.getRange());
+            }
+        }
+
+        // Apply changes after iteration
+        this.notes.removeAll(toRemove);
+        this.notes.addAll(toAdd);
     }
 
     private void assignHands() {
@@ -205,12 +218,12 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     }
 
     public void add(Note other) {
-        int index = Collections.binarySearch(this.notes.getBackingList(), other);
+        int index = Collections.binarySearch(this.notes, other);
         if (index < 0) { index = -(index + 1); }
         this.notes.add(index, other);
     }
 
-    public Note remove(int index) {return this.notes.remove(index); }
+    public Note remove(int index) { return this.notes.remove(index); }
 
     public int size() { return this.notes.size(); }
     public boolean isEmpty() { return this.notes.isEmpty(); }
@@ -235,7 +248,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
 
     public int getMeanPitch()  {
         int sum = 0;
-        for (Note note : this.notes.getBackingList()) { sum += note.pitch(); }
+        for (Note note : this.notes) { sum += note.pitch(); }
         return sum / this.notes.size();
     }
 
@@ -255,16 +268,13 @@ public class Column implements Ranged, Noted, Comparable<Column> {
         return -1;
     }
 
-    public Range getActualRange() { return Range.concatenate(this.notes.getBackingList()); }
+    public Range getActualRange() { return Range.concatenate(this.notes); }
 
     @Override
     public Range getRange() { return new Range(this.range); }
 
     @Override
-    public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes.getBackingList()); }
-
-    @Override
-    public void setNotes(ArrayList<Note> notes) { }
+    public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes); }
 
     @Override
     public int compareTo(Column other) { return this.range.compareTo(other.range); }

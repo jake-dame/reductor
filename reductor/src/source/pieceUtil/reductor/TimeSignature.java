@@ -8,27 +8,27 @@ public class TimeSignature implements Ranged {
 
     private final int resolution;
 
-    private final int upperNumeral;
-    private final int lowerNumeral;
+    private final int numerator;
+    private final int denominator;
 
     private final long measureSize;
 
     private final Range range;
 
 
-    TimeSignature(int resolution, int upperNumeral, int lowerNumeral, Range range) {
+    TimeSignature(int resolution, int numerator, int denominator, Range range) {
         this.resolution = resolution;
-        this.upperNumeral = upperNumeral;
-        this.lowerNumeral = lowerNumeral;
+        this.numerator = numerator;
+        this.denominator = denominator;
         this.range = new Range(range);
-        this.measureSize = calculateMeasureSize(this.upperNumeral, this.lowerNumeral, this.resolution);
+        this.measureSize = calculateMeasureSize(this.numerator, this.denominator, this.resolution);
     }
 
 
     public int getResolution() { return this.resolution; }
 
-    public int getUpperNumeral() { return this.upperNumeral; }
-    public int getLowerNumeral() { return this.lowerNumeral; }
+    public int getNumerator() { return this.numerator; }
+    public int getDenominator() { return this.denominator; }
 
     public long getMeasureSize() { return this.measureSize; }
 
@@ -36,11 +36,11 @@ public class TimeSignature implements Ranged {
     public Range getRange() { return new Range(this.range); }
 
     @Override
-    public String toString() { return this.upperNumeral + "/" + this.lowerNumeral; }
+    public String toString() { return this.numerator + "/" + this.denominator; }
 
 
     public static long calculateMeasureSize(TimeSignature timeSig) {
-        return calculateMeasureSize(timeSig.getUpperNumeral(), timeSig.getLowerNumeral(), timeSig.getResolution());
+        return calculateMeasureSize(timeSig.getNumerator(), timeSig.getDenominator(), timeSig.getResolution());
     }
 
     public static long calculateMeasureSize(int upperNumeral, int lowerNumeral, int resolution) {
@@ -75,6 +75,11 @@ public class TimeSignature implements Ranged {
 
         return (long) measureInTicks;
 
+    }
+
+    /// Returns false if they are incomparable (mismatched denominators).
+    public boolean lessThan(TimeSignature other) {
+        return other.denominator == this.denominator && this.numerator < other.numerator;
     }
 
 

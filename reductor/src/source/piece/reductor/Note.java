@@ -24,7 +24,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
         this.pitch = Pitch.validatePitch(pitch);
         this.range = range;
         this.length = this.range.length();
-        this.rhythm = new Rhythm(this.length, Context.resolution());
+        this.rhythm = new Rhythm(this.length);
         this.instrument = "";
         this.isHeld = false;
     }
@@ -64,7 +64,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
         this.pitch = Pitch.validatePitch(other.pitch);
         this.range = range;
         this.length = this.range.length();
-        this.rhythm = new Rhythm(this.length, Context.resolution());
+        this.rhythm = new Rhythm(this.length);
         this.instrument = other.instrument;
         this.isHeld = other.isHeld;
     }
@@ -105,6 +105,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
                 : Pitch.toStr(this.pitch, true);
 
         return this.range + " " + pitchStr;
+        //return pitchStr;
     }
 
     /*======
@@ -138,7 +139,5 @@ public class Note implements Ranged, Noted, Comparable<Note> {
         return out;
     }
 
-    @Override
-    public void setNotes(ArrayList<Note> notes) { }
 
 }

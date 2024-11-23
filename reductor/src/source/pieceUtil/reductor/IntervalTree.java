@@ -51,7 +51,7 @@ public class IntervalTree<T extends Ranged> {
         private long max;
 
         /// This node's data (a Set of elements with the same range but possibly differing pitches)
-        List<T> elements;
+        ArrayList<T> elements;
 
         /// This node's left child
         Node left;
@@ -85,20 +85,19 @@ public class IntervalTree<T extends Ranged> {
 
         @Override
         public String toString() {
-            String str = this.range + "->{";
-            for (T note : this.elements) { str += note + ","; }
-            str = str.substring(0, str.length() - 1); // get last comma off
-            return str + "}"; // looks like: "[240,480]->{C4,E4,G4}"
+            String str = this.range + " -> {  ";
+            for (T note : this.elements) { str += note + "  "; }
+            return str + "  }";
         }
 
         @Override
         public Range getRange() { return new Range(this.range); }
 
-    } //endregion
+    }
 
 
     /// Root of this interval tree
-    Node root;
+    private final Node root;
 
     /// Size (number of nodes)
     private int numNodes;
@@ -216,37 +215,53 @@ public class IntervalTree<T extends Ranged> {
     * ===*/
 
 
-    ArrayList<T> query(Range window) {
+    public ArrayList<T> query(long point) {
 
-        if (root == null) { return new ArrayList<>(); }
-
-        if (window == null) { throw new NullPointerException(); }
+        if (point < 0  ||  isEmpty()) { return new ArrayList<>(); }
 
         ArrayList<T> matches = new ArrayList<>();
+        query(root, point, matches);
+        var out = new ArrayList<>(matches);
+        out.sort(null);
+        return out;
+    }
 
+    private ArrayList<T> query(Node node, long point, ArrayList<T> matches) {
+
+        // Target hit.
+        if (node.getRange().contains(point)) { matches.addAll(node.elements); }
+
+        // Base case.
+        if (node.left == null  &&  node.right == null) { return matches; }
+
+        // Look left & right.
+        if (node.left != null  &&  point <= node.left.getMax()) { query(node.left, point, matches); }
+        if (node.right != null  &&  point >= node.getRange().low()) { query(node.right, point, matches); }
+
+        // Continue to search
+        return matches;
+    }
+
+
+    public ArrayList<T> query(Range window) {
+
+        if (window == null) { throw new NullPointerException(); }
+        if (isEmpty()) { return new ArrayList<>(); }
+
+        ArrayList<T> matches = new ArrayList<>();
         query(root, window, matches);
-
-        //while(!this.queriedNodes.isEmpty()) {
-        //    var guy = queriedNodes.pop();
-        //    guy.queried = false;
-        //}
-
         return new ArrayList<>(matches);
-
     }
 
     private ArrayList<T> query(Node node, Range window, ArrayList<T> matches) {
 
-        //if (!node.queried &&  window.overlaps(node.getRange())) {
-        //    matches.addAll(node.elements);
-        //    node.queried = true;
-        //    queriedNodes.push(node);
-        //}
-
+        // Target hit.
         if (window.overlaps(node.getRange())) { matches.addAll(node.elements); }
 
+        // Base case.
         if (node.left == null  &&  node.right == null) { return matches; }
 
+        // Look left & right.
         if (node.left != null  &&  window.low() <= node.left.getMax()) {
             query(node.left, window, matches);
         }
@@ -255,59 +270,38 @@ public class IntervalTree<T extends Ranged> {
             query(node.right, window, matches);
         }
 
-        // Return from this path/branch, but may need to keep going on other paths -- return above too.
+        // Continue to search
         return matches;
-
     }
 
 
-    ArrayList<T> getColumns(Range window) {
+    //public ArrayList<T> queryWithoutDuplicates(Range window) {
+    //
+    //    if (window == null) { throw new NullPointerException(); }
+    //    if (isEmpty()) { return new ArrayList<>(); }
+    //
+    //    ArrayList<T> matches = new ArrayList<>();
+    //    query(root, window, matches);
+    //    return new ArrayList<>(matches);
+    //}
+    //
+    //private ArrayList<T> queryWithoutDuplicates(Node node, Range window, ArrayList<T> matches) {
+    //
+    //    if (window.overlaps(node.getRange())) { matches.addAll(node.elements); }
+    //
+    //    if (node.left == null  &&  node.right == null) { return matches; }
+    //
+    //    if (node.left != null  &&  window.low() <= node.left.getMax()) {
+    //        query(node.left, window, matches);
+    //    }
+    //
+    //    if (node.right != null  &&  window.high() >= node.getRange().low()) {
+    //        query(node.right, window, matches);
+    //    }
+    //
+    //    return matches;
+    //}
 
-        if (root == null) { return new ArrayList<>(); }
-        if (window == null) { throw new NullPointerException(); }
-
-        ArrayList<T> matches = new ArrayList<>();
-
-        query(root, window, matches);
-
-        //while(!this.queriedNodes.isEmpty()) {
-        //    var guy = queriedNodes.pop();
-        //    guy.queried = false;
-        //}
-
-        return new ArrayList<>(matches);
-
-    }
-
-    /*
-
-                [0,
-
-        [0,240]
-        G, B,  E
-
-
-     */
-
-
-    private ArrayList<T> getColumns(Node node, Range window, ArrayList<T> matches) {
-
-        if (window.overlaps(node.getRange())) { matches.addAll(node.elements); }
-
-        if (node.left == null  &&  node.right == null) { return matches; }
-
-        if (node.left != null  &&  window.low() <= node.left.getMax()) {
-            query(node.left, window, matches);
-        }
-
-        if (node.right != null  &&  window.high() >= node.getRange().low()) {
-            query(node.right, window, matches);
-        }
-
-        // Return from this path/branch, but may need to keep going on other paths -- return above too.
-        return matches;
-
-    }
 
     /* ====
      * OTHER
@@ -326,16 +320,34 @@ public class IntervalTree<T extends Ranged> {
         toList(node.left, inOrderList);
         inOrderList.addAll(node.elements);
         toList(node.right, inOrderList);
-
     }
 
-    /// Prints the tree in order.
+    /**
+     * @return An in-order list of each node by its key (i.e. range/interval).
+     */
+    public ArrayList<Range> toListOfRanges() {
+        ArrayList<Range> ranges = new ArrayList<>();
+        toListOfRanges(root, ranges);
+        return ranges;
+    }
+
+    private void toListOfRanges(Node node, ArrayList<Range> ranges) {
+        if (node == null) { return; }
+        toListOfRanges(node.left, ranges);
+        ranges.add(node.getRange());
+        toListOfRanges(node.right, ranges);
+    }
+
+    /**
+     * Prints the tree in order. Each node appears like "[0,480] -> {  C4  E4  G4  }"
+     * @see Node#toString
+     */
     public void print() { print(root); }
 
     private void print(Node node) {
         if (node == null) { return; }
         print(node.left);
-        for (T elem : node.elements) { System.out.println(elem); }
+        System.out.println(node);
         print(node.right);
     }
 
@@ -344,34 +356,76 @@ public class IntervalTree<T extends Ranged> {
      * Explicitly named size-related getters are provided instead.
      */
 
+    /**
+     * @return True if this tree is empty.
+     */
+    public boolean isEmpty() { return this.root == null; }
+
+    /**
+     * @return The number of nodes in this tree.
+     */
     public int getNumNodes() { return numNodes; }
+
+    /**
+     * @return The total number of elements stored at all nodes in this tree.
+     */
     public int getNumElements() { return numElements; }
 
-    /*
-     * Note on these four methods: They return the min/max TICK values in the tree, not the min/max of the thing the
-     * tree is built on (the interval/range of nodes). It can be implemented, and the getMin would look exactly the
-     * same except return the actual Range instead of the range left endpoint. However, when looking for the max
-     * range, this could be independent of node actually sitting at the bottom-right-most position in the tree. It is
-     * perfectly valid for that leaf to be something like [15,20], and it's parent to be something like [12,30] due to
-     *  the way the tree is ordered (primarily by low endpoint).
-     *
-     * TLDR: when looking for the max tick, in the tree, use getMaxTick() -- it's already stored in the root.
-     * When looking for the last sounding/struck note (or the node holding it) in the tree, use getMax().
-     */
+    /* There is some redundancy in the following methods,
+    but they each suit my needs for specific purposes, for now. */
 
+    public T getFirst() {
+        Node node = this.root;
+        while(node.left != null) { node = node.left; }
+        return node.elements.getFirst();
+    }
+
+    public T getLast() {
+        Node node = this.root;
+        while(node.right != null) { node = node.right; }
+        return node.elements.getLast();
+    }
+
+    /**
+     * @return The range of the first sounding note.
+     * @see IntervalTree#getFirstTick
+     */
     public Range getMin() {
         Node node = this.root;
         while(node.left != null) { node = node.left; }
         return node.getRange();
     }
 
+    /**
+     * @return The range of the last sounding note.
+     * @see IntervalTree#getLastTick
+     */
     public Range getMax() {
         Node node = this.root;
         while(node.right != null) { node = node.right; }
         return node.getRange();
     }
 
+    /**
+     * @return The first tick in the tree. Equivalent to calling {@link Range#low()} on {@link IntervalTree#getMin()}.
+     */
     public long getFirstTick() { return this.getMin().low(); }
+
+    /**
+     * This does not necessarily correspond to calling {@link Range#high()} on {@link IntervalTree#getMax()} due to the
+     * fact that the tree orders first by NOTE ON ticks, and then NOTE OFF ticks. The last note of a piece may start
+     * *and* stop before the penultimate note ceases.
+     *
+     * @return The last tick in the tree
+     */
     public long getLastTick() { return root.max; }
+
+
+    /* ===
+     * DEV
+     * ==*/
+
+    IntervalTree() { this.root = null; }
+    Node getRoot() { return this.root; }
 
 }

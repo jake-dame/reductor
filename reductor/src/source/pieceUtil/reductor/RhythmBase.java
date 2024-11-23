@@ -84,6 +84,11 @@ public enum RhythmBase {
         return enumVal.duration;
     }
 
+    static Range getEquivalentRange(RhythmBase enumVal) {
+        setDurations();
+        return new Range(0, enumVal.duration - 1);
+    }
+
     public static RhythmBase getEnumType(long duration) {
 
         setDurations();

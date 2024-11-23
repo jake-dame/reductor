@@ -327,7 +327,6 @@ public class Conversion {
         int thirtySecondsPerBeat = data[3] & 0xFF; // don't delete
 
         return new TimeSignature(
-                Context.resolution(),
                 upperNumeral,
                 lowerNumeral,
                 range

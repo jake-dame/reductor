@@ -19,7 +19,7 @@ public class Bucket extends AbstractList<Note> implements Noted {
 
 
     /// Primary constructor
-    public Bucket(ArrayList<Note> notes) {
+    public Bucket(List<Note> notes) {
         if (notes == null) { notes = new ArrayList<>(); }
         this.notes = new ArrayList<>(notes);
         this.notes.sort(null);

@@ -1,21 +1,21 @@
 package reductor;
 
+import java.sql.Time;
 import java.util.ArrayList;
 
 
 public class Measure implements Ranged, Noted {
 
     private final Bucket notes;
-    private ArrayList<Column> columns;
+    private final ArrayList<Column> columns;
 
     private final Range range;
 
-    private int measureNumber;
+    private Integer number;
 
-    private TimeSignature timeSig;
-    private KeySignature keySig;
+    private final TimeSignature timeSig;
 
-    private boolean isPickup;
+    private Boolean isPickup;
 
     /// Primary constructor
     Measure(ArrayList<Column> columns, Range range, TimeSignature timeSig) {
@@ -24,23 +24,24 @@ public class Measure implements Ranged, Noted {
         this.columns.sort(null);
 
         ArrayList<Note> notes = new ArrayList<>();
-        for (Column col : columns) {
-            notes.addAll(col.getNotes());
-        }
+        for (Column col : columns) { notes.addAll(col.getNotes()); }
         this.notes = new Bucket(notes);
 
         this.range = range;
         this.timeSig = timeSig;
-        this.isPickup = false;
+
+        this.isPickup = null;
+        this.number = null;
     }
 
     /// Copy constructor
     Measure(Measure other) {
-        this.notes = new Bucket(other.notes);
-        this.measureNumber = other.measureNumber;
+        this.notes = new Bucket(other.getNotes());
+        this.columns = new ArrayList<>(other.columns);
+        this.columns.sort(null);
+        this.number = other.number;
         this.range = other.range;
         this.timeSig = other.timeSig;
-        this.keySig = other.keySig;
         this.isPickup = other.isPickup;
     }
 
@@ -51,20 +52,30 @@ public class Measure implements Ranged, Noted {
     public long length() { return this.getRange().length(); }
 
     public boolean isPickup() { return this.isPickup; }
-    public void setIsPickup(boolean val) { this.isPickup = val; }
+    public boolean setIsPickup(boolean val) {
 
-    public int getMeasureNumber() { return measureNumber; }
-    public void setMeasureNumber(int measureNumber) { this.measureNumber = measureNumber; }
+        if (this.isPickup == null) {
+            this.isPickup = val;
+            return true;
+        }
 
-    public TimeSignature getTimeSignature() { return this.timeSig; }
-    public void setTimeSignature(TimeSignature timeSignature) { this.timeSig = timeSignature; }
-
-    public KeySignature getKeySignature() { return new KeySignature(this.keySig); }
-    public void setKeySignature(KeySignature keySignature) { this.keySig = keySignature; }
-
-    public Column getColumn(int index) {
-        return this.columns.get(index);
+        return false;
     }
+
+    public int getMeasureNumber() { return number; }
+    public boolean setMeasureNumber(int measureNumber) {
+
+        if (this.number == null) {
+            this.number = measureNumber;
+            return true;
+        }
+
+        return false;
+    }
+
+    public TimeSignature getTimeSignature() { return new TimeSignature(this.timeSig); }
+
+    public Column getColumn(int index) { return this.columns.get(index); }
 
     @Override
     public Range getRange() { return new Range(this.range); }

@@ -20,10 +20,15 @@ public class Rhythm {
     private boolean isOrnament;
 
 
-    Rhythm(long actualDuration) {
+    public static Rhythm fromRange(Range range) {
+        return new Rhythm(range.length() + 1);
+    }
 
-        assert actualDuration > 0;
-        assert Context.resolution() > 0;
+    public static Rhythm fromType(RhythmBase enumVal) {
+        return new Rhythm(enumVal.getDuration());
+    }
+
+    private Rhythm(long actualDuration) {
 
         this.base = RhythmBase.getEnumType(actualDuration);
         this.actualDuration = actualDuration;
@@ -31,10 +36,12 @@ public class Rhythm {
 
         checkTriplet();
 
-        // if this is:
-        //     + 0: we are done. it is exactly a quarter, 16th, etc.
-        //     + >0: it is greater than its base, so it is some kind of dotted
-        //     + <0: if exactly half, then dotted; if not, some kind of tie
+        /*
+         if this is:
+            == 0: we are done. it is exactly a quarter, 16th, etc.
+             > 0: it is greater than its base, so it is some kind of dotted
+             < 0: if exactly half, then dotted; if not, some kind of tie
+        */
         if (!isTriplet) {
             long remainder = Math.abs(this.baseDuration - this.actualDuration);
             if (remainder != 0) {
@@ -118,12 +125,9 @@ public class Rhythm {
         return str + " " + this.base;
     }
 
-    public static Range toRange(Rhythm rhythm, long startTick) {
+    public static Range toRange(long startTick, Rhythm rhythm) {
         return new Range(startTick, rhythm.getDuration());
     }
 
-    public static Rhythm fromRange(Range range) {
-        return new Rhythm(range.length() + 1);
-    }
 
 }

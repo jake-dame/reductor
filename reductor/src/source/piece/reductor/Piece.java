@@ -195,8 +195,10 @@ public class Piece implements Ranged, Noted {
             boolean heuristic2 = last.lessThan(penultimate)
                     && first.getDenominator() + last.getNumerator()  ==  first.getNumerator();
 
-            boolean heuristic3 = first == second
-                    && 0 < measures.get(0).getColumn(0).getRange().low();
+            // Right now, this is exactly an eighth rest (half of the value of a quarter)
+            final long THRESHOLD = (long) (Context.resolution() * 0.5);
+            long amountOfRest = Math.abs(Piece.this.range.low() - measures.get(0).getColumn(0).getRange().low());
+            boolean heuristic3 = first == second  &&  amountOfRest < THRESHOLD;
 
             if (heuristic1 || heuristic2 || heuristic3) {
                 measures.getFirst().setIsPickup(true);
@@ -213,7 +215,7 @@ public class Piece implements Ranged, Noted {
             if (hasPickup) { measureNumber--; }
 
             for (Measure m : measures) {
-                m.setMeasureNumber( measureNumber++ );
+                if (!m.setMeasureNumber(measureNumber++)) { break; }
             }
         }
 
@@ -300,7 +302,7 @@ public class Piece implements Ranged, Noted {
 
         ArrayList<Note> out = new ArrayList<>();
         for (Note note : copy) {
-            out.add( new Note(note, Range.getShiftedInstance(note.getRange(), offset)));
+            //out.add( new Note(note, Range.getShiftedInstance(note.getRange(), offset))); // TODO: use setRange instead
         }
 
         return out;
@@ -334,5 +336,9 @@ public class Piece implements Ranged, Noted {
     //}
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // The final countdown. Piece factory method that coordinate MidiFile, Conversion, and Piece construction. 🤩
+    public static Piece getPiece(String filePath) {
+        return null;
+    }
 
 }

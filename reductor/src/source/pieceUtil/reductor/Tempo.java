@@ -1,5 +1,6 @@
 package reductor;
 
+
 public class Tempo implements Ranged {
 
     private final Range range;

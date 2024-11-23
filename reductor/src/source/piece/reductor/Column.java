@@ -65,7 +65,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /// Copy constructor.
     public Column(Column other) {
         this.range = new Range(other.range);
-        this.notes =  new Bucket(other.notes);
+        this.notes =  new Bucket(other.getNotes());
         this.isPure = other.isPure;
         this.LH = new  Column(other.LH, false);
         this.middle = new Column(other.middle, false);
@@ -83,7 +83,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
 
     private Column(Column other, boolean createHandColumns) {
         this.range = new Range(other.range);
-        this.notes = new Bucket(other.notes);
+        this.notes = new Bucket(other.getNotes());
         this.isPure = other.isPure;
     }
 
@@ -121,9 +121,6 @@ public class Column implements Ranged, Noted, Comparable<Column> {
                 newNote.setIsHeld(true);
                 toAdd.add(newNote); // Add the modified note to the temporary list
             }
-
-
-
 
             if (this.range.low() < note.start()) {
                 System.out.println("this column has range" + this.range + " and this note:  " + note + " " + note.getRange());

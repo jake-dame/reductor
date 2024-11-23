@@ -6,8 +6,6 @@ ultimately determines measure size, these should all be handled and encapsulated
  */
 public class TimeSignature implements Ranged {
 
-    private final int resolution;
-
     private final int numerator;
     private final int denominator;
 
@@ -16,16 +14,20 @@ public class TimeSignature implements Ranged {
     private final Range range;
 
 
-    TimeSignature(int resolution, int numerator, int denominator, Range range) {
-        this.resolution = resolution;
+    TimeSignature(int numerator, int denominator, Range range) {
         this.numerator = numerator;
         this.denominator = denominator;
         this.range = new Range(range);
-        this.measureSize = calculateMeasureSize(this.numerator, this.denominator, this.resolution);
+        this.measureSize = calculateMeasureSize(this.numerator, this.denominator);
     }
 
+    TimeSignature(TimeSignature other) {
+        this.numerator = other.numerator;
+        this.denominator = other.denominator;
+        this.range = new Range(other.range);
+        this.measureSize = other.measureSize;
+    }
 
-    public int getResolution() { return this.resolution; }
 
     public int getNumerator() { return this.numerator; }
     public int getDenominator() { return this.denominator; }
@@ -40,10 +42,10 @@ public class TimeSignature implements Ranged {
 
 
     public static long calculateMeasureSize(TimeSignature timeSig) {
-        return calculateMeasureSize(timeSig.getNumerator(), timeSig.getDenominator(), timeSig.getResolution());
+        return calculateMeasureSize(timeSig.getNumerator(), timeSig.getDenominator());
     }
 
-    public static long calculateMeasureSize(int upperNumeral, int lowerNumeral, int resolution) {
+    public static long calculateMeasureSize(int upperNumeral, int lowerNumeral) {
 
         // These need to be floats for stuff like 3/8 or 7/8
         float upper = (float) upperNumeral;
@@ -68,7 +70,7 @@ public class TimeSignature implements Ranged {
         }
 
         // Quarters per measure * ticks per quarter
-        float measureInTicks = upper * resolution;
+        float measureInTicks = upper * Context.resolution();
 
         // sanity check: to make sure there is no loss (compare to int version of itself) before converting to long
         assert measureInTicks == (int) measureInTicks;

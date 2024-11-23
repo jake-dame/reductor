@@ -1,69 +1,80 @@
 package reductor;
 
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 
 import static reductor.Pitch.*;
 
 
 public class Chord implements Noted, Ranged {
 
-    ArrayList<Note> notes;
+    private Deque<Note> notes;
 
-    Range range;
+    private Range range;
 
-    Rhythm rhythm;
+    private Rhythm rhythm;
 
     Chord(ArrayList<Note> notes) {
-        this.notes = notes;
+        this.notes = new ArrayDeque<>(notes);
         this.range = Range.concatenate(notes);
         this.rhythm = new Rhythm(this.range.length());
     }
 
     Chord(Note... notes) {
-        ArrayList<Note> list = new ArrayList<>();
-        for (Note note : notes) { list.add( new Note(note) ); }
-        this.notes = list;
-        this.range = Range.concatenate(this.notes);
+        this.notes = new ArrayDeque<>(Arrays.asList(notes));
+        this.range = Range.concatenate(this.getNotes());
         this.rhythm = new Rhythm(this.range.length());
     }
 
     Chord(int... pitches) {
-        ArrayList<Note> notes = new ArrayList<>();
-        for (int pitch : pitches) { notes.add(new Note(pitch)); }
-        this.notes = notes;
-        this.range = Range.concatenate(notes);
+        ArrayList<Note> list = new ArrayList<>();
+        for (int pitch : pitches) { list.add(new Note(pitch)); }
+
+        this.notes = new ArrayDeque<>(list);
+        this.range = Range.concatenate(list);
         this.rhythm = new Rhythm(this.range.length());
     }
 
-    // I-III-V
-    public static Chord getTriad(int root, int mode) { return getTriad(root, mode, 0); };
+    // Returns true if the chord was inverted (inversion remained within piano range); false if not
+    public boolean invert(int inversions) {
 
-    // Mode: 0 == Major, 1 == minor
+        boolean inverted = false;
+
+        if (0 < inversions) {
+
+            while(inversions != 0) {
+                if (notes.peekFirst().pitch() + 12 <= PIANO_MAX) {
+                    this.notes.addLast(this.notes.removeFirst());
+                    inverted = true;
+                }
+                inversions--;
+            }
+
+        } else if (inversions < 0) {
+
+            while(inversions != 0) {
+                if (PIANO_MIN <= notes.peekLast().pitch() - 12) {
+                    this.notes.addFirst(this.notes.removeLast());
+                    inverted = true;
+                }
+                inversions++;
+            }
+
+        }
+
+        return inverted;
+    }
+
+    public boolean octaveUp() { return this.invert(notes.size()); }
+    public boolean octaveDown() { return this.invert(notes.size()); }
+
     public static Chord getTriad(int root, int mode, int inversion) {
 
         if (mode != 0  &&  mode != 1) { throw new RuntimeException("invalid mode: " + mode); }
+        if (inversion < 0  ||  2 < inversion) { throw new RuntimeException("invalid inversion: " + inversion); }
 
-        int third = root + M3 - mode;
-        int fifth = root + P5;
-
-        // Clamp (but bring everything down too in order to maintain intervallic relationships)
-        if (inversion == 1  &&  PIANO_MAX < root + OCTAVE
-                || inversion == 2  &&  PIANO_MAX < third + OCTAVE) {
-            root -= OCTAVE;
-            third -= OCTAVE;
-            fifth -= OCTAVE;
-        }
-
-        // DM/m 6-4 and FM/m 6-3 are the first valid inversions not rooted at a valid pitch
-        // Might want to control for this later
-
-        return switch (inversion) {
-            case 0 -> new Chord (root, third, fifth);
-            case 1 -> new Chord (third, fifth, root);
-            case 2 -> new Chord (fifth, root, third);
-            default -> throw new RuntimeException("invalid inversion value: " + inversion);
-        };
+        Chord chord = new Chord(root, root + M3 - mode, root + P5);
+        chord.invert(inversion);
+        return chord;
     }
 
     public static ArrayList<Note> arpeggiate(Chord chord) {
@@ -78,7 +89,7 @@ public class Chord implements Noted, Ranged {
         Range range = new Range(chord.getRange().low(), chord.getRange().low() + partitionSize - 1);
         ArrayList<Note> out = new ArrayList<>();
         for (Note note : chord.notes) {
-            out.add( new Note(note, range) );
+            //out.add( new Note(note, range) ); // TODO: use setRange() instead
             range = Range.add(range, partitionSize);
         }
 

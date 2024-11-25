@@ -71,7 +71,10 @@ public class Events {
                     }
 
                     event.setTrackIndex(trackIndex);
-                    event.setTrackName(this.currTrackNameEvent.getTrackNameAsString());
+                    String trackName = this.currTrackNameEvent != null
+                            ? this.currTrackNameEvent.getTrackNameAsString()
+                            : "";
+                    event.setTrackName(trackName);
                     Events.this.allEvents.add(event);
                 }
             }

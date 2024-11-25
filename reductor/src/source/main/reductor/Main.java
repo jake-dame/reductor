@@ -1,20 +1,25 @@
 package reductor;
 
 import javax.sound.midi.*;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static reductor.Files.*;
+import static reductor.RhythmType.*;
 
 
 public class Main {
 
     // TODO:
     // Biggest Tasks:
-    // 1. Note containers vs note primitives
-    // 2. Mutability of Note and note containers
-    // 3. Inclusive-exclusive Range and query() stuff
-    // 5. Column construction messiness
-    // 6. MeasuresAccessor messiness
+    // 1. Mutability of Note and note containers (Boxes, Columns, Measures, should all be able to access and
+    // manipulate Notes. If one does some kind of manipulation on theirs, but they are deep-copied, who else will
+    // know? Nobody.
+    // 2. Inclusive-exclusive Range and query() stuff (Rhythm vs. Range... maybe only have Ranges but convert to
+    // rhythm when needed?)
+    // 3. Column and hand Column design could be better
+    // 4. MeasuresAccessor could be better
 
     // TODO:
     // Eventually we will need to go back to having resolution passed to piece, or perhaps something more universal
@@ -48,9 +53,6 @@ public class Main {
     // complexity; remove assertions and commented out code (after deciding about duplicates)
 
     // TODO:
-    // String constructor for KeySignature class? If time
-
-    // TODO:
     // Design choice: callbacks and registering during a big loop
     // Each counter can live in an object that is just about one aspect of the event stream
     // "plug-in architecture https://cs.uwaterloo.ca/~m2nagapp/courses/CS446/1195/Arch_Design_Activity/PlugIn.pdf
@@ -69,25 +71,26 @@ public class Main {
     // received no note off event?
 
     // TODO:
-    // Possible other interfaces:
-    //     + Reductible -> applyPattern
-    //        applyPattern(() -> ) heuristic)
-    //         while (pattern is applicable)
-    //               find range
-    //
-    //         yay we have a range now
-    //         applyReductionTechnique(range)
-    //                if pitch is repeated x times within range
-    //                       && pitch.octaveUpOrDown() is repeated within range {
-    //                 { apply tremolo pattern }
-
     // option + return creates a local variable for "Result is ignored" stuff
     // cmd + l now selects line
     // TIL the number after @ in the debugger is the object's hashCode. JVM abstracts mem management away.
 
+    /*
+        List.copyOf() is a shallow copy (if the objects THEMSELVES change, it will be reflected), but is completely
+        decoupled from the original list. So if you add, remove, or re-sort the original list, those changes will not be
+        reflected in the result of List.copyOf(). It is read-only.
+
+        Collections.unmodifiableList() maintains its connection to the original list reference, so changes to the
+        original list WILL as well as the objects themselves will be reflected in the wrapper. It is also read-only.
+    */
+
+    // TODO:
+    //  instrument/track-based analysis / grouping
+
     public static void main(String[] args) {
 
         try {
+
 
             /* DON'T DELETE */
             //==================================================
@@ -96,6 +99,7 @@ public class Main {
             //    Piece piece = DevelopmentHelper.getPiece(file.getPath());
             //}
             //==================================================
+
 
             /* DON'T DELETE -- file analysis without any reductor stuff */
             //==================================================
@@ -122,74 +126,72 @@ public class Main {
             //}
             //==================================================
 
-            //DevelopmentHelper dh = new DevelopmentHelper();
+
+            /* DON'T DELETE -- PhraseBuilder demo */
+            //==================================================
             //
-            //Piece piece = dh.getPiece(CHOPIN_PREL_e);
-            ////Piece piece = dh.getPiece("midis/in/trythis.mid");
+            // Context.createContext(480, Long.MAX_VALUE);
             //
-            //ArrayList<Column> cols = piece.getColumns();
+            //ArrayList<Ranged> measure_1 = Phrase.builder(0)
+            //        .timeSignature(4,4)
+            //        .keySignature("e")
+            //        .tempo(60)
+            //        .pickupOf(1)
+            //        .then(DOTTED_EIGHTH, "b3")
+            //        .then(SIXTEENTH, "b4")
+            //        .mark()
+            //        .then(DOTTED_HALF, "b4")
+            //        .then(QUARTER, "c5")
+            //        .goToMark()
+            //        .then(EIGHTH,"g3", "b3", "e4")
+            //        .repeat(7)
+            //        .build();
             //
-            //ArrayList<Note> RH = new ArrayList<>();
-            //for (Column col : cols) {
-            //    if (col.getRH().getNotes().isEmpty()) { continue; } // TODO: fix
-            //    RH.addAll(col.getRH().getNotes());
+            //ArrayList<MidiEvent> midiEvents = new ArrayList<>();
+            //
+            //for (Ranged elem : measure_1) {
+            //    if (elem instanceof TimeSignature timeSig) { midiEvents.add( Conversion.toTimeSignatureEvent(timeSig)); }
+            //    if (elem instanceof KeySignature keySig) { midiEvents.add( Conversion.toKeySignatureEvent(keySig)); }
+            //    if (elem instanceof Tempo tempo) { midiEvents.add( Conversion.toTempoEvent(tempo)); }
+            //    if (elem instanceof Note note) { midiEvents.addAll( Conversion.toNoteEvents( note.getNotes()) ); }
+            //    if (elem instanceof Chord chord) {
+            //        var hi = Conversion.toNoteEvents( chord.getNotes());
+            //        midiEvents.addAll(hi);
+            //    }
             //}
             //
-            //ArrayList<Chord> LH = new ArrayList<>();
-            //for (Column col : cols) {
-            //    if (col.getLH().getNotes().isEmpty()) { continue; } // TODO: fix
-            //    LH.add( new Chord(col.getLH().getNotes()) );
-            //}
+            //Sequence seq = Conversion.toSequence(midiEvents);
             //
-            //ArrayList<Note> arpeggiatedChords = new ArrayList<>();
-            //for (Chord chord : LH) { arpeggiatedChords.addAll( Chord.arpeggiate(chord) ); }
-            //
-            //// print
-            //boolean print = arpeggiatedChords.size() == 42;
-            //if (print) {
-            //    System.out.print("\nnotes: ");
-            //    for (Note note : piece.getNotes()) { System.out.print(note.stop() - note.start() + ", "); }
-            //    System.out.print("\narpOut: ");
-            //    for (Note note : arpeggiatedChords) {System.out.print(note.stop() - note.start() + ", "); }
-            //}
-            //// print
-            //
-            //ArrayList<MidiEvent> RHNotes = Conversion.toMidiEvents(RH);
-            //ArrayList<MidiEvent> LHNotes = Conversion.toMidiEvents(arpeggiatedChords);
-            ////ArrayList<MidiEvent> addbacks = DevelopmentHelper.getAddbacks(piece);
-            //ArrayList<MidiEvent> addbacks = dh.midiFile.events.getAddBacks();
-            //
-            ////piece.scaleTempo(1);
-            //
-            //Sequence seq = Conversion.toSequence(Context.resolution(), List.of( RHNotes, LHNotes, addbacks) );
-            ////Events events = new Events(seq);
-            //
-            //Util.write(seq, "conv_test");
+            //Util.write(seq, "phrase_builder_demo");
             //Util.play(seq);
-
-            DevelopmentHelper dh = new DevelopmentHelper();
-
-            Piece piece = dh.getPiece(CHOPIN_PREL_e);
-
-            ArrayList<Column> cols = piece.getColumns();
-
-            piece.columns.print();
-            System.out.println();
-
-            // print
-
-            // print
-
-            //ArrayList<MidiEvent> addbacks = dh.midiFile.events.getAddBacks();
             //
-            //Sequence seq = Conversion.toSequence(Context.resolution(), List.of( addbacks) );
-            //
-            //Util.write(seq, "columns_test");
-            //Util.play(seq);
+            //==================================================
+
+            // TODO: MONDAY
+            //  + Get rid of Bucket
+            //  + Quantize to 128th notes after looking at ornament test
+            //      + Find first tick
+            //      + Grid is 128th note depending on resolution
+            //      + If something doesn't fit that, round its low/high up/down
+            //      + Shift everyone down too no more empty measures at start or beginning
+            //      + Clamp everything to piano range, I'm ok with this information loss
+            //      + Range is just going to have to be mutable I don't care anymore
+
+            Piece piece = new DevelopmentHelper().getPiece(BEETHOVEN_5_IV);
+            var seq = Conversion.toSequence(piece);
+            Util.write(seq, "rossini_test");
+            Util.play(seq);
 
         } catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
-        } catch (UnpairedNoteException e) {
+        }
+        catch (MidiUnavailableException e) {
+            throw new RuntimeException(e);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        catch (UnpairedNoteException e) {
             throw new RuntimeException(e);
         }
     }

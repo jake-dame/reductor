@@ -15,7 +15,7 @@ public class Piece implements Ranged, Noted {
     final IntervalTree<Column> columns;
 
     final IntervalTree<Measure> measures;
-    final MeasuresAccessor ma;
+    final MeasuresAccessor ma; // TODO not this
 
     private final IntervalTree<TimeSignature> timeSigs;
     private final IntervalTree<KeySignature> keySigs;
@@ -51,8 +51,11 @@ public class Piece implements Ranged, Noted {
      * ==================== */
 
 
+    /**
+     * minTick should ALWAYS be 0. Not the tick of the first event. Otherwise, measure creation is absolutely
+     * impossible.
+     * */
     public Range findPieceRange() {
-        //long minTick = this.notes.getFirstTick();
         long minTick = 0;
         long maxTick = this.notes.getLastTick();
         return new Range(minTick, maxTick + 1);
@@ -81,7 +84,6 @@ public class Piece implements Ranged, Noted {
         return measures;
     }
 
-
     public ArrayList<Range> getColumnRanges() {
 
         ArrayList<Range> list = this.notes.toListOfRanges();
@@ -96,7 +98,7 @@ public class Piece implements Ranged, Noted {
 
         Set<Long> startTicks = new HashSet<>();
 
-        long marker = 0; // TODO: this, or this.range.low()?
+        long marker = this.range.low();
         while (marker < this.range.high()) {
             startTicks.add(marker);
             marker += TimeSignature.calculateMeasureSize(getTimeSigAt(marker));
@@ -110,9 +112,9 @@ public class Piece implements Ranged, Noted {
     public Tempo getTempoAt(long point) { return tempos.query(point).getFirst(); }
 
 
-    /* =======================
-       PUBLIC INSTANCE METHODS
-     * ======================= */
+    /* ================
+       INSTANCE METHODS
+     * ================ */
 
 
     /**
@@ -134,17 +136,8 @@ public class Piece implements Ranged, Noted {
      * ======= */
 
 
-    public ArrayList<Column> getColumns() {
-        var list = this.columns.toList();
-        list.sort(null);
-        return list;
-    }
-
-    public ArrayList<Measure> getMeasures() {
-        return null;
-    }
-
-
+    public ArrayList<Column> getColumns() { return new ArrayList<>( this.columns.toList() ); }
+    public ArrayList<Measure> getMeasures() { return new ArrayList<>( this.measures.toList() ); }
     public ArrayList<TimeSignature> getTimeSignatures() { return new ArrayList<>(this.timeSigs.toList()); }
     public ArrayList<KeySignature> getKeySignatures() { return new ArrayList<>(this.keySigs.toList()); }
     public ArrayList<Tempo> getTempos() { return new ArrayList<>(this.tempos.toList()); }
@@ -184,21 +177,39 @@ public class Piece implements Ranged, Noted {
 
             if (measures.isEmpty()  ||  measures.size() == 1) { return false; }
 
-            TimeSignature first = measures.get(0).getTimeSignature();
-            TimeSignature second = measures.get(1).getTimeSignature();
+            int i = 0;
+            Measure firstMeasure = measures.get(i);
+            while (firstMeasure.isEmpty()) {
+                i++;
+                firstMeasure = measures.get(i);
+            }
+            Measure secondMeasure = measures.get(i + 1);
 
-            TimeSignature penultimate = measures.get(measures.size() - 2).getTimeSignature();
-            TimeSignature last = measures.get(measures.size() - 1).getTimeSignature();
+            i = measures.size() - 1;
+            Measure lastMeasure = measures.get(i);
+            while (lastMeasure.isEmpty()) {
+                i--;
+                lastMeasure = measures.get(i);
+            }
+            Measure penultimateMeasure = measures.get(i - 1);
 
-            boolean heuristic1 = first.lessThan(second);
+            TimeSignature firstTimeSig = firstMeasure.getTimeSignature();
+            TimeSignature secondTimeSig = secondMeasure.getTimeSignature();
 
-            boolean heuristic2 = last.lessThan(penultimate)
-                    && first.getDenominator() + last.getNumerator()  ==  first.getNumerator();
+            TimeSignature penultimateTimeSig = penultimateMeasure.getTimeSignature();
+            TimeSignature lastTimeSig = lastMeasure.getTimeSignature();
+
+            boolean heuristic1 = firstTimeSig.compareTo(secondTimeSig) < 0;
+
+            // TODO: choose one or the other
+            boolean heuristic2 = lastTimeSig.compareTo(penultimateTimeSig) < 0
+                    && firstTimeSig.getDenominator() + lastTimeSig.getNumerator()  ==  firstTimeSig.getNumerator();
 
             // Right now, this is exactly an eighth rest (half of the value of a quarter)
             final long THRESHOLD = (long) (Context.resolution() * 0.5);
-            long amountOfRest = Math.abs(Piece.this.range.low() - measures.get(0).getColumn(0).getRange().low());
-            boolean heuristic3 = first == second  &&  amountOfRest < THRESHOLD;
+            long amountOfRest = Math.abs(firstMeasure.getRange().low() - firstMeasure.getColumn(0).getRange().low());
+            boolean heuristic3 = firstTimeSig.compareTo(secondTimeSig) == 0
+                    &&  THRESHOLD < amountOfRest;
 
             if (heuristic1 || heuristic2 || heuristic3) {
                 measures.getFirst().setIsPickup(true);
@@ -215,8 +226,9 @@ public class Piece implements Ranged, Noted {
             if (hasPickup) { measureNumber--; }
 
             for (Measure m : measures) {
-                if (!m.setMeasureNumber(measureNumber++)) { break; }
+                m.setMeasureNumber(measureNumber++);
             }
+
         }
 
 
@@ -293,16 +305,17 @@ public class Piece implements Ranged, Noted {
 
         if (tick < 0) { throw new RuntimeException("cannot shift notes past 0"); }
 
-        ArrayList<Note> copy = new ArrayList<>(container.getNotes());
-        copy.sort(Comparator.comparingLong(Note::start));
+        ArrayList<Note> listCopy = new ArrayList<>(container.getNotes());
+        listCopy.sort(Comparator.comparingLong(Note::start));
 
-        if (copy.isEmpty()) { return new ArrayList<>(); }
+        if (listCopy.isEmpty()) { return new ArrayList<>(); }
 
-        long offset = tick - copy.getFirst().start() ;
+        long offset = tick - listCopy.getFirst().start();
 
         ArrayList<Note> out = new ArrayList<>();
-        for (Note note : copy) {
-            //out.add( new Note(note, Range.getShiftedInstance(note.getRange(), offset))); // TODO: use setRange instead
+        for (Note note : listCopy) {
+            Range range = Range.getShiftedInstance(note.getRange(), offset);
+            out.add( Note.builder(note).start(range.low()).stop(range.high()).build());
         }
 
         return out;
@@ -314,7 +327,6 @@ public class Piece implements Ranged, Noted {
     //        elem.setNotes(matches);
     //    }
     //}
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //public <T extends Noted & Ranged>
@@ -336,7 +348,6 @@ public class Piece implements Ranged, Noted {
     //}
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // The final countdown. Piece factory method that coordinate MidiFile, Conversion, and Piece construction. 🤩
     public static Piece getPiece(String filePath) {
         return null;
     }

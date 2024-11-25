@@ -43,6 +43,11 @@ public class Range implements Ranged, Comparable<Range> {
         this(0, 480);
     }
 
+    Range(long low, long high, boolean hi) {
+        this.low = low;
+        this.high = high;
+    }
+
 
     /* ================
      * INSTANCE METHODS
@@ -143,7 +148,8 @@ public class Range implements Ranged, Comparable<Range> {
     }
 
     /// Given multiple ranges, constructs a single range encompassing them.
-    public static <T extends Ranged> Range concatenate(List<T> rangedElems) {
+    public static <T extends Ranged> Range concatenate(Collection<T> rangedElems) {
+
         if (rangedElems.isEmpty()) { throw new RuntimeException("can't concatenate empty list"); }
 
         long min = Long.MAX_VALUE;

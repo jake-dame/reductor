@@ -80,8 +80,17 @@ public class Conversion {
                 if (on.getPitch() == off.getPitch()) {
 
                     if (off.getTick() != on.getTick()) {
-                        Range range = new Range(on.getTick(), off.getTick());
-                        Note note = new Note(on.getPitch(), range);
+                        //Range range = new Range(on.getTick(), off.getTick()); // TODO: remove if things don't explode
+                        //Note note = new Note(on.getPitch(), range);
+                        //outNotes.add(note);
+
+                        Note note = Note.builder()
+                                .pitch(on.getPitch())
+                                .start(on.getTick())
+                                .stop(off.getTick())
+                                .instrument(on.getTrackName())
+                                .build();
+
                         outNotes.add(note);
                     }
 
@@ -109,7 +118,7 @@ public class Conversion {
         return outNotes;
     }
 
-    public static <T extends Noted> ArrayList<MidiEvent> toMidiEvents(List<T> notedElems) throws InvalidMidiDataException {
+    public static <T extends Noted> ArrayList<MidiEvent> toNoteEvents(List<T> notedElems) throws InvalidMidiDataException {
 
         final ArrayList<MidiEvent> out = new ArrayList<>();
         final int MEDIAN_VELOCITY = 64;
@@ -131,11 +140,13 @@ public class Conversion {
         return out;
     }
 
-    public static Sequence toSequence(int resolution, List<ArrayList<MidiEvent>> midiEventsLists) throws InvalidMidiDataException {
-        Sequence out = new Sequence(Sequence.PPQ, resolution);
+    @SafeVarargs
+    public static Sequence toSequence(List<MidiEvent>... midiEventsLists) throws InvalidMidiDataException {
+
+        Sequence out = new Sequence(Sequence.PPQ, Context.resolution());
         Track track = out.createTrack();
 
-        for (ArrayList<MidiEvent> list : midiEventsLists) {
+        for (List<MidiEvent> list : midiEventsLists) {
             for (MidiEvent event : list) {
                 track.add(event);
             }
@@ -485,6 +496,12 @@ public class Conversion {
         );
 
         return new MidiEvent(message, 0);
+    }
+
+    static Sequence toSequence(Piece piece) throws InvalidMidiDataException {
+        var hi = getAddbacks(piece);
+        var hello = toNoteEvents(piece.getColumns());
+        return toSequence(hi, hello);
     }
 
 }

@@ -22,6 +22,8 @@ public class Bucket extends AbstractList<Note> implements Noted {
     public Bucket(List<Note> notes) {
         if (notes == null) { notes = new ArrayList<>(); }
         this.notes = new ArrayList<>(notes);
+        //this.notes = new ArrayList<>();
+        //for (Note note : notes) { this.notes.add( new Note(note) ); } // deep copy?
         this.notes.sort(null);
     }
 

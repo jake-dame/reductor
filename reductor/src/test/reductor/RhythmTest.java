@@ -14,49 +14,49 @@ class RhythmTest {
     @Test
     void testEnumBases() {
 
-        assertEquals(RhythmBase.WHOLE, RhythmBase.getEnumType(1920));
-        assertEquals(RhythmBase.HALF, RhythmBase.getEnumType(960));
-        assertEquals(RhythmBase.QUARTER, RhythmBase.getEnumType(480));
-        assertEquals(RhythmBase.EIGHTH, RhythmBase.getEnumType(240));
-        assertEquals(RhythmBase.SIXTEENTH, RhythmBase.getEnumType(120));
-        assertEquals(RhythmBase.THIRTY_SECOND, RhythmBase.getEnumType(60));
-        assertEquals(RhythmBase.SIXTY_FOURTH, RhythmBase.getEnumType(30));
-        assertEquals(RhythmBase.ONE_TWENTY_EIGHTH, RhythmBase.getEnumType(15));
+        assertEquals(RhythmType.WHOLE, RhythmType.getEnumType(1920));
+        assertEquals(RhythmType.HALF, RhythmType.getEnumType(960));
+        assertEquals(RhythmType.QUARTER, RhythmType.getEnumType(480));
+        assertEquals(RhythmType.EIGHTH, RhythmType.getEnumType(240));
+        assertEquals(RhythmType.SIXTEENTH, RhythmType.getEnumType(120));
+        assertEquals(RhythmType.THIRTY_SECOND, RhythmType.getEnumType(60));
+        assertEquals(RhythmType.SIXTY_FOURTH, RhythmType.getEnumType(30));
+        assertEquals(RhythmType.ONE_TWENTY_EIGHTH, RhythmType.getEnumType(15));
 
     }
 
     //@Test
     //void testEnumBases() {
     //
-    //    assertEquals(RhythmBase.WHOLE, RhythmBase.getEnumType(RES * 4, RES));
+    //    assertEquals(RhythmType.WHOLE, RhythmType.getEnumType(RES * 4, RES));
     //
-    //    assertEquals(RhythmBase.HALF, RhythmBase.getEnumType(RES * 2, RES));
-    //    assertEquals(RhythmBase.TRIPLET_HALF, RhythmBase.getEnumType(((RES * 4)/3), RES));
-    //    assertEquals(RhythmBase.DOTTED_HALF, RhythmBase.getEnumType((RES * 3), RES));
+    //    assertEquals(RhythmType.HALF, RhythmType.getEnumType(RES * 2, RES));
+    //    assertEquals(RhythmType.TRIPLET_HALF, RhythmType.getEnumType(((RES * 4)/3), RES));
+    //    assertEquals(RhythmType.DOTTED_HALF, RhythmType.getEnumType((RES * 3), RES));
     //
-    //    assertEquals(RhythmBase.QUARTER, RhythmBase.getEnumType(480, RES));
-    //    assertEquals(RhythmBase.TRIPLET_QUARTER, RhythmBase.getEnumType(320, RES));
-    //    assertEquals(RhythmBase.DOTTED_QUARTER, RhythmBase.getEnumType(720, RES));
+    //    assertEquals(RhythmType.QUARTER, RhythmType.getEnumType(480, RES));
+    //    assertEquals(RhythmType.TRIPLET_QUARTER, RhythmType.getEnumType(320, RES));
+    //    assertEquals(RhythmType.DOTTED_QUARTER, RhythmType.getEnumType(720, RES));
     //
-    //    assertEquals(RhythmBase.EIGHTH, RhythmBase.getEnumType(240, RES));
-    //    assertEquals(RhythmBase.TRIPLET_EIGHTH, RhythmBase.getEnumType(160, RES));
-    //    assertEquals(RhythmBase.DOTTED_EIGHTH, RhythmBase.getEnumType(360, RES));
+    //    assertEquals(RhythmType.EIGHTH, RhythmType.getEnumType(240, RES));
+    //    assertEquals(RhythmType.TRIPLET_EIGHTH, RhythmType.getEnumType(160, RES));
+    //    assertEquals(RhythmType.DOTTED_EIGHTH, RhythmType.getEnumType(360, RES));
     //
-    //    assertEquals(RhythmBase.SIXTEENTH, RhythmBase.getEnumType(120, RES));
-    //    assertEquals(RhythmBase.TRIPLET_SIXTEENTH, RhythmBase.getEnumType(80, RES));
-    //    assertEquals(RhythmBase.DOTTED_SIXTEENTH, RhythmBase.getEnumType(180, RES));
+    //    assertEquals(RhythmType.SIXTEENTH, RhythmType.getEnumType(120, RES));
+    //    assertEquals(RhythmType.TRIPLET_SIXTEENTH, RhythmType.getEnumType(80, RES));
+    //    assertEquals(RhythmType.DOTTED_SIXTEENTH, RhythmType.getEnumType(180, RES));
     //
-    //    assertEquals(RhythmBase.THIRTY_SECOND, RhythmBase.getEnumType(60, RES));
-    //    assertEquals(RhythmBase.TRIPLET_THIRTY_SECOND, RhythmBase.getEnumType(40, RES));
-    //    assertEquals(RhythmBase.DOTTED_THIRTY_SECOND, RhythmBase.getEnumType(90, RES));
+    //    assertEquals(RhythmType.THIRTY_SECOND, RhythmType.getEnumType(60, RES));
+    //    assertEquals(RhythmType.TRIPLET_THIRTY_SECOND, RhythmType.getEnumType(40, RES));
+    //    assertEquals(RhythmType.DOTTED_THIRTY_SECOND, RhythmType.getEnumType(90, RES));
     //
-    //    assertEquals(RhythmBase.SIXTY_FOURTH, RhythmBase.getEnumType(30, RES));
-    //    assertEquals(RhythmBase.TRIPLET_SIXTY_FOURTH, RhythmBase.getEnumType(20, RES));
-    //    assertEquals(RhythmBase.DOTTED_SIXTY_FOURTH, RhythmBase.getEnumType(45, RES));
+    //    assertEquals(RhythmType.SIXTY_FOURTH, RhythmType.getEnumType(30, RES));
+    //    assertEquals(RhythmType.TRIPLET_SIXTY_FOURTH, RhythmType.getEnumType(20, RES));
+    //    assertEquals(RhythmType.DOTTED_SIXTY_FOURTH, RhythmType.getEnumType(45, RES));
     //
-    //    assertEquals(RhythmBase.ONE_TWENTY_EIGHTH, RhythmBase.getEnumType(15, RES));
-    //    assertEquals(RhythmBase.TRIPLET_ONE_TWENTY_EIGHTH, RhythmBase.getEnumType(10, RES));
-    //    assertEquals(RhythmBase.DOTTED_ONE_TWENTY_EIGHTH, RhythmBase.getEnumType(22, RES));
+    //    assertEquals(RhythmType.ONE_TWENTY_EIGHTH, RhythmType.getEnumType(15, RES));
+    //    assertEquals(RhythmType.TRIPLET_ONE_TWENTY_EIGHTH, RhythmType.getEnumType(10, RES));
+    //    assertEquals(RhythmType.DOTTED_ONE_TWENTY_EIGHTH, RhythmType.getEnumType(22, RES));
     //}
 
     @Test

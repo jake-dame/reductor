@@ -14,13 +14,13 @@ class ColumnTest {
 
     @Test
     void givenEmpty() {
-        Column c = new Column(new ArrayList<>());
+        Column c = new Column(new ArrayList<>(), new Range());
 
-        assertEquals(0, c.getLH().size());
+        assertEquals(0, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(0, c.getRH().size());
+        assertEquals(0, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         // Should technically still be two-handed
         assertTrue(c.isTwoHanded());
@@ -28,26 +28,26 @@ class ColumnTest {
 
     @Test
     void givenOneNoteInBass() {
-        Column c = new Column( Note.toList( List.of("C3") ) );
+        Column c = new Column( Note.toList( List.of("C3") ), new Range());
 
-        assertEquals(1, c.getLH().size());
+        assertEquals(1, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(0, c.getRH().size());
+        assertEquals(0, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
     }
 
     @Test
     void givenOneNoteInTreble() {
-        Column c = new Column( Note.toList( List.of("C5") ) );
+        Column c = new Column( Note.toList( List.of("C5") ), new Range());
 
-        assertEquals(0, c.getLH().size());
+        assertEquals(0, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(1, c.getRH().size());
+        assertEquals(1, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
     }
@@ -57,15 +57,15 @@ class ColumnTest {
 
         // Middle C and above should go to the RH (it is the decision boundary when distributing)
 
-        Column c = new Column( Note.toList( List.of("C4") ) );
+        Column col = new Column( Note.toList( List.of("C4") ), new Range());
 
-        assertEquals(0, c.getLH().size());
-        assertEquals(0, c.getMiddle().size());
-        assertEquals(1, c.getRH().size());
+        assertEquals(0, col.getLeftHand().size());
+        assertEquals(0, col.getMiddle().size());
+        assertEquals(1, col.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(col.size(), col.getLeftHand().size() + col.getMiddle().size() + col.getRightHand().size());
 
-        assertTrue(c.isTwoHanded());
+        assertTrue(col.isTwoHanded());
     }
 
     @Test
@@ -74,13 +74,13 @@ class ColumnTest {
         // There should be no middle or leftover here, and both treble notes go to hands (RH and LH)
         // The two notes are too far apart to be played by one hand (2 octaves apart)
 
-        Column c = new Column( Note.toList( List.of("C5", "C7") ) );
+        Column c = new Column( Note.toList( List.of("C5", "C7") ), new Range());
 
-        assertEquals(1, c.getLH().size());
+        assertEquals(1, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(1, c.getRH().size());
+        assertEquals(1, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
     }
@@ -100,13 +100,13 @@ class ColumnTest {
                 "F#5" // ↑
         ));
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(2, c.getLH().size());
+        assertEquals(2, c.getLeftHand().size());
         assertEquals(1, c.getMiddle().size());
-        assertEquals(2, c.getRH().size());
+        assertEquals(2, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertFalse(c.isTwoHanded());
     }
@@ -134,13 +134,13 @@ class ColumnTest {
 
         ));
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(6, c.getLH().size());
+        assertEquals(6, c.getLeftHand().size());
         assertEquals(2, c.getMiddle().size());
-        assertEquals(6, c.getRH().size());
+        assertEquals(6, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertFalse(c.isTwoHanded());
     }
@@ -152,13 +152,13 @@ class ColumnTest {
                 "C3", "E3", "G3"
         ));
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(3, c.getLH().size());
+        assertEquals(3, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(0, c.getRH().size());
+        assertEquals(0, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
 
@@ -174,13 +174,13 @@ class ColumnTest {
                 "C6", "E6", "G6"
         ));
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(0, c.getLH().size());
+        assertEquals(0, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(3, c.getRH().size());
+        assertEquals(3, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
     }
@@ -194,13 +194,13 @@ class ColumnTest {
             "C5", "D5", "E5", "F5", "G5", "A5",          "C6", "D6", "E6", "F6", "G6", "A6"
         ));
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(6, c.getLH().size());
+        assertEquals(6, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(6, c.getRH().size());
+        assertEquals(6, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
     }
@@ -215,13 +215,13 @@ class ColumnTest {
                 "C3", "E3", "G3",         "C5", "E5", "G5"
         ));
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(3, c.getLH().size());
+        assertEquals(3, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(3, c.getRH().size());
+        assertEquals(3, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
 
@@ -237,13 +237,13 @@ class ColumnTest {
                 "C3", "E3", "G3",      "B4", "E5", "G5"
         ));                          // ^ down 1
 
-        Column c = new Column(list);
+        Column c = new Column(list, new Range());
 
-        assertEquals(3, c.getLH().size());
+        assertEquals(3, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
-        assertEquals(3, c.getRH().size());
+        assertEquals(3, c.getRightHand().size());
 
-        assertEquals(c.size(), c.getLH().size() + c.getMiddle().size() + c.getRH().size());
+        assertEquals(c.size(), c.getLeftHand().size() + c.getMiddle().size() + c.getRightHand().size());
 
         assertTrue(c.isTwoHanded());
 

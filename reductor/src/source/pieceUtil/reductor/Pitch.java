@@ -95,6 +95,11 @@ public class Pitch {
         return pitch;
     }
 
+    public static int validatePitch(String pitch) {
+        int intValue = Pitch.toInt(pitch);
+        return validatePitch(intValue);
+    }
+
     /**
      *
      * @param pitch A pitch that exists on the piano (i.e. in [21,108])

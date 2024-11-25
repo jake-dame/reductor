@@ -4,7 +4,7 @@ package reductor;
 Resolution and measure size: I decided that since Time Signature is nothing without resolution and Time Signature
 ultimately determines measure size, these should all be handled and encapsulated by Time Signature.
  */
-public class TimeSignature implements Ranged {
+public class TimeSignature implements Ranged, Comparable<TimeSignature> {
 
     private final int numerator;
     private final int denominator;
@@ -79,9 +79,10 @@ public class TimeSignature implements Ranged {
 
     }
 
-    /// Returns false if they are incomparable (mismatched denominators).
-    public boolean lessThan(TimeSignature other) {
-        return other.denominator == this.denominator && this.numerator < other.numerator;
+    @Override
+    public int compareTo(TimeSignature o) {
+        if (this.denominator != o.denominator) { return -42; }
+        return Integer.compare(this.numerator, o.numerator);
     }
 
 

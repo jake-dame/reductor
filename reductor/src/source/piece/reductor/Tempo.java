@@ -29,4 +29,10 @@ public class Tempo implements Ranged {
     @Override
     public Range getRange() { return new Range(this.range); }
 
+    @Override
+    public String toString() {
+        return this.range + " " + this.bpm + " bpm";
+    }
+
+
 }

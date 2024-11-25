@@ -1,6 +1,6 @@
 package reductor;
 
-public enum RhythmBase {
+public enum RhythmType {
 
     //WHOLE(4),
     //HALF(2),
@@ -55,7 +55,7 @@ public enum RhythmBase {
 
     static private boolean durationsSet;
 
-    RhythmBase(double multiplier) {
+    RhythmType(double multiplier) {
         this.multiplier = multiplier;
     }
 
@@ -66,7 +66,7 @@ public enum RhythmBase {
         }
 
         if (!durationsSet) {
-            for (RhythmBase val : RhythmBase.values()) {
+            for (RhythmType val : RhythmType.values()) {
                 val.duration = (long) (val.multiplier * Context.resolution() );
             }
             durationsSet = true;
@@ -79,23 +79,23 @@ public enum RhythmBase {
         return this.duration;
     }
 
-    static long getDuration(RhythmBase enumVal) {
+    static long getDuration(RhythmType enumVal) {
         setDurations();
         return enumVal.duration;
     }
 
-    static Range getEquivalentRange(RhythmBase enumVal) {
+    static Range getEquivalentRange(RhythmType enumVal) {
         setDurations();
         return new Range(0, enumVal.duration - 1);
     }
 
-    public static RhythmBase getEnumType(long duration) {
+    public static RhythmType getEnumType(long duration) {
 
         setDurations();
 
-        RhythmBase[] arr = RhythmBase.values();
+        RhythmType[] arr = RhythmType.values();
         int i = 0;
-        RhythmBase currType = WHOLE;
+        RhythmType currType = WHOLE;
 
         while (i < arr.length && duration < currType.duration) {
             currType = arr[i];

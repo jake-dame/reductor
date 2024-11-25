@@ -96,7 +96,7 @@ public abstract class Event<T extends MidiMessage> {
     public final EventType getType() { return type; }
     public final long getTick() { return this.tick; }
 
-    public String getTrackName() { return this.trackName != null ? trackName : "null"; }
+    public String getTrackName() { return this.trackName != null ? trackName : ""; }
     public final void setTrackName(String trackName) { this.trackName = trackName; }
 
     public final int getTrackIndex() { return trackIndex; }

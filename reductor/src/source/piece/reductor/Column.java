@@ -1,271 +1,277 @@
 package reductor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/// This is a special type of note container that is used for vertical analysis
-/// i.e. looking at all the notes played at one time, and their relationships to each other pitch-wise
-/// It is not for looking at neighboring notes. Notes held from before can be in a Column, but no new notes shoulud
-/// begin within a Column's range.
+/**
+ * This is a special type of note container that is used for vertical analysis,
+ * i.e., looking at all the notes played at one time, and their relationships to each other pitch-wise.
+ * It is NOT for looking at neighboring notes. Notes held over from before can "bleed" into this Column (making the
+ * Column impure), but no new Notes should start within this Column (and should start in the next Column).
+ * <p>
+ * In this sense, they are components of a unidirectional, left-to-right sequence (reflecting the semantics used in
+ * music, as well).
+ */
 public class Column implements Ranged, Noted, Comparable<Column> {
 
-    /// The noteList that comprise this {@code Column} in ascending order by pitch
-    private final Bucket notes;
+    /**
+     * The notes belonging to this Column.
+     */
+    final Bucket notes;
 
-    /// The Range this column was created with and intended to represent, although due to notes whose durations are
-    /// either shorter or longer than this, the actual range may vary. To get the actual range, use
-    ///  {@link Column#getActualRange}
-    private final Range range;
+    /**
+     * The range this Column covers, though that may differ from the unison of Ranges of its constituent notes due to
+     * holdovers. To calculate the latter, use {@linkplain Column#getActualRange}.
+     * */
+    final Range range;
 
-    // These and the whole mess with the constructors / recursive construction... can probably be converted to just
-    // indices at some point, and getters that get sublists using those indices
-    /// This Column's left hand notes.
-    private Column LH;
-    /// This Column's notes that fall between realistic hand coverage.
-    private Column middle;
-    /// This Column's right hand notes.
-    private Column RH;
+    /**
+     * Pure Columns are those that contain only Notes that exactly match the Column's range (i.e. no notes extend
+     * behind or ahead of the Column.
+     */
+    boolean isPure;
+    /**
+     * Semi-pure columns contain only Notes that exactly match the Column's range or extend past it, not behind it.
+     * */
+    boolean isSemiPure;
 
-    /// Index in notes to grab the highest LH note
-    private int leftThumb;
-    /// Index in notes to grab the lowest RH note
-    private int rightThumb;
+    /**
+     * The algorithm used to decide the boundaries of notes that go to each hand. Uses a default function upon
+     * construction, but, when put into larger contexts, such as when this Column is part of a collection of Columns
+     * (e.g. in a {@linkplain Box}), the container might decide that a different heuristic might be better for
+     * splitting the hands, at which point it would call {@linkplain Column#splitHands}; an example of this would be if
+     * the hands could be split based on textural or melodic differences, rather than using defaults. A Column, of
+     * course, cannot know this until that time.
+     */
+    Consumer<Column> splitFunc;
+
+    Column LH;
+    Column middle;
+    Column RH;
+
+    int leftThumb;
+    int rightThumb;
 
 
-    /// "Pure" Columns contain Notes that all have the same duration (i.e. a single chord that includes no notes that
-    /// held over from previous columns).
-    /// There should never be a Column made entirely of held over notes, because those notes should belong to the
-    /// previous Column.
-    private final boolean isPure;
-
-    private int medianPitch;
-    private int meanPitch;
-    private int splitPoint;
-
-    /// Given a list of {@link Note} objects, constructs a {@link Column} object
+    /**
+     * Primary constructor which takes a list of {@linkplain Note}, and a {@linkplain Range}.
+     */
     public Column(ArrayList<Note> notes, Range range) {
+
         this.range = new Range(range);
+
         this.notes = new Bucket(notes);
         this.notes.sort(Comparator.comparingInt(Note::pitch));
 
-        this.isPure = this.assignIsPure();
-        this.LH = new Column(this.range, false);
-        this.middle = new Column(this.range, false);
-        this.RH = new Column(this.range, false);
+        this.isPure = true;
+        this.isSemiPure = true;
+        this.assignPurity();
+        this.markHoldovers();
 
-        this.assignHands();
-        this.assignHoldovers();
+        this.LH = new Column(this, false);
+        this.middle = new Column(this, false);
+        this.RH = new Column(this, false);
 
-        assert this.size() == this.LH.size() + this.middle.size() + this.RH.size();
+        this.splitHands(HandSplittingFunctions::defaultHandSplitter);
     }
 
-    /// Copy constructor.
-    public Column(Column other) {
-        this.range = new Range(other.range);
-        this.notes =  new Bucket(other.getNotes());
-        this.isPure = other.isPure;
-        this.LH = new  Column(other.LH, false);
-        this.middle = new Column(other.middle, false);
-        this.RH = new Column(other.RH, false);
-    }
-
-
-    /// Because Column has Column members, but that should only be 1-deep, use this private constructor in primary
-    /// constructor
-    private Column(Range range, boolean createHandColumns) {
-        this.range = new Range(range);
-        this.notes = new Bucket();
-        this.isPure = this.assignIsPure();
-    }
-
+    /**
+     * A constructor used by the primary constructor to create "terminal" Columns to represent the hands.
+     * The resulting Column takes all its properties from the primary constructor or "parent" object, except that its
+     * own Column members are null, and other processing/construction helpers are not necessary to call.
+     */
     private Column(Column other, boolean createHandColumns) {
+
+        this.range = new Range(other.range);
+        this.notes =  new Bucket();
+
+        this.isPure = other.isPure;
+        this.isSemiPure = other.isSemiPure;
+
+        this.LH = null;
+        this.middle = null;
+        this.RH = null;
+
+        this.splitFunc = null;
+    }
+
+    /**
+     * Copy constructor.
+     */
+    public Column(Column other) {
         this.range = new Range(other.range);
         this.notes = new Bucket(other.getNotes());
         this.isPure = other.isPure;
+        this.isSemiPure = other.isSemiPure;
+        this.LH = new  Column(other.LH, false);
+        this.middle = new Column(other.middle, false);
+        this.RH = new Column(other.RH, false);
+        this.splitFunc = other.splitFunc;
     }
 
-    /// Create a Column with a default range (the default quarter note, \[0,480])
-    public Column(ArrayList<Note> notes) {
-        this(new ArrayList<>(notes), new Range());
-    }
 
-    /// Create an empty Column with a specified range.
-    public Column(Range range) {
-        this(new ArrayList<>(), new Range(range));
-    }
+    /* ====================
+       CONSTRUCTION HELPERS
+     * ==================== */
 
-    /// Create an empty Column with a default range (the default quarter note, \[0,480])
-    public Column() {
-        this(new ArrayList<>(), new Range());
-    }
 
-    /// Helper to determine whether this Column of Notes is pure or not.
-    private boolean assignIsPure() {
+    /**
+     * Checks all Notes to see if any bleed out of this Column. Unlike
+     * {@linkplain Column#markHoldovers}, looks forward (notes extending past or to the right of this Column).
+     */
+    private void assignPurity() {
+
         for (Note note : this.notes) {
-            if (this.range.compareTo(note.getRange()) != 0) { return false; }
+            if (this.range.compareTo(note.getRange()) != 0) {
+                this.isPure = false;
+            }
+            if (this.range.high() < note.getRange().high()) {
+                this.isPure = false;
+                this.isSemiPure = false;
+                return;
+            }
         }
+
+    }
+
+    /**
+     * Assigns a Note object as being held over if it extends to the left of this Column.
+     * Notes in a Column are deep copies, so this does not affect the same held-over Note in its native Column.
+     */
+    private void markHoldovers() {
+
+        Function<Note, Note> transformHoldovers = note ->
+                note.start() < this.range.low()
+                        ? note.setIsHeld(true)
+                        : note;
+
+        List<Note> notes = this.notes.stream()
+                .map(transformHoldovers)
+                .toList();
+
+        this.notes.clear();
+        this.notes.addAll(notes);
+    }
+
+
+    /* ================
+       INSTANCE METHODS
+     * ================ */
+
+
+    /**
+     * Re-calculates the hand distribution based on the passed function representing another heuristic algorithm.
+     */
+    boolean splitHands(Consumer<Column> splitFunc) {
+
+        if (LH == null && RH == null && middle == null) { return false; }
+
+        this.splitFunc = splitFunc;
+        this.splitFunc.accept(this);
         return true;
     }
 
-    public void assignHoldovers() {
-        ArrayList<Note> toAdd = new ArrayList<>();
-        ArrayList<Note> toRemove = new ArrayList<>();
+    /**
+     * Returns the distance between this Column's lowest and highest notes, in terms of pitch.
+     */
+    int getOverallSpan() { return this.getHighNote().pitch() - this.getLowNote().pitch(); }
 
-        for (Note note : new ArrayList<>(this.notes)) { // Use a copy of the list to iterate safely
-            if (note.start() < this.range.low()) {
-                toRemove.add(note); // Mark the note for removal
-                Note newNote = new Note(note);
-                newNote.setIsHeld(true);
-                toAdd.add(newNote); // Add the modified note to the temporary list
-            }
+    /**
+     * This is pretty meaningless on its own, but, when used as a comparison to the split point,
+     * it can provide insight into whether the hand distribution is even or uneven. For instance, if the median pitch
+     * is relatively close to the split point, it means the hands are pretty evenly distributed. If the median pitch
+     * is relatively far from the split point, it means that the note density in one of the hands is significantly
+     * higher than in the other.
+     */
+    int getMedianPitch() { return this.notes.get( this.notes.size() / 2 ).pitch(); }
 
-            if (this.range.low() < note.start()) {
-                System.out.println("this column has range" + this.range + " and this note:  " + note + " " + note.getRange());
-            }
-        }
-
-        // Apply changes after iteration
-        this.notes.removeAll(toRemove);
-        this.notes.addAll(toAdd);
-    }
-
-    private void assignHands() {
-
-        final int size = this.notes.size();
-
-        final int MIDDLE_C = 60;
-
-        if (notes.isEmpty()) { return; }
-
-        if (size == 1) {
-
-            if (notes.getFirst().pitch() < MIDDLE_C) {
-                LH.add(notes.getFirst());
-            } else {
-                RH.add(notes.getFirst());
-            }
-
-            return;
-        }
-
-        final int SPAN_MAX = 14; // major 9th. I can't reach a 10th of any kind except double black keys
-        final int NOTES_MAX = 6; // I have yet to come across a piano chord with 7+ notes
-
-        // Fill up LH (start from bottom)
-        int i = 0;
-        int anchorPitch = notes.get(i).pitch();
-        while (i < size) {
-            Note currNote = notes.get(i);
-            int distanceFromAnchor = Math.abs(currNote.pitch() - anchorPitch);
-
-            if (SPAN_MAX < distanceFromAnchor) { break; }
-            if (NOTES_MAX == LH.size()) { break; }
-
-            LH.add(currNote); i++;
-        }
-        this.leftThumb = i - 1;
-
-        // Fill up RH (start from top)
-        i = size - 1;
-        anchorPitch = notes.get(i).pitch();
-        while (0 < i) {
-            Note currNote = notes.get(i);
-            int distanceFromAnchor = Math.abs(currNote.pitch() - anchorPitch);
-
-            if (SPAN_MAX < distanceFromAnchor) { break; }
-            if (NOTES_MAX == RH.size()) { break; }
-            if (i <= this.leftThumb ) { break; } // also
-
-            RH.add(currNote); i--;
-        }
-        this.rightThumb = i + 1;
-
-        // Grab what notes are left over between the two hands, if any, and give them to "middle"
-        for (i = this.leftThumb + 1; i <= this.rightThumb - 1; i++) {
-            this.middle.add( this.notes.get(i) );
-        }
-
-        // If there were only enough notes for LH, but they are all above middle C, transfer them to RH
-        if (RH.isEmpty()  &&  MIDDLE_C < LH.getLowNote().pitch()) {
-            for (i = 0; i < LH.size(); i++) { RH.add( LH.getNotes().get(i) ); }
-            while (0 < LH.size()) { LH.notes.remove(0); }
-        }
-
-        //// If both hands are playing relatively close to each other but the density of each group is thinner, it
-        //// probably means the notes are meant to be evenly distributed between the hands
-        //// See: Mozart K545 i or Liszt-Beethoven Symphony 3 scherzo
-        //if (getOverallSpan() <= 3 * 12) {
-        //    this.redistributeHands();
-        //}
-
-        // TODO: loop through all, assign scores, and say LH should be here, RH should be here, the "unreachable area"
-
-    }
-
-    private void redistributeHands() {
-
-
-
-
-
-
-    }
-
-    public void add(Note other) {
-        int index = Collections.binarySearch(this.notes, other);
-        if (index < 0) { index = -(index + 1); }
-        this.notes.add(index, other);
-    }
-
-    public Note remove(int index) { return this.notes.remove(index); }
-
-    public int size() { return this.notes.size(); }
-    public boolean isEmpty() { return this.notes.isEmpty(); }
-
-    public Column getLH() { return new Column(this.LH, true); }
-    public Column getMiddle() { return new Column(this.middle, false); }
-    public Column getRH() { return new Column(this.RH, false); }
-
-    public Note getLowNote() { return this.notes.getFirst(); }
-    public Note getHighNote() { return this.notes.getLast(); }
-
-    public boolean isPure() { return this.isPure; }
-    public boolean isTwoHanded() { return middle.isEmpty(); }
-
-    public int getOverallSpan() {
-        return this.getHighNote().pitch() - this.getLowNote().pitch();
-    }
-
-    public int getMedianPitch() {
-        return this.notes.get( this.notes.size() / 2 ).pitch();
-    }
-
-    public int getMeanPitch()  {
+    /**
+     * This is more used to compare the mean pitch *between* other columns to help look for contours in the hand
+     * lines over time, and can help identify more probably melody vs. accompaniment lines.
+     */
+    int getMeanPitch()  {
         int sum = 0;
         for (Note note : this.notes) { sum += note.pitch(); }
         return sum / this.notes.size();
     }
 
-    ///
-    public int getSplitPointPitch() {
+    /**
+     * This returns the imaginary pitch that represents exactly halfway between the two thumbs. If the thumbs cross
+     * (extremely rare, but not impossible, this returns -1).
+     */
+    int getSplitPointPitch() {
 
         int rhThumbPitch = this.notes.get(this.rightThumb).pitch();
-        int lhThumbPitch = this.notes.get(this.leftThumb).pitch();
-        int dist = rhThumbPitch - lhThumbPitch;
+        int dist = getSplitSpan();
 
-        if (-1 < dist) {
-            // Halfway between the thumbs
-            return rhThumbPitch - (int) (dist / 2);
-        }
+        if (0 <= getSplitSpan()) { return rhThumbPitch - (dist / 2); }
 
-        // If the thumbs cross
         return -1;
     }
 
-    public Range getActualRange() { return Range.concatenate(this.notes); }
+    /**
+     * This measures the distance between the thumbs, indicating how far apart or close together the hands are.
+     */
+    int getSplitSpan() {
+
+        int rhThumbPitch = this.notes.get(this.rightThumb).pitch();
+        int lhThumbPitch = this.notes.get(this.leftThumb).pitch();
+
+        return rhThumbPitch - lhThumbPitch;
+    }
+
+    /**
+     * Inserts a Note, in order, to this Column.
+     */
+    void add(Note other) {
+        int index = Collections.binarySearch(this.notes, other);
+        if (index < 0) { index = -(index + 1); }
+        this.notes.add(index, other);
+    }
+
+    /**
+     * Removes and returns a Note from this Column.
+     */
+    Note remove(int index) { return this.notes.remove(index); }
+
+
+    /* =======
+       GETTERS
+     * ======= */
+
+
+    int size() { return this.notes.size(); }
+    boolean isEmpty() { return this.notes.isEmpty(); }
+
+    Column getLeftHand() { return LH; }
+    Column getMiddle() { return middle; }
+    Column getRightHand() { return RH; }
+
+    Note getLowNote() { return this.notes.getFirst(); }
+    Note getHighNote() { return this.notes.getLast(); }
+
+    boolean isPure() { return this.isPure; }
+    boolean isSemiPure() { return this.isSemiPure; }
+
+    /**
+     * Returns false if there are more notes in this Column than can be realistically played by two hands.
+     */
+    boolean isTwoHanded() { return middle.isEmpty(); }
+    boolean isTwoHandedForRachmaninoff() { return true; }
+
+    /**
+     * See {@linkplain Column#range}.
+     */
+    Range getActualRange() { return Range.concatenate(this.notes); }
+
+
+    /* =========
+       OVERRIDES
+     * ========= */
+
 
     @Override
     public Range getRange() { return new Range(this.range); }
@@ -277,8 +283,62 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     public int compareTo(Column other) { return this.range.compareTo(other.range); }
 
     @Override
-    public String toString() { return this.range.toString() + this.notes; }
+    public String toString() {
 
+        String lh = LH.notes.stream()
+                .map(Note::toString)
+                .collect(Collectors.joining(", "));
 
+        String m = middle.notes.stream()
+                .map(Note::toString)
+                .collect(Collectors.joining(", "));
+
+        String rh = RH.notes.stream()
+                .map(Note::toString)
+                .collect(Collectors.joining(", "));
+
+        if (lh.isEmpty()) { lh = "   "; }
+        if (m.isEmpty()) { m = "   "; }
+        if (rh.isEmpty()) { rh = "   "; }
+
+        return String.format("%s => LH: %s  ->  M: %s  ->  RH: %s",
+                this.range, lh, m, rh
+        );
+    }
 
 }
+
+
+
+/*
+    @Override
+    public String toString() {
+
+        Function<Note, String> prependHyphen = note ->
+                note.isHeld() ? "-" : "";
+
+        Function<Note, String> showRange = note ->
+                note.getRange().compareTo(this.range) != 0 ? " " + note.getRange().toString() : "";
+
+        String lh = LH.notes.stream()
+                .map(note -> prependHyphen.apply(note) + Pitch.toStr(note.pitch(), true) + showRange.apply(note))
+                .collect(Collectors.joining(", "));
+
+        String m = middle.notes.stream()
+                .map(note -> prependHyphen.apply(note) + Pitch.toStr(note.pitch(), true) + showRange.apply(note))
+                .collect(Collectors.joining(", "));
+
+        String rh = RH.notes.stream()
+                .map(note -> prependHyphen.apply(note) + Pitch.toStr(note.pitch(), true) + showRange.apply(note))
+                .collect(Collectors.joining(", "));
+
+                if (lh.isEmpty()) { lh = "   "; }
+                if (m.isEmpty()) { m = "   "; }
+                if (rh.isEmpty()) { rh = "   "; }
+
+                return String.format("%s => LH: %s  ->  M: %s  ->  RH: %s",
+                                             this.range, lh, m, rh
+                                     );
+            }
+
+*/

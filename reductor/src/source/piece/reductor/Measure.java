@@ -1,6 +1,5 @@
 package reductor;
 
-import java.sql.Time;
 import java.util.ArrayList;
 
 
@@ -17,6 +16,10 @@ public class Measure implements Ranged, Noted {
 
     private Boolean isPickup;
 
+
+    private boolean pickupSet;
+    private boolean numberSet;
+
     /// Primary constructor
     Measure(ArrayList<Column> columns, Range range, TimeSignature timeSig) {
 
@@ -30,8 +33,11 @@ public class Measure implements Ranged, Noted {
         this.range = range;
         this.timeSig = timeSig;
 
-        this.isPickup = null;
-        this.number = null;
+        this.isPickup = false;
+        this.number = -1;
+
+        this.pickupSet = false;
+        this.numberSet = false;
     }
 
     /// Copy constructor
@@ -54,8 +60,9 @@ public class Measure implements Ranged, Noted {
     public boolean isPickup() { return this.isPickup; }
     public boolean setIsPickup(boolean val) {
 
-        if (this.isPickup == null) {
+        if (!this.pickupSet) {
             this.isPickup = val;
+            this.pickupSet = true;
             return true;
         }
 
@@ -65,8 +72,9 @@ public class Measure implements Ranged, Noted {
     public int getMeasureNumber() { return number; }
     public boolean setMeasureNumber(int measureNumber) {
 
-        if (this.number == null) {
+        if (!this.numberSet) {
             this.number = measureNumber;
+            this.numberSet = true;
             return true;
         }
 
@@ -85,8 +93,9 @@ public class Measure implements Ranged, Noted {
 
     @Override
     public String toString() {
-        return "m." + this.getMeasureNumber() + " " + this.range + ": " + this.timeSig + " and " + this.size() + " " +
-                "noteList";
+        String number = this.number != null ? this.number + "" : "-1";
+        return "m." + number + " " + this.range + ": " + this.timeSig + " and " + this.size() + " " +
+                "notes";
     }
 
 }

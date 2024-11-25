@@ -1,11 +1,14 @@
 package reductor;
 
+import java.util.Objects;
+
+
 public class Rhythm {
 
 
     // in enum ordinal order: whole, half, quarter, 8th, 16th, 32nd, 64th, 128th
     // `base` is the nearest note value in that list _without going over_
-    private RhythmBase base;
+    private RhythmType base;
     // This can be gotten from the enum at any time, just nice to have calculated once
     private final long baseDuration;
     // The duration passed to the constructor
@@ -24,13 +27,24 @@ public class Rhythm {
         return new Rhythm(range.length() + 1);
     }
 
-    public static Rhythm fromType(RhythmBase enumVal) {
+    public static Rhythm fromType(RhythmType enumVal) {
         return new Rhythm(enumVal.getDuration());
     }
 
-    private Rhythm(long actualDuration) {
+    /// Copy constructor
+    public Rhythm(Rhythm other) {
+        this.base = other.base;
+        this.baseDuration = other.baseDuration;
+        this.actualDuration = other.actualDuration;
+        this.isTriplet = other.isTriplet;
+        this.isDotted = other.isDotted;
+        this.isTied = other.isTied;
+        this.isOrnament = other.isOrnament;
+    }
 
-        this.base = RhythmBase.getEnumType(actualDuration);
+    public Rhythm(long actualDuration) {
+
+        this.base = RhythmType.getEnumType(actualDuration);
         this.actualDuration = actualDuration;
         this.baseDuration = this.base.getDuration();
 
@@ -53,7 +67,7 @@ public class Rhythm {
             }
         }
 
-        if (this.base.compareTo(RhythmBase.THIRTY_SECOND) > 0) {
+        if (this.base.compareTo(RhythmType.THIRTY_SECOND) > 0) {
             isOrnament = true;
         }
 
@@ -87,7 +101,7 @@ public class Rhythm {
 
         */
 
-        RhythmBase enclosingRhythm;
+        RhythmType enclosingRhythm;
 
         int ordinal = this.base.ordinal();
         if (ordinal == 0) {
@@ -95,17 +109,17 @@ public class Rhythm {
             return;
         } else if (ordinal == 1) {
             // this is a HALF note
-            enclosingRhythm = RhythmBase.values()[ordinal - 1];
+            enclosingRhythm = RhythmType.values()[ordinal - 1];
         } else {
             // this is anything else
-            enclosingRhythm =  RhythmBase.values()[ordinal - 2];
+            enclosingRhythm =  RhythmType.values()[ordinal - 2];
         }
 
         var tripletedValue = enclosingRhythm.getDuration() / 3;
         if (actualDuration == tripletedValue) {
             isTriplet = true;
             // Re-assign to be more accurate ("some species of")
-            this.base = RhythmBase.values()[base.ordinal() - 1];
+            this.base = RhythmType.values()[base.ordinal() - 1];
         }
 
     }
@@ -116,6 +130,26 @@ public class Rhythm {
     public boolean isDotted() { return this.isDotted; }
     public boolean isTied() { return this.isTied; }
     public boolean isOrnament() { return this.isOrnament; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (!(o instanceof Rhythm rhythm)) { return false; }
+        return baseDuration == rhythm.baseDuration
+                && actualDuration == rhythm.actualDuration
+                && isTriplet == rhythm.isTriplet
+                && isDotted == rhythm.isDotted
+                && isTied == rhythm.isTied
+                && isOrnament == rhythm.isOrnament
+                && base == rhythm.base;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                base, baseDuration, actualDuration, isTriplet, isDotted, isTied, isOrnament
+        );
+    }
 
     @Override public String toString() {
         String str = "";

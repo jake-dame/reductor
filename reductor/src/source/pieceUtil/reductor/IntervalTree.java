@@ -85,9 +85,9 @@ public class IntervalTree<T extends Ranged> {
 
         @Override
         public String toString() {
-            String str = this.range + " -> {  ";
-            for (T note : this.elements) { str += note + "  "; }
-            return str + "  }";
+            String str = this.range + " -> {";
+            for (T note : this.elements) { str += note + " "; }
+            return str + "}";
         }
 
         @Override

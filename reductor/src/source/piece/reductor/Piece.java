@@ -5,6 +5,8 @@ import java.util.*;
 
 public class Piece implements Ranged, Noted {
 
+    public static int TPQ;
+
     /// This Piece's range (start and end ticks)
     private final Range range;
 
@@ -28,6 +30,8 @@ public class Piece implements Ranged, Noted {
             ArrayList<KeySignature> keySignatures,
             ArrayList<Tempo> tempos
     ) {
+
+        TPQ = Context.resolution();
 
         this.notes = new IntervalTree<>(notes);
 

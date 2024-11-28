@@ -54,7 +54,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
         this.hand = hand;
 
         // TODO REMOVE
-        if (range.length() <= 15){ System.err.println("From Note: " + Pitch.toStr(pitch, true) + " " + range + " " + range.length()); }
+        if (range.duration() < 15){ System.err.println("From Note: " + Pitch.toStr(pitch, true) + " " + range + " " + range.length()); }
     }
 
     /**

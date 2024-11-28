@@ -214,7 +214,7 @@ public class Pitch {
      * @return Returns the MIDI int value corresponding to the pitch described by {@code str}.
      * @throws IllegalArgumentException If the input string is invalid.
      */
-    static int toInt(String str) {
+    public static int toInt(String str) {
 
         if (str == null || str.isEmpty() || str.length() > 5) {
             throw new IllegalArgumentException("string is null, empty, or too long");

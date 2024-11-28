@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class Quantize {
 
+    // Least Common Denominator before fractional ticks; assuming resolution of 480
     private final int LCD = 15;
 
     private final int TPQ;

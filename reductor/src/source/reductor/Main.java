@@ -1,14 +1,15 @@
 package reductor;
 
-import reductor.dataconverter.Conversion;
+import reductor.dataconverter.ConversionToMidi;
 import reductor.dataconverter.UnpairedNoteException;
+import reductor.piece.Column;
+import reductor.piece.Note;
 import reductor.piece.Piece;
 import reductor.util.Util;
 
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiUnavailableException;
-import java.io.File;
-import java.io.IOException;
+import javax.sound.midi.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static reductor.Files.*;
 
@@ -25,6 +26,20 @@ public class Main {
     // 3. Column and hand Column design could be better
     // 4. MeasuresAccessor could be better
 
+    // TODO: FINAL WEEK WISHLIST
+    // 0. How to actually output shit that you've manipulated
+    // 1. Logging for the love of god
+    // 2. Make Gradle project
+    //   + quantization library
+    //   + chordcat library
+    //   + proxymusic library
+    // 2.5. Quantization stuff if the library doesn't work out
+    // 3. ConversionToMusicXML
+    // 4. Documentation and cleanup (public API stuff)
+    //
+    // These are what I want more than more reduction algorithms. Those can be the side-project over time. I would
+    // rather do this other stuff now.
+
     // TODO:
     // Eventually we will need to go back to having resolution passed to piece, or perhaps something more universal
     // because:
@@ -37,7 +52,7 @@ public class Main {
     // Would only need to do hasNext and Next, not remove (which is the tricky one)
 
     // TODO:
-    // implement channel hopping stuff in Conversion
+    // implement channel hopping stuff in ConversionFromMidi
 
     // TODO:
     // Hand class (extends Column??)
@@ -130,42 +145,59 @@ public class Main {
             //ArrayList<MidiEvent> midiEvents = new ArrayList<>();
             //
             //for (Ranged elem : measure_1) {
-            //    if (elem instanceof TimeSignature timeSig) { midiEvents.add( Conversion.toTimeSignatureEvent(timeSig)); }
-            //    if (elem instanceof KeySignature keySig) { midiEvents.add( Conversion.toKeySignatureEvent(keySig)); }
-            //    if (elem instanceof Tempo tempo) { midiEvents.add( Conversion.toTempoEvent(tempo)); }
-            //    if (elem instanceof Note note) { midiEvents.addAll( Conversion.toNoteEvents( note.getNotes()) ); }
+            //    if (elem instanceof TimeSignature timeSig) { midiEvents.add( ConversionFromMidi.toTimeSignatureEvent(timeSig)); }
+            //    if (elem instanceof KeySignature keySig) { midiEvents.add( ConversionFromMidi.toKeySignatureEvent(keySig)); }
+            //    if (elem instanceof Tempo tempo) { midiEvents.add( ConversionFromMidi.toTempoEvent(tempo)); }
+            //    if (elem instanceof Note note) { midiEvents.addAll( ConversionFromMidi.toNoteEvents( note.getNotes()) ); }
             //    if (elem instanceof Chord chord) {
-            //        var hi = Conversion.toNoteEvents( chord.getNotes());
+            //        var hi = ConversionFromMidi.toNoteEvents( chord.getNotes());
             //        midiEvents.addAll(hi);
             //    }
             //}
             //
-            //Sequence seq = Conversion.toSequence(midiEvents);
+            //Sequence seq = ConversionFromMidi.toSequence(midiEvents);
             //
             //Util.write(seq, "phrase_builder_demo");
             //Util.play(seq);
             //
             //==================================================
 
-            Piece piece = DevelopmentHelper.getPiece(MOZART_SYMPHONY_40);
-            System.err.println("DONE");
-            var seq = Conversion.toSequence(piece);
-            Util.write(seq, "package_test");
-            Util.play(seq);
+            //Piece piece = DevelopmentHelper.getPiece(MOZART_SYMPHONY_40_I_NEW);
+            //
+            //ArrayList<Column> cols = piece.getColumns();
+            //
+            //List<Note> RH = cols.stream().map(Column::getRightHand).flatMap(col -> col.getNotes().stream()).toList();
+            //List<Note> middle = cols.stream().map(Column::getMiddle).flatMap(col -> col.getNotes().stream()).toList();
+            //List<Note> LH = cols.stream().map(Column::getLeftHand).flatMap(col -> col.getNotes().stream()).toList();
+            //
+            //var rhEvents = ConversionToMidi.toNoteEvents(RH, 1);
+            //var middleEvents = ConversionToMidi.toNoteEvents(middle, 2);
+            //var lhEvents = ConversionToMidi.toNoteEvents(LH, 3);
+            //
+            //Sequence seq = new Sequence(0, 480, 3);
+            //
+            //Track rhTrack = seq.getTracks()[0];
+            //Track middleTrack = seq.getTracks()[1];
+            //Track lhTrack = seq.getTracks()[2];
+            //
+            //for (MidiEvent event : rhEvents ) { rhTrack.add(event); }
+            //for (MidiEvent event : middleEvents ) { middleTrack.add(event); }
+            //for (MidiEvent event : lhEvents ) { lhTrack.add(event); }
+            //
+            //Util.write(seq, "hand_sep_test");
+            //Util.play(seq);
+
+            Piece piece = DevelopmentHelper.getPiece(CHOPIN_PREL_e);
+            Util.write( ConversionToMidi.toSequence(piece), "beans_dot_com");
 
         }
         catch (InvalidMidiDataException e) {
             throw new RuntimeException(e);
         }
-        catch (MidiUnavailableException e) {
-            throw new RuntimeException(e);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         catch (UnpairedNoteException e) {
             throw new RuntimeException(e);
         }
+
     }
 
 

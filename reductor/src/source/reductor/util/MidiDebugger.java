@@ -8,8 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import static reductor.Files.BACH_BEFIEHL_DU_DEINE_WEGE;
-import static reductor.Files.BACH_BEFIEHL_DU_DEINE_WEGE_NEW;
+import static reductor.Files.*;
 
 
 /// This is purely a class to group development/debug helpers and most of them are pretty bad
@@ -18,7 +17,7 @@ public class MidiDebugger {
 
     public static void main(String[] args) throws InvalidMidiDataException, IOException {
 
-        Sequence seq = MidiSystem.getSequence(new File(BACH_BEFIEHL_DU_DEINE_WEGE_NEW));
+        Sequence seq = MidiSystem.getSequence(new File(BACH_ST_JOHN_OVERTURE));
         Track[] tracks = seq.getTracks();
 
         System.err.println("res: " + seq.getResolution());
@@ -28,18 +27,14 @@ public class MidiDebugger {
                 MidiEvent event = track.get(i);
                 MidiMessage message = event.getMessage();
 
-                if (1500 < event.getTick()) {continue;}
-
                 // ======== DO SOMETHING BELOW: =========
                 if (message instanceof ShortMessage sm) {
-                    if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() != 0) {
-                        System.out.println(Pitch.toStr(sm.getData1(), true) + " on: " + event.getTick());
-                    }
 
-                    if ((sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0)
-                            ||  sm.getCommand() == ShortMessage.NOTE_OFF) {
-                        System.out.println("\t" + Pitch.toStr(sm.getData1(), true) + " off: " + event.getTick());
-                    }
+                    if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() != 0) {
+                        System.out.println(Pitch.toStr(sm.getData1(), true) +"("+sm.getData1()+")" + " on: " + event.getTick()); }
+                    if ((sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0) || sm.getCommand() == ShortMessage.NOTE_OFF) {
+                        System.out.println("\t" + Pitch.toStr(sm.getData1(), true) + " off: " + event.getTick()); }
+
                 }
                 // ========================================
 

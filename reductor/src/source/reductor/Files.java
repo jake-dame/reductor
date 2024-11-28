@@ -7,7 +7,6 @@ import java.util.ArrayList;
 public class Files {
 
     /// Project-specific directories
-    public static final String PROJECT_DIR = "/Users/u0858882/Desktop/Capstone/reductor/";
     public static final String MIDI_FILES_IN_DIR = "/Users/u0858882/Desktop/Capstone/reductor/midis/in/";
     public static final String MIDI_FILES_OUT_DIR = "/Users/u0858882/Desktop/Capstone/reductor/midis/out/";
 
@@ -18,19 +17,19 @@ public class Files {
     static ArrayList<File> INVALID_FILES = new ArrayList<>();
 
 
-    /// Piece files downloaded from ClassicalArchives.org or imslp.org
-    //public static final String BEETHOVEN_MOONLIGHT = addFile("beethoven_moonlight.mid", OK_FILES);
-    public static final String BACH_INV_1 = addFile("bach_inv_1.mid", OK_FILES);
-    //public static final String BACH_PREL_1 = addFile("bach_prel_1.mid", OK_FILES);
+    /// Downloaded from ClassicalArchives.org; some re-quantized by MuseScore
     public static final String BACH_BEFIEHL_DU_DEINE_WEGE = addFile("bach_befiehl_du_deine_wege.mid", OK_FILES);
     public static final String BACH_BEFIEHL_DU_DEINE_WEGE_NEW = addFile("bach_befiehl_du_deine_wege_new.mid", OK_FILES);
     public static final String BACH_BRANDENBURG_6_I = addFile("bach_brandenburg_6_i.mid", OK_FILES);
     public static final String BACH_BRANDENBURG_6_III = addFile("bach_brandenburg_6_iii.mid", OK_FILES);
     public static final String BACH_BRANDENBURG_3_I = addFile("bach_brandenburg_3_i.mid", OK_FILES);
     public static final String BACH_DOUBLE_I = addFile("bach_double_i.mid", OK_FILES);
+    public static final String BACH_INV_1 = addFile("bach_inv_1.mid", OK_FILES);
+    public static final String BACH_INV_1_NEW = addFile("bach_inv_1_new.mid", OK_FILES);
+    public static final String BACH_PREL_1 = addFile("bach_prel_1.mid", OK_FILES);
     public static final String BACH_ST_JOHN_ARIA = addFile("bach_st_john_aria.mid", OK_FILES);
     public static final String BACH_ST_MATTHEW_OVERTURE = addFile("bach_st_matthew_overture.mid", INVALID_FILES);
-    //public static final String BACH_ST_JOHN_OVERTURE = addFile("bach_st_john_overture.mid", OK_FILES);
+    public static final String BACH_ST_JOHN_OVERTURE = addFile("bach_st_john_overture.mid", OK_FILES);
     public static final String BACH_QUI_SEDES_AD_DEXTERAM_PATRIS = addFile("mass_in_b_minor/qui_sedes_ad_dexteram_patris.mid", OK_FILES);
     public static final String BACH_KYRIE_ELEISON = addFile("mass_in_b_minor/kyrie_eleison.mid", OK_FILES);
     public static final String BACH_ET_RESURREXIT = addFile("mass_in_b_minor/et_resurrexit.mid", OK_FILES);
@@ -40,6 +39,7 @@ public class Files {
     public static final String BEETHOVEN_5_II = addFile("beethoven_5_ii.mid", OK_FILES);
     public static final String BEETHOVEN_5_III_IV = addFile("beethoven_5_iii_iv.mid", OK_FILES);
     public static final String BEETHOVEN_5_IV = addFile("beethoven_5_iv.mid", OK_FILES);
+    public static final String BEETHOVEN_MOONLIGHT = addFile("beethoven_moonlight.mid", OK_FILES);
     public static final String BIZET_PEARL_FISHERS_DUET = addFile("bizet_pearl_fishers_duet.mid", OK_FILES);
     public static final String BYRD_AVE_VERUM = addFile("byrd_avc.mid", NO_TIME_SIG_FILES);
     public static final String BRAHMS_CLAR_QUINTET_I = addFile("brahms_clar_quintet_i.mid", OK_FILES); // dbl note off
@@ -64,7 +64,8 @@ public class Files {
     public static final String MOZART_SONATA_IN_C = addFile("mozart_sonata_in_c.mid", OK_FILES);
     public static final String MOZART_SYMPHONY_25_I = addFile("mozart_symphony_25_i.mid", OK_FILES);
     public static final String MOZART_SYMPHONY_29_I = addFile("mozart_symphony_29_i.mid", OK_FILES);
-    public static final String MOZART_SYMPHONY_40 = addFile("mozart_symphony_40.mid", OK_FILES);
+    public static final String MOZART_SYMPHONY_40_I = addFile("mozart_symphony_40_i.mid", OK_FILES);
+    public static final String MOZART_SYMPHONY_40_I_NEW = addFile("mozart_symphony_40_i_new.mid", OK_FILES);
     public static final String ROSSINI_LA_SCALA_DI_SETA = addFile("rossini_la_scala_di_seta.mid", OK_FILES);
     public static final String ROSSINI_PETITE_MESSE = addFile("rossini_petite_messe.mid", OK_FILES);
     public static final String ROSSINI_CENERENTOLA_OVERTURE = addFile("rossini_cenerentola_overture.mid", NO_TIME_SIG_FILES);

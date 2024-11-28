@@ -67,12 +67,17 @@ public class Util {
      *
      * @param sequence The {@link javax.sound.midi.Sequence} to play
      */
-    public static void play(Sequence sequence) throws MidiUnavailableException, InvalidMidiDataException {
+    public static void play(Sequence sequence) throws InvalidMidiDataException {
 
-        Sequencer sequencer = MidiSystem.getSequencer();
-        sequencer.setSequence(sequence);
-        sequencer.open();
-        sequencer.start();
+        Sequencer sequencer;
+        try {
+            sequencer = MidiSystem.getSequencer();
+            sequencer.setSequence(sequence);
+            sequencer.open();
+            sequencer.start();
+        } catch (MidiUnavailableException e) {
+            throw new RuntimeException(e);
+        }
 
         while (true) {
             if (!sequencer.isRunning()) {
@@ -91,7 +96,7 @@ public class Util {
      * @param name     A name to give the file
      * @return The File object pertaining to the new file
      */
-    public static File write(Sequence sequence, String name) throws IOException {
+    public static File write(Sequence sequence, String name) {
 
         if (name.contains(".")) {
             throw new RuntimeException("file name should not contain '.'");
@@ -106,14 +111,16 @@ public class Util {
             counter++;
         }
 
-        // TODO: double-check that the way you writing files out (type 1: single-track) isn't screwing up musescore stuff
+        //// Assuming this program will never write a 2 file type (multiple sequences)
+        //int fileType = sequence.getTracks().length == 1 ? 0 : 1;
+        int fileType = 0; // TODO: double-check
 
-        // Assuming this program will never write a 2 file type (multiple sequences)
-        int fileType = sequence.getTracks().length == 1 ? 0 : 1;
-
-        MidiSystem.write(sequence, fileType, outFile);
-
-        if (!outFile.exists()) { throw new IOException("write out failed"); }
+        try {
+            MidiSystem.write(sequence, fileType, outFile);
+            if (!outFile.exists()) { throw new IOException("write out failed"); }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         return outFile;
     }

@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static reductor.Files.TEST_3;
 
 
-class ConversionTest {
+class fromMIDITest {
 
     static final int C4 = 60;
     static final int D4 = 62;
@@ -38,7 +38,7 @@ class ConversionTest {
         ons.add( noteOn(C4, 0) );
         ons.add( noteOn(C4, 480) ); offs.add( noteOff(C4, 959) );
 
-        Exception exception = assertThrows(UnpairedNoteException.class, () -> Conversion.toNotes(ons, offs));
+        Exception exception = assertThrows(UnpairedNoteException.class, () -> ConversionFromMidi.toNotes(ons, offs));
         assertEquals("unpaired note on", exception.getMessage());
 
     }
@@ -50,7 +50,7 @@ class ConversionTest {
         ons.add( noteOn(C4, 0) );
         ons.add( noteOn(D4, 0) ); offs.add( noteOff(D4, 1919) );
 
-        Exception exception = assertThrows(UnpairedNoteException.class, () -> Conversion.toNotes(ons, offs));
+        Exception exception = assertThrows(UnpairedNoteException.class, () -> ConversionFromMidi.toNotes(ons, offs));
         assertEquals("unpaired note on", exception.getMessage());
 
     }
@@ -62,7 +62,7 @@ class ConversionTest {
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 479) );
                                   offs.add( noteOff(C4, 1919) );
 
-        Exception exception = assertThrows(UnpairedNoteException.class, () -> Conversion.toNotes(ons, offs));
+        Exception exception = assertThrows(UnpairedNoteException.class, () -> ConversionFromMidi.toNotes(ons, offs));
         assertEquals("unpaired note off", exception.getMessage());
 
     }
@@ -79,7 +79,7 @@ class ConversionTest {
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 479) ); // quarter C
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 1919) ); // whole C
 
-        assertDoesNotThrow(() -> Conversion.toNotes(ons, offs));
+        assertDoesNotThrow(() -> ConversionFromMidi.toNotes(ons, offs));
 
     }
 

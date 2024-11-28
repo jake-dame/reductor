@@ -52,6 +52,8 @@ public class Piece implements Ranged, Noted {
         this.measures = new IntervalTree<>(this.createMeasures());
 
         this.ma = new MeasuresAccessor();
+        var list = measures.toList();
+        System.out.println();
     }
 
 
@@ -297,68 +299,6 @@ public class Piece implements Ranged, Noted {
         }
 
 
-    }
-
-
-    /* ======
-       STATIC
-     * ====== */
-
-
-    //public static <T extends Noted> ArrayList<Note> shiftNotesToBeginning(T container) {
-    //    return shiftNotes(container, 0);
-    //}
-    //
-    ///// Given any class that is Noted, shifts all its Notes to start at a provided tick.
-    //public static <T extends Noted> ArrayList<Note> shiftNotes(T container, long tick) {
-    //
-    //    if (tick < 0) { throw new RuntimeException("cannot shift notes past 0"); }
-    //
-    //    ArrayList<Note> listCopy = new ArrayList<>(container.getNotes());
-    //    listCopy.sort(Comparator.comparingLong(Note::start));
-    //
-    //    if (listCopy.isEmpty()) { return new ArrayList<>(); }
-    //
-    //    long offset = tick - listCopy.getFirst().start();
-    //
-    //    ArrayList<Note> out = new ArrayList<>();
-    //    for (Note note : listCopy) {
-    //        Range range = Range.getShiftedInstance(note.getRange(), offset);
-    //        out.add( Note.builder(note).start(range.low()).stop(range.high()).build());
-    //    }
-    //
-    //    return out;
-    //}
-
-    //public <T extends Ranged & Noted> void fillContainer(ArrayList<T> rangedElems) {
-    //    for (T elem : rangedElems) {
-    //        ArrayList<Note> matches = this.tree.query(elem.getRange());
-    //        elem.setNotes(matches);
-    //    }
-    //}
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    //public <T extends Noted & Ranged>
-    //ArrayList<Noted> queryWithRanges(ArrayList<Range> ranges, Class<T> containerClass) {
-    //
-    //    ArrayList<Noted> out = new ArrayList<>();
-    //
-    //    for (Range range : ranges) {
-    //        ArrayList<Note> matches = this.notes.query(range);
-    //        if (!matches.isEmpty()) {
-    //            // this won't work - it calls the actual static method
-    //            // can use reflection or
-    //            // have an actual factory method in Noted, but that would be messy and violate open/closed
-    //            out.add(Noted.fromNotes(matches));
-    //        }
-    //    }
-    //
-    //    return out;
-    //}
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public static Piece getPiece(String filePath) {
-        return null;
     }
 
 

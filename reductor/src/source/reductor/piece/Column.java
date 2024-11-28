@@ -310,38 +310,3 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     }
 
 }
-
-
-
-/*
-    @Override
-    public String toString() {
-
-        Function<Note, String> prependHyphen = note ->
-                note.isHeld() ? "-" : "";
-
-        Function<Note, String> showRange = note ->
-                note.getRange().compareTo(this.range) != 0 ? " " + note.getRange().toString() : "";
-
-        String lh = LH.notes.stream()
-                .map(note -> prependHyphen.apply(note) + Pitch.toStr(note.pitch(), true) + showRange.apply(note))
-                .collect(Collectors.joining(", "));
-
-        String m = middle.notes.stream()
-                .map(note -> prependHyphen.apply(note) + Pitch.toStr(note.pitch(), true) + showRange.apply(note))
-                .collect(Collectors.joining(", "));
-
-        String rh = RH.notes.stream()
-                .map(note -> prependHyphen.apply(note) + Pitch.toStr(note.pitch(), true) + showRange.apply(note))
-                .collect(Collectors.joining(", "));
-
-                if (lh.isEmpty()) { lh = "   "; }
-                if (m.isEmpty()) { m = "   "; }
-                if (rh.isEmpty()) { rh = "   "; }
-
-                return String.format("%s => LH: %s  ->  M: %s  ->  RH: %s",
-                                             this.range, lh, m, rh
-                                     );
-            }
-
-*/

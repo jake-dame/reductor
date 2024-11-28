@@ -1,9 +1,8 @@
 package reductor;
 
-import reductor.dataconverter.Conversion;
+import reductor.dataconverter.ConversionFromMidi;
 import reductor.dataconverter.UnpairedNoteException;
 import reductor.midi.MidiFile;
-import reductor.midi.NoteOnEvent;
 import reductor.piece.*;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -27,16 +26,15 @@ public class DevelopmentHelper {
         //System.out.println();
         ////dev
 
-        Piece.TPQ = midiFile.getResolution();
-        System.err.println("Res: " + Piece.TPQ + " for " + midiFile.getName());
+        Piece.TPQ = midiFile.getResolution(); // jic
 
-        ArrayList<Note> notes = Conversion.toNotes(midiFile.getNoteOnEvents(),
+        ArrayList<Note> notes = ConversionFromMidi.toNotes(midiFile.getNoteOnEvents(),
                 midiFile.getNoteOffEvents());
-        ArrayList<TimeSignature> timeSigs = Conversion.assignRanges(midiFile.getTimeSignatureEvents(),
+        ArrayList<TimeSignature> timeSigs = ConversionFromMidi.assignRanges(midiFile.getTimeSignatureEvents(),
                 midiFile.getSequenceLengthInTicks(), TimeSignature.class);
-        ArrayList<KeySignature> keySigs = Conversion.assignRanges(midiFile.getKeySignatureEvents(),
+        ArrayList<KeySignature> keySigs = ConversionFromMidi.assignRanges(midiFile.getKeySignatureEvents(),
                 midiFile.getSequenceLengthInTicks(), KeySignature.class);
-        ArrayList<Tempo> tempos = Conversion.assignRanges(midiFile.getSetTempoEvents(),
+        ArrayList<Tempo> tempos = ConversionFromMidi.assignRanges(midiFile.getSetTempoEvents(),
                 midiFile.getSequenceLengthInTicks(), Tempo.class);
 
         return new Piece(notes, timeSigs, keySigs, tempos, midiFile.getResolution(), midiFile.getName());

@@ -190,8 +190,10 @@ public class RangeTest {
                         |       |   |   |       |
                         0      160 240 320     480
 
-
             So, columns should be: [0, 160], [160, 240], [240, 320], [320, 480]
+
+            fromStartTicks(), when given a Set of start ticks, as well as a tick to end at (i.e. 480),
+             can create these ranges (half-open)
          */
 
         Range quarter = new Range(0, 480-1);

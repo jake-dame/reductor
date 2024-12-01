@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="reductor.dataconverter.QuantizeTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2024-11-30T22:46:24" hostname="u0858882s-MacBook-Pro.local" time="0.016">
+  <properties/>
+  <testcase name="test1()" classname="reductor.dataconverter.QuantizeTest" time="0.01"/>
+  <testcase name="test2()" classname="reductor.dataconverter.QuantizeTest" time="0.0"/>
+  <testcase name="test3()" classname="reductor.dataconverter.QuantizeTest" time="0.0"/>
+  <testcase name="test4()" classname="reductor.dataconverter.QuantizeTest" time="0.0"/>
+  <testcase name="test5()" classname="reductor.dataconverter.QuantizeTest" time="0.0"/>
+  <testcase name="test6()" classname="reductor.dataconverter.QuantizeTest" time="0.0"/>
+  <testcase name="test7()" classname="reductor.dataconverter.QuantizeTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

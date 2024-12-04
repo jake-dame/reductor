@@ -102,12 +102,12 @@ public class KeySignature implements Ranged {
                 : reverseMapMinor.get(str);
     }
 
-    public int getTonic() {
+    public static int getTonic(KeySignature keySignature) {
 
         // This is weird but it works with what I have
-        String keyString = this.isMajor()
-                ? mapMajor.get(this.accidentals)
-                : mapMinor.get(this.accidentals);
+        String keyString = keySignature.isMajor()
+                ? mapMajor.get(keySignature.getAccidentals())
+                : mapMinor.get(keySignature.getAccidentals());
 
         return Pitch.toInt(keyString + "-1");
     }
@@ -120,7 +120,7 @@ public class KeySignature implements Ranged {
 
     // C/a is grouped with sharp-spelled keys (for now)
     boolean isSharp() { return this.accidentals >= 0; }
-    boolean isFlat() { return !isSharp(); }
+    public boolean isFlat() { return !isSharp(); }
 
     @Override
     public Range getRange() { return new Range(this.range); }

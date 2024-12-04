@@ -150,8 +150,8 @@ public class Pitch {
         validatePitch(pitch);
 
         // e.g. 60 (middle C, or C4)
-        int register = -1;
-        while (0 <= pitch) {
+        int register = -2;
+        while (0 <= pitch) { // TODO: double-check
             pitch -= 12; // 60, 48, 36, 24, 12, 0, break
             register++;  // -1,  0,  1,  2,  3, 4, n/a
         }

@@ -1,4 +1,4 @@
-package reductor.dataconverter;
+package reductor.dataconverter.midi;
 
 import reductor.midi.Event;
 import reductor.midi.EventType;

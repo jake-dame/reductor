@@ -1,6 +1,6 @@
 package reductor.midi;
 
-import reductor.dataconverter.ConversionFromMidi;
+import reductor.dataconverter.midi.ConversionFromMidi;
 
 import javax.sound.midi.MidiEvent;
 

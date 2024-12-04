@@ -15,7 +15,7 @@ public class Chord implements Noted, Ranged {
 
     private final Deque<Note> notes;
 
-    private Chord(ArrayList<Note> notes, Range range) {
+    public Chord(ArrayList<Note> notes, Range range) {
         this.notes = new ArrayDeque<>(notes);
         this.range = new Range(range);
         this.rhythm = Rhythm.fromRange(this.range);
@@ -234,6 +234,27 @@ public class Chord implements Noted, Ranged {
     @Override
     public String toString() {
         return this.range + " => " + this.notes;
+    }
+
+
+    ////// dev
+
+    public void add(Note note) {
+        note = note.setRange( new Range(this.range) );
+        this.notes.add(note);
+    }
+
+    public static void main(String[] args) {
+
+        Chord chord = Chord.builder()
+                .start(0)
+                .stop(479)
+                .add(60, 64, 67)
+                .build();
+
+        chord.add( new Note("Bb4"));
+        System.out.println();
+
     }
 
 

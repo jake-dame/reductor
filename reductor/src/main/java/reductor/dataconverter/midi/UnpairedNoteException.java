@@ -1,4 +1,4 @@
-package reductor.dataconverter;
+package reductor.dataconverter.midi;
 
 
 public class UnpairedNoteException extends Exception {

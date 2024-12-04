@@ -3,6 +3,8 @@ package reductor.dataconverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reductor.Application;
+import reductor.dataconverter.midi.ConversionFromMidi;
+import reductor.dataconverter.midi.UnpairedNoteException;
 import reductor.midi.NoteOffEvent;
 import reductor.midi.NoteOnEvent;
 import reductor.piece.Piece;

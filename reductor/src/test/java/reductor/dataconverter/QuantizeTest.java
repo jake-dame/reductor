@@ -7,8 +7,7 @@ import reductor.piece.Rhy;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static reductor.dataconverter.Quantize.quantize;
-import static reductor.piece.Rhy.*;
+import static reductor.dataconverter.midi.Quantize.quantize;
 
 
 class QuantizeTest {

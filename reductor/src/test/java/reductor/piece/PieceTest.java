@@ -2,7 +2,7 @@ package reductor.piece;
 
 import org.junit.jupiter.api.Test;
 import reductor.Application;
-import reductor.dataconverter.UnpairedNoteException;
+import reductor.dataconverter.midi.UnpairedNoteException;
 
 import javax.sound.midi.InvalidMidiDataException;
 import java.util.ArrayList;

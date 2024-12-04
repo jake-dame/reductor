@@ -1,7 +1,5 @@
 package reductor.piece;
 
-import reductor.dataconverter.Quantize;
-
 import java.util.*;
 
 // TODO: best practice for default constructor?? null? 0,1?
@@ -42,7 +40,7 @@ public class Range implements Ranged, Comparable<Range> {
 
     /// Default constructor
     public Range() {
-        this(0, 480);
+        this(0, 479);
     }
 
     Range(long low, long high, boolean hi) {

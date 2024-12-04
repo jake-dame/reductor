@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PitchTest {
 
-
     @Test
     void toInt() {
         // bottom edge (switch/case)
@@ -66,6 +65,44 @@ class PitchTest {
         assertThrows(RuntimeException.class, () -> new Note("g$$"));
         assertThrows(RuntimeException.class, () -> new Note("g$4"));
         assertThrows(RuntimeException.class, () -> new Note("g$$4"));
+    }
+
+    @Test
+    void getRegister() {
+
+        assertEquals(-1, Pitch.getRegister(0));
+        assertEquals(-1, Pitch.getRegister(11));
+
+        assertEquals(0, Pitch.getRegister(12));
+        assertEquals(0, Pitch.getRegister(23));
+
+        assertEquals(1, Pitch.getRegister(24));
+        assertEquals(1, Pitch.getRegister(35));
+
+        assertEquals(2, Pitch.getRegister(36));
+        assertEquals(2, Pitch.getRegister(47));
+
+        assertEquals(3, Pitch.getRegister(48));
+        assertEquals(3, Pitch.getRegister(59));
+
+        assertEquals(4, Pitch.getRegister(60));
+        assertEquals(4, Pitch.getRegister(71));
+
+        assertEquals(5, Pitch.getRegister(72));
+        assertEquals(5, Pitch.getRegister(83));
+
+        assertEquals(6, Pitch.getRegister(84));
+        assertEquals(6, Pitch.getRegister(95));
+
+        assertEquals(7, Pitch.getRegister(96));
+        assertEquals(7, Pitch.getRegister(107));
+
+        assertEquals(8, Pitch.getRegister(108));
+        assertEquals(8, Pitch.getRegister(119));
+
+        assertEquals(9, Pitch.getRegister(120));
+        assertEquals(9, Pitch.getRegister(127));
+
     }
 
 }

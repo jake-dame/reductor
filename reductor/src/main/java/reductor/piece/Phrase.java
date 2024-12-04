@@ -231,8 +231,6 @@ public class Phrase<T extends Ranged>  {
 
     //public static void main(String[] args) {
     //
-    //    Context.createContext(480, Long.MAX_VALUE);
-    //
     //    ArrayList<Ranged> list = Phrase.builder(0)
     //            .timeSignature(4,4)
     //            .keySignature("e")

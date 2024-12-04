@@ -2,20 +2,6 @@ package reductor.piece;
 
 import static reductor.piece.RhythmBases.*;
 
-class RhythmBases {
-
-    static final double tpq = 480.0;
-
-    static final double WHOLE = tpq * 4;
-    static final double HALF = tpq * 2;
-    static final double QUARTER = tpq * 1;
-    static final double EIGHTH = tpq / 2;
-    static final double SIXTEENTH = tpq / 4;
-    static final double THIRTY_SECOND = tpq / 8;
-    static final double SIXTY_FOURTH = tpq / 16;
-    static final double ONE_TWENTY_EIGHTH = tpq / 32;
-
-}
 
 public enum Rhy {
 

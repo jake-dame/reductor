@@ -180,7 +180,7 @@
 //
 //}
 
-package reductor.dataconverter;
+package reductor.dataconverter.midi;
 
 import reductor.piece.Range;
 import reductor.piece.Rhy;

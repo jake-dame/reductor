@@ -17,7 +17,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
     }
 
 
-    Note(int pitch, Range range) {
+    public Note(int pitch, Range range) {
         this.range = new Range(range);
         this.rhythm = Rhythm.fromRange(this.range);
         this.pitch = Pitch.validatePitch(pitch);
@@ -25,7 +25,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
         this.isHeld = false;
         this.hand = NONE;
     }
-    Note(String pitch) {
+    public Note(String pitch) {
         this(Pitch.toInt(pitch), new Range());
     }
 
@@ -40,7 +40,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
 
     private final boolean isHeld;
 
-    private final Hand hand;
+    private Hand hand;
 
     /**
      * Primary constructor. Use a call to {@link Note#builder} for easier Note construction.
@@ -76,7 +76,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
 
 
     /**
-     * Returns a fresh instance of a {@link NoteBuilder}. Builder methods can be chained onto it.
+     * Returns a fresh instance of a {@link NoteBuilder}. ScorePartwiseFactory methods can be chained onto it.
      */
     public static NoteBuilder builder() { return new NoteBuilder(); }
 
@@ -293,6 +293,7 @@ public class Note implements Ranged, Noted, Comparable<Note> {
 
     public String getInstrument() { return this.instrument; }
 
+    public Hand hand() { return this.hand; }
 
     /* =========
        OVERRIDES
@@ -334,8 +335,8 @@ public class Note implements Ranged, Noted, Comparable<Note> {
                 ? "-"+ Pitch.toStr(this.pitch, true).toLowerCase()
                 : Pitch.toStr(this.pitch, true);
 
-        //return this.range + " " + pitchStr;
-        return pitchStr;
+        return pitchStr + " " + this.range;
+        //return pitchStr;
     }
 
 
@@ -353,5 +354,13 @@ public class Note implements Ranged, Noted, Comparable<Note> {
         return out;
     }
 
+    ///////// dev
+
+    public Rhy getRhy() {
+        return Rhy.type(this.range);
+    }
+
+    public Hand getHand() { return this.hand; }
+    public void setHand(Hand val) { this.hand = val; }
 
 }

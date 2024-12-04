@@ -9,7 +9,6 @@ import java.util.Set;
 public class Piece implements Ranged, Noted {
 
     public static int TPQ = 480;
-    public static String name = "";
 
     /// This Piece's range (start and end ticks)
     private final Range range;
@@ -21,12 +20,13 @@ public class Piece implements Ranged, Noted {
     final IntervalTree<Column> columns;
 
     final IntervalTree<Measure> measures;
-    final MeasuresAccessor ma; // TODO not this
+    public final MeasuresAccessor ma; // TODO not this
 
     private final IntervalTree<TimeSignature> timeSigs;
     private final IntervalTree<KeySignature> keySigs;
     private final IntervalTree<Tempo> tempos;
 
+    private final String name;
 
     public Piece(
             ArrayList<Note> notes,
@@ -38,7 +38,7 @@ public class Piece implements Ranged, Noted {
     ) {
 
         Piece.TPQ = ticksPerQuarter;
-        Piece.name = name;
+        this.name = name;
 
         this.notes = new IntervalTree<>(notes);
 
@@ -98,7 +98,8 @@ public class Piece implements Ranged, Noted {
                     matches,
                     range,
                     getTimeSigAt(range.low()),
-                    getKeySigAt(range.low()))
+                    getKeySigAt(range.low()),
+                    getTempoAt(range.low()))
             );
         }
 
@@ -162,6 +163,8 @@ public class Piece implements Ranged, Noted {
     public ArrayList<TimeSignature> getTimeSignatures() { return new ArrayList<>(this.timeSigs.toList()); }
     public ArrayList<KeySignature> getKeySignatures() { return new ArrayList<>(this.keySigs.toList()); }
     public ArrayList<Tempo> getTempos() { return new ArrayList<>(this.tempos.toList()); }
+    public String getName() { return this.name; }
+    public long getTPQ() { return Piece.TPQ; }
 
 
     /* =========
@@ -300,7 +303,8 @@ public class Piece implements Ranged, Noted {
 
         public ArrayList<Measure> getFirstNMeasures(int n) {
             if (getNumMeasures() < n) { n = getNumMeasures(); } // Clamp.
-            return getMeasures(0, n);
+            if (n == 1) { return new ArrayList<>( List.of(getFirstMeasure()) ); }
+            return getMeasures(1, n);
         }
 
         public ArrayList<Measure> getLastNMeasures(int n) {
@@ -308,6 +312,40 @@ public class Piece implements Ranged, Noted {
             return getMeasures(this.getNumMeasures() - n, this.getNumMeasures());
         }
 
+
+    }
+
+
+
+    // DEV
+
+    public static Piece fromPhrase(ArrayList<Ranged> phrase, int TPQ, String name) {
+
+        ArrayList<Note> notes = new ArrayList<>();
+        ArrayList<TimeSignature> timeSignatures = new ArrayList<>();
+        ArrayList<KeySignature> keySignatures  = new ArrayList<>();
+        ArrayList<Tempo> tempos = new ArrayList<>();
+
+        for (Ranged elem : phrase) {
+
+            switch(elem) {
+                case TimeSignature ts -> timeSignatures.add(ts);
+                case KeySignature ks -> keySignatures.add(ks);
+                case Tempo t -> tempos.add(t);
+                case Note n -> notes.add(n);
+                default -> {}
+            }
+
+        }
+
+        return new Piece(
+                notes,
+                timeSignatures,
+                keySignatures,
+                tempos,
+                TPQ,
+                name
+        );
 
     }
 

@@ -1,8 +1,13 @@
 package reductor.util;
 
+import org.audiveris.proxymusic.ScorePartwise;
+import org.audiveris.proxymusic.util.Marshalling;
+
 import javax.sound.midi.*;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import static reductor.Files.MIDI_FILES_OUT_DIR;
 
@@ -123,6 +128,19 @@ public class Util {
         }
 
         return outFile;
+    }
+
+    public static File write(ScorePartwise scorePartwise) throws IOException, Marshalling.MarshallingException {
+
+        String outName = scorePartwise.getWork().getWorkTitle();
+        File xmlFile = new File(MIDI_FILES_OUT_DIR + outName + ".musicxml");
+        OutputStream stream = new FileOutputStream(xmlFile);
+
+        Marshalling.marshal(scorePartwise, stream, true, 2);
+
+        stream.close();
+
+        return xmlFile;
     }
 
 

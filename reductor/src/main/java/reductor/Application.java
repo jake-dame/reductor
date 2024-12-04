@@ -1,13 +1,12 @@
 package reductor;
 
-import reductor.dataconverter.ConversionFromMidi;
-import reductor.dataconverter.UnpairedNoteException;
+import reductor.dataconverter.midi.ConversionFromMidi;
+import reductor.dataconverter.midi.UnpairedNoteException;
 import reductor.midi.MidiFile;
 import reductor.piece.*;
 
 import javax.sound.midi.InvalidMidiDataException;
 import java.util.ArrayList;
-import java.util.logging.Logger;
 
 
 public class Application {

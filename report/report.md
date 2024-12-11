@@ -568,7 +568,7 @@ I am going to do a real fly-over view of this stuff.
 
 The Piece classes can be roughly categorized as follows (this is not everything, and some of these are not fully implemented, but are placeholders of sorts at the current moment):
 + "Element" classes: `Note`, `Chord`, `Phrase`
-+ "Sub-component`" classes: `TimeSignature`, `KeySignature`, `Tempo`, `Rhythm`
++ "Sub-component" classes: `TimeSignature`, `KeySignature`, `Tempo`, `Rhythm`
 + Container classes: `Measure`, `Column`, `Box`, 
 + Heavy-lifting utility classes: `IntervalTree`, `Range`, `Pitch`
 + "Plug-in" utility classes (algorithms): `HandSplittingFunctions`, `ReductionFunctions`
@@ -632,11 +632,11 @@ Measures have to be created from scratch when working with MIDI data, since ther
 
 #### API
 
-I briefly [mentioned](#time-signature-events) some of the issues with pickup measures. Treating a collection of `Measure`s as a simple list does not suffice. Measure 0 should only exist if there is a pickup measure.
+I briefly [mentioned](#time-signature-events) some of the issues with pickup measures. Treating a collection of Measures as a simple list does not suffice. Measure 0 should only exist if there is a pickup measure.
 
 Secondly, there is the issue of measures being a 1-indexed sort of thing.
 
-So access to a collection of `Measure`s has to be controlled in some way. 
+So access to a collection of Measures has to be controlled in some way. 
 
 If you were a developer using the API, what would you expect these method calls to return... :
 
@@ -748,7 +748,7 @@ Of all the data structures, I will only go into depth on Columns, but even then,
 
 My `Column` class has the most documentation of any of my classes by far, and explains what "pure" and "semi-pure" Columns are, how it assigns "holdovers", splits hands, etc. 
 
-It makes use of a `Consumer<Column>` type that will (in the future, hopefully) allow `Box`es or `Measure`s or other actors to re-split hands based on wider contextual information.
+It makes use of a `Consumer<Column>` type that will (in the future, hopefully) allow Boxes or Measures or other actors to re-split hands based on wider contextual information.
 
 A Column represents the **smallest unit of musical change, regardless of where it happens in the staff.** 
 

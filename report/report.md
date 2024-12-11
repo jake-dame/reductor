@@ -1,18 +1,8 @@
 # Capstone: Final Report
 
-I re-wrote my report to:
-1. Include more diagrams as per your recommendation
-2. Re-done to consider audience more specifically (less background).
-3. Be more like a summary of a journal of the process of building this program.
+The internal representation stuff starts [here](#reductorpiece).
 
-I obviously don't go into every little thing, but I've tried to highlight some major decision points/code/etc.
-
-I have eschewed most* background information (unless it helps me to make a point, or describe reasoning/decisions). 
-+ *I included a lot about MusicXML, mostly to draw comparisons with how it is different than MIDI, but also to present the challenges that came with converting my internal representation to it. Maybe you will find it interesting, maybe not.
-
-I would not blame you for just skipping down to [the description of the piece package](#reductorpiece), that's where the most specific and succinct information relating to stuff I came up with is. 
-
-But you should definitely check out [Appendix B](#appendix-b-cool-reductions) for some cool YouTube/Spotify links if you are interested in any real-world transcriptions/reductions. I think they're pretty cool.
+If anything, you should definitely check out [Appendix B](#appendix-b-cool-reductions) for some cool YouTube/Spotify links. I think they're pretty cool.
 
 ## MIDI
 
@@ -33,7 +23,7 @@ Furthermore, MIDI messages fall into 3 categories:
 + Sysex messages: not even sure. But real-time performance stuff
   + Never stored in SMFs, always sent across the wire
 
-![midi messages venn](report/images/midi_messages.png)
+![midi messages venn](images/midi_messages.png)
 
 ### Division Types
 
@@ -57,7 +47,7 @@ Ticks, of course, are just an abstraction from the microsecond. Each tick has an
 
 The 120-960 range seems to be the sweet spot (they are what I have seen the most). 480 is the conventional default resolution, and it translates to exactly 500,000 microseconds per quarter note. 480 is not amazingly fine-grained, and not super coarse.
 
-![divison type flow](report/images/divisionType.png)
+![divison type flow](images/divisionType.png)
 
 ### Quantization
 
@@ -192,7 +182,7 @@ Some of the metadata the MIDI *does* include that can be helpful for notation:
 
 For instance, MIDI data can be parsed and used to display everything seen here in notation software:
 
-![midi vs musicxml](report/images/chopin_pickup.png)
+![midi vs musicxml](images/chopin_pickup.png)
 
 The thing is, however, that how much metadata a MIDI file includes usually correlates to whether it was "recorded" (by somebody playing a keyboard), or notated (somebody went in and manually made a score in notation software, and then the notation software exported a MIDI file based on the MusicXML data associated with the score). Even then, not all authors include various metadata.
 
@@ -274,7 +264,7 @@ But, if you play back a MusicXML-turned-MIDI file, it will sound much more robot
 
 So they each have their "what they do best" and their domains:
 
-![midi vs musicxml](report/images/midi_vs_musicxml.png)
+![midi vs musicxml](images/midi_vs_musicxml.png)
 
 I knew that at some point, this program would have to start dealing in MusicXML, since the whole point of the program is to produce scores, not recordings. Additionally, having exact control of which hand was notated on which staff (upper or lower) in a piano grand staff was paramount. The notation software I had experience with (MuseScore and GarageBand - which isn't notation software per se but includes most of the functionality needed to display MIDI as a score) used the most bare-bones approach to assigning hands: middle C and above notes go on the upper staff, and the rest go on the lower staff.
 
@@ -330,7 +320,7 @@ A lot of MusicXML stuff is pretty straightforward, except the placement of notes
 
 Consider the first measure of the C minor prelude of Chopin:
 
-![chopin c multi-voice](report/images/chopin_voices.png)
+![chopin c multi-voice](images/chopin_voices.png)
 
 You will notice that in the 3rd beat of the right hand, there are 2 independent voices: the quarter "base", and the moving line (in thirds) in the melody/soprano. 
 
@@ -340,7 +330,7 @@ If you think about this in terms of finger placement:
 
 This means, when including the left hand, we essentially have three "regions" of notes occurring at exactly the same time, but on disparate stems:
 
-![chopin c stems](report/images/chopin_stems.png)
+![chopin c stems](images/chopin_stems.png)
 
 In MusicXML, notes are placed sequentially. At first glance, this sounds like it is essentially the same as MIDI. TL;DR: it's not.
 
@@ -349,13 +339,13 @@ In MIDI, if I wanted to encode a C major triad in quarter notes with a resolutio
 
 And it would look like this:
 
-![midi C triad](report/images/midi_triad.png)
+![midi C triad](images/midi_triad.png)
 
 It is all sequential, and it is up to the sequencing software to take that "flat map" and put everybody into their corrals and send them off at the right time during playback.
 
 If you were to encode that triad in MusicXML *without* any of the MusicXML-specific workarounds, it would look like this:
 
-![bad musicxml sequence](report/images/musicxml_sequence.png)
+![bad musicxml sequence](images/musicxml_sequence.png)
 
 Where each note looked something like this:
 
@@ -394,7 +384,7 @@ Finally, the left hand in the piano Part is usually "reached" by first filling i
 
 So, to use a slightly simpler example than the Chopin:
 
-![note placement process](report/images/note_placement_process.png)
+![note placement process](images/note_placement_process.png)
 
 Now in English/pseudocode (Note: I already separated the lists of notes into RH/LH):
 
@@ -451,7 +441,7 @@ The whole internal representation of my program could probably be combed through
 
 reductor is split thusly:
 
-![package structure](report/images/package_structure.png)
+![package structure](images/package_structure.png)
 
 Additionally there is a reductor.util that handles file I/O stuff; playback using `javax.sound.midi` methods (easier than opening another application, as it was usually just confirm a file sounds correct in the first 3 seconds); opening with various applications using `ProcessBuilder`, and a class called `MidiDebugging` that just has a bunch of printing utility functions to look at midi bytes in various ways (was actually very helpful).
 
@@ -459,7 +449,7 @@ Additionally there is a reductor.util that handles file I/O stuff; playback usin
 
 The `Application` class was a late addition to the program. It may not be final, either. It was called `DevelopmentHelper` for a long time. It is just to coordinate package duties in one, single program flow. It takes a String filepath, and pops out either a MIDI or (eventually) MusicXML file. It isn't final or anything, but I include it here because it is a good descriptor of how the program is intended to flow as a whole, and show how the different packages are kept separate and interface with each other:
 
-![application class](report/images/application.png)
+![application class](images/application.png)
 
 ## reductor.midi
 
@@ -722,7 +712,7 @@ The idea hierarchically is that you have the Piece, which (theoretically) contai
 
 This is shown below, and the coloring corresponds to left (blue), middle (yellow), and right (red) hand clusters:
 
-![data structures](report/images/data_structures.png)
+![data structures](images/data_structures.png)
 
 Furthermore:
 
@@ -745,7 +735,7 @@ Even if Measures were never constructed (or were an on-demand thing), specialize
 
 And then Columns could take that information into account, as well.A sort of "indexing" (that is to say, locating using a determined set of "coordinates") scheme now exists. The following example illustrates this, with just the "middle" hand area selected:
 
-![indices](report/images/indices.png)
+![indices](images/indices.png)
 
 So, one could say:
 + "Get me the (middle/LH/RH) notes of beat `b` of Measure `m`.
@@ -785,7 +775,7 @@ It is easier to think in terms of a number line here:
 
 For instance:
 
-![columns simple](report/images/columns_simple.png)
+![columns simple](images/columns_simple.png)
 
 + We do NOT want a Column for each Note (we do NOT want 13 Columns)
 + We do NOT want 5 Columns
@@ -794,17 +784,17 @@ For instance:
 
 And here is what that measure looks like in terms of the number line:
 
-![number line](report/images/number_line.png)
+![number line](images/number_line.png)
 
 Slightly more complex (syncopation):
 
-![columns syncopation](report/images/columns_syncopation.png)
+![columns syncopation](images/columns_syncopation.png)
 
 + Should have 4 Columns
 + If you pat this on the table, and count hands-together as once, you will notice that you pat 4 times. This is a perfect indicator of Column creation.
 
 And 1 more visualization, with a different example (this is some documentation from a unit test, but I like how it is visualized):
-![columns syncopation](report/images/range_test.png)
+![columns syncopation](images/range_test.png)
 
 Once a Column is filled with notes, it can decided if it is "pure" (no notes extend outside of it, either forward *or* back), and assign the `isHeld` field of each Note accordingly; apply a hand-splitting (the default, for now) function during construction to separate the notes into Left, Middle, and Right hand Columns; and do some other things, like calculate median pitch, mean pitch, split point (halfway between the thumbs), etc.
 + Also has leftThumb and rightThumb indices if I decide to do away with the member Columns, since those present a recursive construction issue. They do, however, behave exactly as I need them to for now, and it's nice to see in debugging exactly what is in a sub-Column at any given time.
@@ -853,7 +843,7 @@ Thus, the `Phrase` and `PhraseBuilder` was created. It combines the `NoteBuilder
 
 If you output the below (with the appropriate util call for writing midi files) and open it in MuseScore, it will look *exactly* like this, which is also the first measure of the e minor Chopin prelude:
 
-![noteBuilder](report/images/phrase_builder.png)
+![noteBuilder](images/phrase_builder.png)
 
 Seems the .mark() and goToMark() stuff (fill in right hand; then go back and fill in left hand) is a commonly-arrived-at conclusion, because it's basically how MusicXML handles note appendage; the `PhraseBuilder` actually helped me understand the MusicXML paradigm a lot more quickly. With humility, this was a confidence boost in that I came up with something even remotely resembling an actual approach to doing `x` in a real-world application.
 

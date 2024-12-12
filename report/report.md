@@ -6,83 +6,140 @@ If anything, you should definitely check out [Appendix B](#appendix-b-cool-reduc
 
 ## MIDI
 
-My program chopped off two large sections from the whole of MIDI protocol to work with:
-+ I exclude any real-time (a.k.a. Sysex message) stuff
-+ I do not support SMPTE timing
-
 ### Protocols
 
-As a quick overview, the MIDI standard has two top-level protocols:
-+ SMF (Standard MIDI File) protocol: how performance/MIDI data is stored in a static file
-+ Wire protocol: the same, but how it is sent over the wire and to be interpreted by MIDI-capable devices/instruments
+The MIDI standard is divided into two protocols.
 
-Furthermore, MIDI messages fall into 3 categories:
-+ Channel (also called voice) messages: note stuff and how stuff is to sound, basically
-+ Meta messages: metadata stuff (time signatures, key signatures, tempo, track name, etc.)
-  + Only stored in SMFs, *never* sent across the wire (because it has no effect/nothing to do with how stuff sounds)
-+ Sysex messages: not even sure. But real-time performance stuff
-  + Never stored in SMFs, always sent across the wire
+**SMF (Standard MIDI File) protocol**: how performance data is organized, arranged, and stored in a static file
++ Includes a **header** with very important metadata; after that is any number of MIDI events
++ Most MIDI files further arrange their non-header events into **tracks**. This is simply an abstraction/grouping that is helpful in various contexts (e.g. GUIs), but has no real control over anything (I hardly did anything with them in my program except get Strings pertaining to instrument names, which are only reliable/present in half the MIDI files I found anyway)
+  + A single-track could have information for 16 different channels (the actually important part distinguishing and grouping different instruments or parts)
+  + Conversely, an SMF with information pertaining to 1 channel could spread that data over 16 tracks and it wouldn't make a bit of difference on what comes out of any speakers
 
-![midi messages venn](images/midi_messages.png)
+**Wire protocol**: how execution data is to be created and sent over the wire by MIDI-capable instruments, devices, and computers.
+
+My program deals exclusively in the SMF domain.
+
+### Events
+
+The fundamental unit of MIDI data is the MIDI **event**, which consists of:
++ A timestamp of sorts known as a **tick** (a single integer)
+  + These are *relative*, and also known as delta times
+  + However, the `javax.sound.midi` library does the developer a huge favor by converting all the ticks to absolute ones
++ A message (the actual data), which comes in a wide variety
+
+MIDI messages fall into 3 categories:
++ **Channel** (also called **voice**) **messages**: note and controller stuff (the actual *sound* part)
++ **Meta messages**: metadata stuff (time signatures, key signatures, tempo, track name, etc.)
++ **Sysex messages**: real-time messages concerning the control of devices/instruments (akin to keyboard/mouse events, except with contorller sliders, pedals, etc.)
+
+Meta messages have nothing to with how data sounds in real-time, so it is never sent across the wire. Conversely, sysex messages have nothing to do with a static representation of the data, as they are real-time messages, so they are never stored in an SMF.
+
+<!-- ![midi messages venn](images/midi_messages.png) -->
+<div align="center">
+    <img src="images/midi_messages.png" alt="midi messages venn" width="75%" height="75%">
+</div>
+
 
 ### Division Types
 
-Finally, in regards to my program, I decided not to support SMPTE timing on two painstakingly and carefully considered criteria:
-+ It's really, really rare, especially for my use cases (amateurs notating, deriving, and posting MIDI files)
+The **division type** is very important and dictates how an associated value, the **resolution**, is to be interpreted by sequencing software. There are two:
++ **Pulses-Per-Quarter (PPQ)** or Ticks-Per-Quarter (TPQ) or Ticks-Per-Quarter-Note (TPQN) **timing**
+  + If the division type is PPQ, the resolution value defines how many ticks constitute a quarter note
+  + I tend towards ticks-per-quarter, as the word "pulse" may make sense in terms of MIDI beat clock stuff, but is slightly confusing in a normal music context, where "pulse" usually refers to the tempo or meter, and not any kind of subdivisions or a rhythm
++ **Society of Motion Picture and Television Engineers (SMPTE) timing**
+  + If the division type is SMPTE, the resolution value defines how many divisions per SMPTE frame (did not delve into this)
+
+<!-- ![divison type flow](images/divisionType.png) -->
+<div align="center">
+    <img src="images/divisionType.png" alt="divison type flow" width="40%" height="40%">
+</div>
+
+Regarding my program, I decided not to support SMPTE timing on two painstakingly and carefully considered criteria:
++ It's really rare, especially for my use cases (amateur musicians notating, deriving, and posting MIDI files)
 + It's hard
 
-(I have also seen PPQ (Pulses-per-Quarter) referred to as ticks-per-quarter (TPQ) or ticks-per-quarter-note (TPQN). I tend towards TPQ, as "pulses" may make sense in terms of MIDI beat clock stuff, but is really a misnomer from normal musician POV.)
+### Resolution
 
-MIDI **resolution** (in the context of PPQ division type) essentially defines the duration of a quarter note, in ticks. 
+The resolution is extremely important as it essentially defines every note duration for an entire MIDI file.
 
-This has implications for how much you can subdivide a quarter note. For example, a resolution of 24 means that the lowest note value you can represent before resorting to fractional ticks (which are not even supported in MIDI -- they will always be rounded, depending on the sequencing software) is a 16th note:
+Different MIDI files have different resolutions, but the conventional default is 480, meaning *a quarter note lasts for 480 ticks*. You can then derive every other rhythm value from that number, meaning if you get a 240, it's an 8th note; if you get a 960, its a half note; etc.
++ The **tick** is just an abstraction of the microsecond. That is to say, each tick has an exact conversion to microseconds. You could have a resolution of 500,000, but it would be a nightmare to handle for anybody working with the data, especially for long pieces. There's just no need to have that much wiggle room between rhythm values. The other end of the spectrum, however, is too low of resolutions. Less freedom means more robotic and rigid-sounding playback. So, in general, the higher the resolution, the more expressive and subtle timing differences (in a recording of a performance or in manipulation in a DAW) can be represented. 
++ A resolution of 480 translates exactly to 500,000 microseconds per quarter note.
 
-  24 ticks == quarter note
-  12 ticks == 8th note
-  6 ticks == 16th note
-  3 ticks == 32nd note
-  1.5 ticks == rounds down to 1, usually == ?
+There are some additional considerations.
 
-Ticks, of course, are just an abstraction from the microsecond. Each tick has an exact conversion to microseconds. You could have a resolution of 500,000 but it would be a nightmare for audio engineers or developers and probably sequencing software to have to deal with, especially for long pieces. You may even start getting into overflow issues, depending on whichever numerical type the software uses. The higher the resolution, however, the more expressive and subtle timing differences (in a recording of a performance or in manipulation in a DAW) can be represented. Most of the time, small tick differences are going to be imperceptible to the human ear and the bigger problem is **time drift** (accumulated rounding corrections or poor quantization leading to actual inaccuracies in note values or timing).
+First, the resolution sets a lower bound of sorts on the smallest rhythm you can have before resorting to fractional ticks. I will illustrate with scaled-down numbers:
 
-The 120-960 range seems to be the sweet spot (they are what I have seen the most). 480 is the conventional default resolution, and it translates to exactly 500,000 microseconds per quarter note. 480 is not amazingly fine-grained, and not super coarse.
+    24 ticks == quarter note
+    12 ticks == 8th note
+    6 ticks == 16th note
+    3 ticks == 32nd note
+    1.5 ticks == ?
 
-![divison type flow](images/divisionType.png)
+The thing is, there *are* no fractional ticks in MIDI. The decision to round up/down is left up to notation or sequencing software.
+
+Now, we are talking about differences that would be imperceptible to the human ear. The bigger problem is how those small rounding corrections accumulate over time, leading to something called **time drift**. In the above example, the effect is greatly augmented due to the scale, but it would only take 3 rounding corrections to be off by an entire 32nd note! 
+
+TL;DR: the bare minimum resolution should at least make it so the smallest rhythm within a piece has a duration that can be represented as an integer.
+
+The 120-960 range seems to be the sweet spot (they are what I have seen the most). The default 480 is not *amazingly* fine-grained, and not super coarse.
+
+I have not seen anything higher than a 960, but I have seen a 48. It was a small Bach chorale where there were only two rhythms: quarters and 8ths.
 
 ### Quantization
 
-MIDI was designed, and is still best, for transmitting and storing exact details of a real-time performance, e.g.:
+MIDI was designed, and is still best, for transmitting and storing exact details of a real-time performance.
+
+For example:
 + The exact velocity (i.e. volume) of a key being pressed --> some integer between 0 and 127
 + The exact time a key was pressed --> some integer as a delta time from the last event
-+ The exact time a key was released --> "   "
++ The exact time a key was released --> some integer as a delta time from the last event
 
-It was never meant to translate perfectly to notation on a musical score. It is more concerned with accurate playback.
+If a quarter note is defined as 480 ticks, a performer will release a key *approximately* 480 ticks after they pressed it - say 478, 483, or some other close value.
 
-The last point is the reason quantization exists and is needed for notating (on a musical score) or visualizing (e.g. as rectangles/bars in some DAWs) MIDI files in any meaningful way.
+The problem: MIDI was never meant to translate perfectly to notation on a musical score. Part of the reason quantization in MIDI exists is to force imperfectly-executed performances (i.e. *every* human performance) into a cleaner grid. Another way to think about this is taking sloppily executed notes and notating what they *should have been*.
 
-Humans are not perfect, and do not play perfectly. If a quarter note is defined as 480 ticks, a performer will release a key *around* 480 ticks after they pressed it - say 478, 483, or some other close value.
+Say notation software gets a note whose length is 171 ticks:
++ We will define a quarter note as 480 ticks
++ The example note is close to 180 --> the exact length of a dotted 16th note
++ The example note is *also* close to 160 --> the exact length of a triplet 8th note
 
-This does not translate well to notation software, because there is no original source of truth indicating what the note was *supposed* to be.
+The is a relatively simple example. You may read it and think, "It is closer to 180 - clearly the performer was executing a dotted 16th" or "All you need to do is round to the nearest pre-defined rhythm value." I will speak more on this later in the implementation section below.
 
-For instance, say notation software gets a note whose length is 171. We will define a quarter note as 480 ticks:
-+ The example note is close to 180, which is the exact length of a dotted 16th note, a very common rhythm
-+ The example note is also close to 160, which is the exact length of a triplet 8th note, another very common rhythm
+It should be noted that this is mostly a notation issue. A tick difference of 9 is imperceptible to the ear, and, furthermore, context helps listening to playback a lot more (e.g. hearing groupings or sequences of notes.) (This is also somewhat dependent on the tempo and resolution).
 
-The is a somewhat simplified example, and it may be intuitive to say: "It is closer to 180 - clearly the performer was executing a dotted 16th".
+However, on paper, a dotted 16th and triplet 8th is a big difference in the way those two rhythms are usually used.
 
-It should be noted that, as mentioned in an earlier section, and somewhat dependent on the tempo and resolution, a difference of 10 ticks will be imperceptible to the human ear 99% of the time. However, on paper, a dotted 16th and triplet 8th is a *huge* difference rhythmically.
+A second issue regarding messy tick values: notation programs are free to implement start/stop ticks however they want. The MIDI standard does not specify any sort of rule, for obvious reasons - think legato, overlapping effects, etc. 
 
-Another huge issue is that notation programs are free to implement start/stop ticks however they want (MIDI standard does not specify any sort of convention, for obvious reasons - think legato, overlapping effects, etc.). My blood froze late in the process of writing this program when I started encountering MIDI files whose tick values perfectly overlapped (in:re preceding and current note), e.g.:
-+ File notated using Program A encodes all its notated notes as rhythm values with start/stops ON the grid (always)
-+ File notated using Program B encodes all its notated notes as rhythm values where only the start of each note is on the grid (and the off is -1 before the next note)
+My blood froze 3 weeks before the end of the semester when I started encountering MIDI files where the previous note's stop tick  perfectly overlapped the current note's start tick. MuseScore encodes its start/stop ticks by sending an OFF 1 tick before the next ON.
 
-This essentially broke my program, since all rhythmic ranges in my program are encoded as half-open (when considering a length 480 in [0,480]). In many of the range-constructing/deriving functionalities in various parts of the program, I was getting invalid interval exceptions for stuff like [480,480] or [481,480].
+Notation Program A encodes all its notes with start *and* stop ticks on the grid:
 
-In fact, it was the definition of a Range issue (and not perfect rhythms) that prompted the quantizing functionality at the last minute.
+    0 ON, 480 OFF
+          480 ON, 960 OFF
+                  960 ON, ... 
+
+Notation Program B encodes all its notes where only the start of each note is on the grid (and the off is -1 before the next note)
+
+    0 ON, 479 OFF
+          480 ON, 959 OFF
+                  960 ON, ... 
+
+Of course that 1-tick-length silence is 100% imperceptible to the human ear in most reasonable contexts.
+
+However, this essentially broke my program, since all rhythmic ranges in my program are encoded as half-open (relative to their full duration). In many of the range-constructing/deriving functionalities in various parts of the program, I was getting invalid interval exceptions for stuff like `[480,480]` or `[481,480]`.
+
+To summarize, it was the that last issue (the half-open vs. inclusive range issue) that prompted the quantizing functionality at the last minute.
 
 #### Workarounds
 
-I looked first for libraries that quantized. There were a couple options, but none of them looked easy enough to integrate with my program. In fact, the best matches ("I give you a range, you quantize it"), were not in Java, and with my time-crunch, I chose the lesser of two evils:
+First, I looked for libraries with quantization functionality. 
+
+There were a couple options, but none of them looked easy enough to integrate with my program. 
+
+In fact, the best matches ("I give you a range, you quantize it"), were not in Java, and with my time-crunch, I chose the lesser of two evils:
 + Learn (for the first time) how to write JNI stuff for a C++ quantization library
 + Implement my own (even if simplified and not the most robust)
 
@@ -92,19 +149,23 @@ I chose the latter.
 
 To implement this, you could go the route of having some map of determined rhythm values, and some heuristic/algorithmic approaches to determining acceptable threshold or MOE values when mapping incoming note lengths to what they "probably" are. 
 
-This work well most of the time. Professional grade notation software, however, has to be able to support (nearly) any type of rhythm the author can conjure. This means your quantization map needs to account for a quintuplet-dotted-64th note. 
+This works well most of the time. But good MIDI-handling software (let alone something like professional notation software) has to be able to support (nearly) any type of rhythm a user can conjure up. This means your quantization map may need to account for a quintuplet-dotted-64th note.
 
 The problem you run into is that a lot of the pre-determined note values start getting close enough in range that they either start to overlap, or screw up the MOE calculations. You could adjust the MOE to be logarithmic or something, so that it too adjusts based on the initial length of the note, but you can't fully escape the principle of: the more granular the rhythms you want to support (no matter how exotic are frequently seen in practice), the more your accuracy *can* suffer.
 
-Even in professional software, you can get a wacky MIDI file, and click quantize, even with various granularity options, and it will be almost equally as wacky after quantization.
+Even in professional software: you can get a wacky MIDI file, and click quantize (even with various granularity options), and it will result in an almost equally wacky quantization result.
 
-Furthermore, there is no way to tell if they performer simply executed a rhythm with a truncating or extending articulation (staccato or legato, respectively), which adds yet another "impossible-to-perfect" element to quantization implementation. (The *actual* lesson here is MIDI is never meant to be perfectly notated - a theme that will be visited several times in this report).
+Furthermore, there is no way to tell if the performer was simply executing a rhythm with a *truncating or extending articulation* (staccato or legato, respectively). This just adds yet another "impossible-to-perfect" element to quantization implementation. 
 
-My quantization function, which seems to work a lot of the time (although not vigorously tested as it was a late addition to the program), started out as around 300 lines of code. It originally intended to preserve the original resolution, but when I realized that even MuseScore (when outputting MIDI based on a notated score) basically just converts everything to a resolution of 480, I decided to just scale everything to 480 myself, and stop caring about the in-resolution. 
+(The *actual* lesson here is, again, that MIDI was never really meant to be notated - a theme that will be visited several times in this report).
 
-Uniform scaling did simplify things, and after several other realizations (that also had to do with unnecessary transformations - quantizing in the end is a pretty simple formula) the function diminished a lot in size.
+My quantization function, which seems to work for most of the basic rhythm values (although not vigorously tested as it was a late addition to the program), started out as around 300 lines of code, and intended to preserve the in- (original) resolution. 
 
-The code (omitted getter/setter, the Range class is actually immutable and doesn't actual have setters shown below; inclusive vs. exclusive correction) is as follows:
+When I realized that even MuseScore basically just converts every MIDI it exports to a resolution of 480, I decided to just scale everything to 480 myself, and stop caring about the in-resolution.
+
+That simplified a lot of the code, and, in the end, I ended up with one pretty small function. (I also did away with some unnecessary transformations. I discovered they were unnecessary with some intense and formal mathematical proofs, and definitely *NOT* by dumb luck during trial-and-error.)
+
+The code below is slightly changed from the actual code for illustration purposes (e.g. the Range class is actually immutable and doesn't have setters as shown below, but the concept is the same; some -1 corrections for half-open/inclusivity):
 
 ```java
 public static Range quantize(Range inRange, int inResolution) {
@@ -112,10 +173,9 @@ public static Range quantize(Range inRange, int inResolution) {
     /*
     Philosophically, this should be a double. In MIDI, it really won't make a difference 
     and will prevent some heartache and unnecessary coddling of data types and fractional 
-    amounts that get thrown away in the end anyway.
+    amounts that will get thrown away in the end, anyway.
     */
-    long scale = 480 / inResolution;  
-
+    long scale = 480 / inResolution;
     Range scaledRange = new Range(inRange.low * scale, inRange.high * scale);
 
     /*	
@@ -129,40 +189,43 @@ public static Range quantize(Range inRange, int inResolution) {
     Rhythm rhythm = Rhythm.fromRange(scaledRange);
 
     /*
-    This is the "simple", essential formula for finding what a rhythm should be when quantizing.
-    `rhythm.base` is a constant (and based in 480 resolution) and is one of: 
-        + whole, half, quarter, 8th, 16th, 32nd, 64th, 128th
+    This is the essential formula for finding what a rhythm should be when quantizing.
 
-    `rhythm.divisor` is if the rhythm is part of an irregular grouping (a triplet 8th would 
-    have divisor 3).
+    `rhythm.base` is a constant (based in 480 resolution) and is one of: 
+        + whole (1920), half (960), quarter (480)... 128th (15)
+
+    `rhythm.divisor` is if the rhythm grouping (a triplet 8th would have divisor 3; normal would be 1).
+    
     */
     double gridWindowSize = rhythm.base / rhythm.divisor;
 
-    /* Now we have a grid window that is the "perfect" or pre-determined duration for x rhythm */
+    /* Now we have a grid window that is the "perfect" duration for a given rhythm. We'll just start it at 0. */
     Range gridWindow = new Range(0, gridWindowSize);
     
     /*
-    "Ratchet" the grid window up to where it's supposed to be (`javax.sound.midi` ticks are absolute, not relative). 
+    "Ratchet" the grid window up to where it's supposed to be. 
     This (using an arbitrary tolerance) worked best when considering that you didn't know if you were catching the head-end of a poorly executed target note, or the tail-end of the previous note.
-    You want to find the one you are *supposed* to fully overlap
+    You want to find the one you are *supposed* to (near-fully) overlap.
     */
-    final long tolerance = 4;
-    while (gridWindow.overlappingRegion(range) < tolerance) {
+    final long TOLERANCE = 4;
+    while (gridWindow.overlappingRegion(range) < TOLERANCE) {
         scaledRange.shift(gridWindowSize);
     }
     
     /* To "snap": */
     long quantizedLow = gridWindow.low();
-    long quantizedLow = quantizedLow + rhythm.duration;
+    long quantizedHigh = quantizedLow + rhythm.duration;
     
     return new Range(quantizedLow, quantizedHigh);
 }
 ```
 
-In unit tests, I used a bunch of helpers to test things "en masse", and I used the logarithm thing I mentioned earlier.
+In unit tests, I used a bunch of helpers to test things en masse. I used the logarithm thing I mentioned earlier to create random offsets:
 + This is because the length of the rhythm and the MOE shouldn't have a linear relationship. Even with larger rhythm values like a quarter, you're not going to have someone (unless they've had one too many while performing at open-mic night) executing a quarter note with a 75 tick MOE. 
 
-I basically have an ArrayList I fill with +/- someOffset (calculated as log of rhythm value), and then use Math.Random to pull out one of the offsets. So a test range to be quantized corresponding to a perfect quarter note `[480,959]` would pop out something like `[478,960]`. 
+I basically have an ArrayList I fill with +/- `someOffset` (calculated as log of rhythm duration), and then use Math.Random to get me an index to pull out one of the offsets. 
+
+So, for a perfect quarter note (`[480,960]`), that helper might pop out something like `[478,964]`. 
 
 ### Notating MIDI
 
@@ -170,35 +233,36 @@ MusicXML (which I will go into later) is sort of a response to the shortcomings 
 
 MIDI was developed during a time when GUIs and displays could not accommodate advanced music notation. It was never intended to be something that stored/transmitted detailed notation information, but rather, was intended to be a protocol for digital instruments to communicate with each other, and computers.
 
-MusicXML was developed much later (early 2000's) by a W3C group, which is still in charge of its standard today, as early notation programs (like Finale) and GUIs that allowed plopping notes onto a staff with the mouse became doable.
+In the early 2000s, MusicXML was developed by a W3C subgroup (which is still in charge of its standard today) as early notation programs (like Finale) and GUIs that allowed plopping notes onto a staff with the mouse started coming out.
 + Fun fact: Finale, an industry standard for the last 20+ years announced it was ceasing production the first week of this project/semester. I used to use it all the time during my undergrad in the music technology lab.
 + Other prominent notation software includes Sibelius, Dorico (both pricey, professional-grade), and MuseScore (FOSS, and very good; purportedly the most widely-used in the world).
   + Still mad nobody from their team helped me with my forum post a month ago. Makes it impossible to open MuseScore from my program using `ProcessBuilder` *and* is a pain when opening associated files without instance of MuseScore already running.
 
-Some of the metadata the MIDI *does* include that can be helpful for notation:
+Some of the metadata that MIDI *does* include that can be helpful for notation:
 + Time signature events
 + Key signature events
 + Tempo events
 
-For instance, MIDI data can be parsed and used to display everything seen here in notation software:
+For instance, MIDI data can be parsed and used to display everything seen here:
 
-![midi vs musicxml](images/chopin_pickup.png)
+<!-- ![midi vs musicxml](images/chopin_pickup.png) -->
+<div align="center">
+    <img src="images/chopin_pickup.png" alt="midi vs musicxml" width="50%" height="50%">
+</div>
 
-The thing is, however, that how much metadata a MIDI file includes usually correlates to whether it was "recorded" (by somebody playing a keyboard), or notated (somebody went in and manually made a score in notation software, and then the notation software exported a MIDI file based on the MusicXML data associated with the score). Even then, not all authors include various metadata.
+The thing is, however, that *how much* metadata a MIDI file includes usually correlates to whether it was "recorded" (by somebody playing a keyboard) or notated (somebody went in and manually made a score in notation software and exported the MIDI). Even then, not all authors of notated scores meticulously notate all the metadata-related things like tempo. I have opened up MIDI files of "Symphony X in Bb minor" only to find there is no key signature data and the spelling of notes is wild.
 
 My program does not even attempt to parse files without time signature data, since it is crucial to the creation of Measure constructs.
 
 #### Time Signature Events
 
-There is no way to calculate *anything* regarding measures without time signature events. Thankfully, if the author of the MIDI file notated things accurately, time signature events will exist *and* be placed correctly within the score.
+There is no way to calculate *anything* regarding measures without time signature events. Thankfully, if the author of the MIDI file notated things accurately, time signature events will probably exist *and* be placed correctly within the score.
 
-This means that time signature events can be ranged (i.e. `[start tick, stop tick]`), and a note happening at `x` time can have measure-related contextual properties.
+If you have the time signature, and the value of a quarter note (which you have because you have the resolution), you can calculate measure size.
 
-If you have the time signature, and the value of a quarter note (i.e. the **resolution**), you can calculate measure size, which I have as a utility function in the `TimeSignature` class.
+It just involves getting a common denominator (i.e. the lower numeral of the time signature) of `4`, to correspond to quarter notes; then, you just multiply the number of quarter notes per measure (i.e. the upper numeral) to get the size of the measure in ticks:
 
-It takes the upper and lower numerals (a.k.a. numerator and denominator, apparently, although I had never heard that in my life before this so I don't think it's ever called that in most music circles) of the time signature, which can be extracted from MIDI data, and essentially just involves getting a "common denominator" of 4, i.e. quarter notes, and then multiplying the resolution (i.e. ticks-per-quarter) by the numerator, which would give you the size of the measure in ticks. 
-
-I took out all of the error-handling/assertions for simplicity:
+Like with the previous (and following) code examples, I took out non-recipe stuff (e.g. error-handling/assertions):
 
 ```java
 public static long calculateMeasureSize(int upperNumeral, int lowerNumeral) {
@@ -229,20 +293,20 @@ public static long calculateMeasureSize(int upperNumeral, int lowerNumeral) {
 }
 ```
 
-In the score image earlier, there is a pickup measure. I spent a long time writing an algorithm to "detect" the presence of a pickup measure:
+In the score image earlier, there is a pickup measure. I spent a long time writing an algorithm (turned out to be pointless) to "detect" the presence of a pickup measure:
 + Put all the time signature events into a stack; calculate and fill a container with measures; if the last measure created is shorter than the last time signature popped, it is probably a pickup
 + If the first note happens after a sizeable amount of rest, it probably occurs in a pickup measure
 
-Turns out a lot of my work was pointless, because notation software (generalizing to really mean MuseScore) will encode pickup measures as a discrete time signature, with an identical lower numeral but smaller upper numeral.
+Turns out notation software (generalizing to really mean MuseScore) will encode pickup measures as a discrete time signature, with an identical lower numeral but smaller upper numeral.
 + For example, the snippet displayed above outputs as *two* time signature events: 1 measure of 1/4, followed by a measure(s) in 4/4.
 
-I did not find this out until after the fact (I was completely done implementing and testing, and tried things out with an actual MuseScore file). I'm sure there is some sort of lesson to be learned here. Not sure what it is.
+I did not find this out until after the fact (I was completely done implementing and testing, and tried things out with an actual MuseScore file). I'm sure there is some sort of lesson to be learned here.
 
-Thankfully, the "near-full measure of rest with a pickup note" case was salvageable / still applicable, and is shown later in this report when discussing [Measures](#measures).
+Thankfully, the "near-full measure of rest with a pickup note" case was salvageable and still applicable, and is shown later when discussing [Measures](#measures).
 
 #### Key Signature Events
 
-Key signature events are pretty pointless in terms of my program, as far as aiding harmonic analysis (e.g. "what is the root of this chord", "what key area are we in at this measure") because even in music, key signatures don't indicate anything except (usually) the key area of the first and last measure (even then, though, there is a litany of counterexamples).
+Key signature events are pretty pointless in terms of my program, as far as aiding harmonic analysis goes (e.g. "What is the root of this chord?"; "What key area are we in in this measure?") because even in music, key signatures don't indicate anything except the possible key area of the first and last measure (even then, though, there are lots of counterexamples).
 
 It does make displaying written-out files nice, aids a *bit* in spelling pitches, and is helpful for the MusicXML stuff later.
 
@@ -250,116 +314,134 @@ It does make displaying written-out files nice, aids a *bit* in spelling pitches
 
 Tempo events are also kind of pointless in my program, except I handle and include them because it became really nice to control the playback speed of the MIDI files I outputted without having to put them into notation software and manually doing it.
 
-The thing with tempo events is that they need to be increased/decreased by a scale, rather than literally, because there may be many tempo events in a MIDI file. Depending on the notation software, tempo events may be used to sort of "frankenstein" together a ritardando, fermata, or any other time diminution/augmentation expression.
+The thing with tempo events is that they need to be increased/decreased by a scale, rather than literally, because there may be many tempo events in a MIDI file. 
 
-This could come in handy for reduction stuff ("how fast are things moving here, and will the hand have time to jump down"). However, the problem is their reliability - "Did the author include painstaking tempo directions? Incomplete tempo directions? etc.".
+Additionally, depending on the notation software, tempo events may be used to sort of "frankenstein" together a ritardando, fermata, or any other time diminution/augmentation expression.
+
+This could come in handy for reduction stuff ("How fast are things moving here, and will the hand have time to jump down?"). However, the larger problem is their reliability - the author may note have included tempo directions, or included incomplete tempo directions (e.g. no bpm markings).
 
 ## MusicXML
 
-Like explained above, MIDI really is not intended for storing/transmitting score details. It is for performance details, which any musician knows, can be very different from what is in the score, due to:
-+ Artistic interpretation of the score
+As explained earlier, MIDI really was never intended for storing/transmitting score or notation details. It is for performance details, which can vary from the score due to:
++ Artistic interpretation
 + Imperfect execution
 
-But, if you play back a MusicXML-turned-MIDI file, it will sound much more robotic than a MIDI performance (although parsing software is getting better and better, along with providing more options to notating authors to really meticulously control playback based on the score). 
+But, if you play back a MusicXML-turned-MIDI recording, it will sound much more robotic than a MIDI performance because it is interpreting the score literally:
++ However, MusicXML and notation software are getting better at producing pretty decent-sounding MIDI based on the score. Additionally, they are providing more options to authors to meticulously control playback through score indications and various configurations. 
 
-So they each have their "what they do best" and their domains:
+So both MIDI and MusicXML, while both being able to do a lot of the basic stuff pretty similarly, each have their domains where they do what they do best:
 
-![midi vs musicxml](images/midi_vs_musicxml.png)
+<!-- ![midi vs musicxml](images/midi_vs_musicxml.png) -->
+<div align="center">
+    <img src="images/midi_vs_musicxml.png" alt="midi vs musicxml" width="75%" height="75%">
+</div>
 
-I knew that at some point, this program would have to start dealing in MusicXML, since the whole point of the program is to produce scores, not recordings. Additionally, having exact control of which hand was notated on which staff (upper or lower) in a piano grand staff was paramount. The notation software I had experience with (MuseScore and GarageBand - which isn't notation software per se but includes most of the functionality needed to display MIDI as a score) used the most bare-bones approach to assigning hands: middle C and above notes go on the upper staff, and the rest go on the lower staff.
+I knew that at some point, my program would have to start dealing in MusicXML, since the whole point of the program is to produce scores. Additionally, having exact control of which hand was notated on which staff (upper or lower) in a piano grand staff is paramount to the purpose of the program, and MIDI doesn't provide any way to control this. 
++ The notation software I had experience with (MuseScore and GarageBand - which isn't notation software per se but includes most of the functionality needed to display MIDI as a score) use a pretty bare-bones approach to assigning hands: notes above and including middle C go on the upper staff, and the rest go on the lower staff.
 
-So, while MIDI means my program can take input from a way wider array of files, *and* provided the basis for nearly everything in my internal representation, I knew I needed to confront the MusicXML spectre.
+So, while MIDI means my program can take input from a way wider array of files, *and* provided the basis for nearly everything in my internal representation, I knew I needed to confront the MusicXML stuff.
 
 ### A MusicXML Document (Background Info)
 
-MusicXML is, of course, hierarchical, rather than serial.
+MusicXML is, being XML, hierarchical rather than serial.
 
 The hierarchy is as follows:
-+ ScorePartwise
-  + Metadata 1
-  + Metadata 2
-  + ...
-  + Part-List
-  + Part 1
-    + Measure 1
-      + Note
-      + Note
-      + Note
-      + etc.
-    + Measure 2
-      + Note
-      + ...
-    + Measure 3
-    + ...
-  + Part 2
-  +  ...
-  + Part 3
-    + ...
-  + etc.
+
+                    
+    ScorePartwise     <-- root element
+                      _  
+      Metadata 1       |
+      Metadata 2       |---- score "header"
+      ...              |
+      Part-List       _|
+
+      Part 1          
+        Measure 1     
+          Note
+          Note
+          Note
+          ...
+        Measure 2
+          ...
+        Measure 3
+          ...
+      Part 2
+        ...
+      Part 3
+        ...
+      ...
+     /ScorePartwise
 
 ScorePartwise is the root element. 
-+ There is one other "species" of root element, called ScoreMeasurewise. It basically reverses the Part-Measure relationship exhibited in ScorePartwise (i.e. Measures contain Parts, and measures are added one at a time). It is rarely used.
++ There is one other "species" of root element, called ScoreMeasurewise. It basically reverses the parent-child relationship between parts and measures (i.e. Measures contain Parts, and measures are added one at a time but contain all parts for that measure). It is rarely used.
 
-Everything other than the various Part elements is known as the **score header**, and occurs before the Parts start to get filled out. Score headers have 1 mandatory element (the Part-List) and various optional metadata concerning "work" info, credits, encoding software name and info, date, etc..
+The stuff preceding (i.e. everything other than) the various Parts is known as the **score header**. Score headers have 1 mandatory element (the Part-List), and various optional metadata, like "work" info, credits, encoding software name and info, etc..
 
-The Part-List is essentially a map that contains ScorePart elements - each containing metadata and info about an individual Part element (like instrument name, number of staves, etc.)
+The Part-List is essentially a map that contains ScorePart elements - each containing metadata and info about an individual Part element (like instrument name, number of staves, etc.). So each Part has a corresponding ScorePart in the Part-List.
 
-This being a piano score, means that there is only 1 Part element, with 2 staves.
+My program, producing piano scores, means that we will just be talking in terms of 1 Part, with 2 staves (declared in the ScorePart).
 
 ### Timing
 
-MusicXML essentially follows the MIDI resolution timing philosophy in that everything time-related is based on the value of a quarter note. Instead of resolution, it is called **divisions** (i.e. subdivisions per quarter note).
+MusicXML essentially follows the MIDI quarter-note resolution timing paradigm in that everything time-related is based on the value of a quarter note. Instead of resolution, it is just called **divisions** (i.e. subdivisions per quarter note).
 
-Most MusicXML files I came across had, vis-a-vis MIDI resolutions, small values. Instead of 480, 960, etc., I saw a lot of 24, 48, and 96. At first glance I thought "ok, they are just lowering the granularity and dividing everything by 10." There seems to be some more convention to this, but I didn't have time to look too deeply into it. 
+Most MusicXML files I came across had, vis-a-vis MIDI resolutions, small values. Instead of 480, 960, etc., I saw a lot of 24, 48, and 96. At first glance I thought "Ok, they are just lowering the granularity by dividing everything by 10." There might be more to this, but I didn't have time to look too deeply into it, and I decided to just use the MIDI resolution as the divisions value. It doesn't seem to have any negative affect, and works fine. 
 
-I decided to just straight-across use the MIDI **resolution** (which is what the value in my internal representation is based on) as the **divisions** value. It doesn't seem to have an negative affect. So, MusicXML divisions for all the files I output is 480.
+So, the MusicXML divisions for all the files I output is 480.
 
 ### Note Placement
 
 A lot of MusicXML stuff is pretty straightforward, except the placement of notes is pretty tricky.
 
-Consider the first measure of the C minor prelude of Chopin:
+Consider the first measure of the [C minor prelude of Chopin](https://www.youtube.com/watch?v=XeX4X_1_lo0):
 
-![chopin c multi-voice](images/chopin_voices.png)
+<!-- ![chopin c multi-voice](images/chopin_voices.png) -->
+<div align="center">
+    <img src="images/chopin_voices.png" alt="chopin c multi-voice" width="50%" height="50%">
+</div>
 
-You will notice that in the 3rd beat of the right hand, there are 2 independent voices: the quarter "base", and the moving line (in thirds) in the melody/soprano. 
+You will notice that in the *3rd beat of the right hand*, there are 2 independent voices: the quarter "base", and the moving line (in thirds) in the melody/soprano.
 
 If you think about this in terms of finger placement:
 + The G and B would be held by fingers 1 and 2
-+ The thirds above it would be played by fingers 4 and 5 (for both thirds).
++ The melody would be played by fingers 4 and 5 (for both)
 
-This means, when including the left hand, we essentially have three "regions" of notes occurring at exactly the same time, but on disparate stems:
+So, and including the left hand, we essentially have three "regions" of notes occurring at exactly the same time, but on disparate stems:
 
-![chopin c stems](images/chopin_stems.png)
+<!-- ![chopin c stems](images/chopin_stems.png) -->
+<div align="center">
+    <img src="images/chopin_stems.png" alt="chopin c stems" width="50%" height="50%">
+</div>
 
-In MusicXML, notes are placed sequentially. At first glance, this sounds like it is essentially the same as MIDI. TL;DR: it's not.
+In MusicXML, notes are placed sequentially. At first glance, this sounds like it is essentially the same as MIDI. TLDR: it's not.
 
 In MIDI, if I wanted to encode a C major triad in quarter notes with a resolution of 480:
-+ 0 ON C4 --> 480 OFF C4 --> 0 ON E4 --> 480 OFF E4 --> 0 ON G4 --> 480 OFF G4
 
-And it would look like this:
+    0: C4 ON --> 480: C4 OFF --> 0: E4 ON --> 480: E4 OFF --> 0: G4 ON --> 480: G4 OFF
+
+and it would look like this:
 
 ![midi C triad](images/midi_triad.png)
 
-It is all sequential, and it is up to the sequencing software to take that "flat map" and put everybody into their corrals and send them off at the right time during playback.
+It is all sequential, and it is up to the sequencing software to take that "flat map" and put everybody in their corrals and send them off at the right time during playback.
 
-If you were to encode that triad in MusicXML *without* any of the MusicXML-specific workarounds, it would look like this:
+If you were to encode that *same* triad in MusicXML using the MIDI paradigm, it would like like this:
 
 ![bad musicxml sequence](images/musicxml_sequence.png)
 
-Where each note looked something like this:
+Where each note looks something like this:
 
 ```xml
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>480</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        <staff>1</staff>
-      </note>
+<note>
+    <pitch>
+        <step>C</step>
+        <octave>4</octave>
+    </pitch>
+    <duration>480</duration>
+    <voice>1</voice>
+    <type>quarter</type>
+    <staff>1</staff>
+</note>
 ```
 
 In MusicXML, pitches don't mean anything to following notes with the same pitch: each note looks like a note to each other, so each note effectively "pushes" the following notes forward by its own duration.
@@ -367,29 +449,31 @@ In MusicXML, pitches don't mean anything to following notes with the same pitch:
 MusicXML has a really easy fix to this: if something is a bona fide chord (i.e. all the noteheads are attached to the same stem), you simply prepend a chord (an empty element) tag top subsequent applicable note elements:
 
 ```xml
-      <note>
-        <chord/>
-        <pitch>
+  <note>
+      <!-- prepend chord -->
+      <chord/>
+      <pitch>
           <step>C</step>
-		<!-- ... -->
+  <!-- ... -->
 ```
 
-But does one place noteheads (i.e. notes) that are to occur at the same time as other notes but are *not* to be attached to the same stem?
+But how does one place noteheads (i.e. notes) that occur at the same time as other notes but are *not* attached to the same stem?
 
-Essentially, each time you want to place notes within the same time range (on the grid) that *don't* have connected stems, you have to add a `<backup>how_many_divisions</backup>` element to get the "counter" (helpful to think about it when writing the conversion code as a counter or cursor) back to where you wanted to place something.
+Essentially, each time you want to place notes within the same time range (on the grid) that *don't* have connected stems, you have to add a `<backup>how_many_divisions</backup>` element to get the "counter" back to where you wanted to place something.
++ It can be helpful to think about all this stuff in terms of a counter or cursor keeping track of where you are in the measure at any given time.
 
-One thing to add before explaining summarizing whole process (which will probably be clearest): if you want gaps between notes, you need to add a forward element. It works exactly like the backup element, but progresses the cursor forward.
+A couple things to add before summarizing the whole process (which will probably be clearest): if you want gaps between notes, you need to add a `<forward>` element. It works exactly like the backup element, but progresses the cursor forward.
 
-Finally, the left hand in the piano Part is usually "reached" by first filling in the whole right hand, and then backing up to the beginning of the measure (which requires you know who far forward you are), and starting over.
+Finally, the left hand in a measure is usually "reached" by first filling in the whole right hand, and then backing up to the beginning of the measure (which requires you know who far forward you are), and starting over. As left and right hand notes usually don't share stems, this is a sensible way to do things. You could fill in beat-wise for *both* hands, but it would be unnecessarily complex.
 
-So, to use a slightly simpler example than the Chopin:
+In summary, and using a slightly simpler example than the Chopin:
 
 ![note placement process](images/note_placement_process.png)
 
-Now in English/pseudocode (Note: I already separated the lists of notes into RH/LH):
-
-    // next and curr are Note objects, or their analogue in musicxml
-    // .start/.stop are ticks
+And the pseudocode:
++ For just one hand
++ `next` and `curr` represent notes
++ `.start` and `.stop` refer to ticks
 
     // For rests (skip ahead)
     if curr.stop < next.start:
@@ -397,7 +481,7 @@ Now in English/pseudocode (Note: I already separated the lists of notes into RH/
       list.add(forward)
 
     // For notes starting at the same time
-    if next.start == curr.start  &&  next.stop == curr.stop
+    if next.start == curr.start && next.stop == curr.stop
 
       // They are to be attached to the same stem
       if next.stop == curr.stop:
@@ -409,33 +493,31 @@ Now in English/pseudocode (Note: I already separated the lists of notes into RH/
         list.add(backup);
         bumpVoice();	
 
-Notes that are tied over the barline are an absolute pain, but I won't go into that here.
+There are more nitty-gritty things and edge cases, and the logic is rather lengthy. I'm sure it could be simplified, but the note placement stuff constitutes by far the largest share of MusicXML conversion logic.
 
-Additionally, there are more nitty-gritty things and edge cases, and the logic is rather lengthy. I'm sure it could be simplified, but the note placement stuff constitutes by far the largest share of MusicXML conversion logic.
+Finally: notes that are tied over the barline are an absolute pain, but I won't go into that here.
 
 ### On the External Library I Used
 
-For the marshaling/unmarshaling stuff, I used the [proxymusic](https://github.com/Audiveris/proxymusic?tab=readme-ov-file) library from the Audiveris project. 
+For the marshaling/unmarshaling stuff, I used the [proxymusic](https://github.com/Audiveris/proxymusic?tab=readme-ov-file) library from the [Audiveris](https://github.com/Audiveris/audiveris) project. 
 
-(I didn't have time to look too deeply into it, but I am actually looking forward to looking into Audiveris as a whole, as it is a OMR (Optical Music Recognition) software. Again, haven't looked too deeply into it, but... apparently can notate (uses MuseScore, I believe) based off of an image/pdf of a score!)
+(I didn't have time to look too deeply into it, but I am actually looking forward to looking into Audiveris as a whole. It is OMR (Optical Music Recognition) software. Again, haven't looked too deeply into it, but... apparently can notate - using MuseScore, I believe - based off of an image/pdf!)
 
 The library is good, but: there is ZERO documentation (except for a small and pretty uninformative unit test).
 
 Thankfully, most of the code is just getters and setters.
 
-So I basically went through the W3C/MusicXML documentation (which has a tutorial), and then used their [reference](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/) page to look up cases as I came across them. 
+So, process-wise, I basically went through the W3C/MusicXML documentation (which has a tutorial), and then used their [reference](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/) page to look up cases as I came across them. 
 
-Then, I literally just used `cmd+f` to look for possibly-related functionality in the `proxymusic` library.
+Then, I literally just used `cmd+f` to look for possibly related functionality in the `proxymusic` library.
 
-There were some surprises, but on the whole, it was merely tedious, and I got the pattern down eventually.
+There were some surprises (and some unintuitive stuff that took me a while to figure out) but on the whole, it was merely tedious, and I got the pattern down eventually.
 
-I am nearly done with the MusicXML package of my program (at least the writing-out portion), except for the note placement nastiness I mentioned above. Each time I fix one thing, and a new case presents the need for more unique handling. Then the code gets so busy with case-handling that I re-design... rinse and repeat.
+I am nearly done with the MusicXML package of my program (at least the writing-out portion). The only thing that remains is the note placement nastiness I mentioned above. Each time I fix one thing, and a new case presents the need for more unique handling. Then the code gets so busy with case-handling that I re-design... rinse and repeat. But it's almost there.
 
-However (not to toot my own horn), the conversion to musicxml process was made even *remotely* possible because I had already implemented a bunch of the stuff it needed in my internal representation - the most useful being Measures, which hold time signature, key signature, and note data. I had also already implemented (the default/basic) hand-splitting stuff, so staff assignment was helped their too.
+However (not to toot my own horn), the conversion to musicxml process was made even *remotely* possible because I had already implemented a bunch of the stuff it needed in my internal representation - the most useful being Measures, which hold time signature, key signature, and note data. I had also already implemented (the default/basic) hand-splitting stuff, so staff assignment was helped there too.
 
-However, I definitely was missing some things, too - mostly related to pitch stuff. This is probably because I had written the program based on MIDI for 3.5 months, and in MIDI, pitches are literally just 0-127 values. Any of the stuff in my program to extract register, semitone, string-parsing, etc., was to make *my* life easier, and isn't the most robust. Some of it didn't align perfectly with how MusicXML does things (especially regarding enharmonic spelling, which my program doesn't handle, partly because my program does not have key-area-analysis capabilities, and that is a big determinant of spelling).
-
-The whole internal representation of my program could probably be combed through and re-designed to be a bit more general and/or include stuff that will make things easier for MusicXML. It's either that, or remain ideologically "pure" and keep the internal representation completely divorced from any MIDI/MusicXML paradigms (already impossible since most all my timing stuff is based on MIDI) and just have the conversion functionality be extremely heavy-lifting.
+However, I definitely was missing some things - mostly related to pitch stuff. This is probably because I had written the program based on MIDI for 3.5 months, and in MIDI, pitches are literally just 0-127 values. Any of the stuff in my program to extract register, semitone, string-parsing, etc., was to make *my* life easier, and isn't the most robust. Some of it didn't align perfectly with how MusicXML does things (especially regarding enharmonic spelling, which my program doesn't handle, partly because my program does not have key-area-analysis capabilities, and that is a big determinant of spelling).
 
 ## Package/Program Structure
 
@@ -443,11 +525,17 @@ reductor is split thusly:
 
 ![package structure](images/package_structure.png)
 
-Additionally there is a reductor.util that handles file I/O stuff; playback using `javax.sound.midi` methods (easier than opening another application, as it was usually just confirm a file sounds correct in the first 3 seconds); opening with various applications using `ProcessBuilder`, and a class called `MidiDebugging` that just has a bunch of printing utility functions to look at midi bytes in various ways (was actually very helpful).
+Additionally there is a `reductor.util` that handles:
++ File I/O stuff
++ Playback using `javax.sound.midi` methods (easier than opening another application, as it was usually just confirm a file sounds correct in the first 3 seconds)
++ Opening with various applications using `ProcessBuilder`
++ A class called `MidiDebugging` that just has a bunch of printing utility functions to look at MIDI bytes in various ways (was actually very helpful).
 
 ### Application
 
-The `Application` class was a late addition to the program. It may not be final, either. It was called `DevelopmentHelper` for a long time. It is just to coordinate package duties in one, single program flow. It takes a String filepath, and pops out either a MIDI or (eventually) MusicXML file. It isn't final or anything, but I include it here because it is a good descriptor of how the program is intended to flow as a whole, and show how the different packages are kept separate and interface with each other:
+The `Application` class was a late addition to the program. It won't be final, either. It was called `DevelopmentHelper` for a long time. It is just to coordinate package duties in one, single program flow. It takes a String filepath, and pops out either a MIDI or (eventually) MusicXML file.
+
+I include it here for the sole reason that it is a good illustration of how the program is intended to flow as a whole at the topmost level, and show how the different packages are kept separate and interface with each other:
 
 ![application class](images/application.png)
 
@@ -804,9 +892,11 @@ Once a Column is filled with notes, it can decided if it is "pure" (no notes ext
 ### Builder
 
 I had a lot of fun implementing these. My only regret is that I did not do them earlier.
-+ Fluent patterns are pretty cool. I remember that D3.js and Android Compose stuff uses them a lot, so it was cool to implement one myself.
++ Fluent patterns are pretty cool. I remember D3.js and Android Compose stuff uses them a lot, so it was cool to implement one myself.
 
-I dealt with a lot of "constructor explosion" problems that the various builders solved, preserving immutability while streamlining things. Here it is in action for the `Note` class:
+Motivation: I dealt with a lot of "constructor explosion" problems for a most of the semester. Since a lot of the classes in my program are immutable, changing one thing about an object required copy-constructing it with just one additional specific parameter. So I had 7 or 8 different constructors for Note, which were all pretty much the same except for 1 thing. It was a nightmare, especially when changing *any* Note fields.
+
+Here it is in action for `Note`:
 
 ```java
 Note note1 = Note.builder()
@@ -818,7 +908,8 @@ Note note1 = Note.builder()
 
 which creates a quarter note at middle C.
 
-Furthermore, any "setters" in the `Note` class return a new instance using the copy-construction capabilities of `NoteBuilder` (i.e. it will set all the defaults to match the passed Note object):
+You can also pass a `Note` instance to a `NoteBuilder` (which is what `Note#builder` returns) and it will set the defaults of that `NoteBuilder` instance, making it essentially a copy constructor. So, the setters in `Note` changed to leverage this and preserve immutability:
+
 ```java
 Note setPitch(int pitch) {
 	return builder(this)
@@ -827,7 +918,7 @@ Note setPitch(int pitch) {
 }
 ```
 
-Moving along, the `ChordBuilder` has a method that takes a vararg which makes use of my `Pitch#toInt` string parser as well. The below will output a C7 chord rooted at middle C:
+Moving along, the `ChordBuilder` makes use of a vararg method, which in turn can utilize my `Pitch#toInt` string parser. The below will output a **C7** chord, rooted at middle C:
 
 ```java
 Chord chord = Chord.builder()
@@ -837,21 +928,29 @@ Chord chord = Chord.builder()
 		.build();
 ```
 
-Finally, and the main impetus for writing builders, is for ease in writing tests. I was needing really specific and SHORT (i.e. contained/focused) test cases, that were complex enough at this point in the project that it would be too unwieldy to try and craft them using what I had currently (i.e. no builder stuff). And it was really becoming a pain going into MuseScore, creating a "test score" snippet, exporting the MIDI, adding that into my `Files` development-helping class... just to test one tiny thing that I knew my internal representation had the ability to create really quickly.
+Motivation: the main impetus for writing builders was actually in trying to create test cases for myself as the program got more and more complex. It was becoming a real pain to have to go into MuseScore, configure a new score and file, do stuff there, then export MIDI, add that to the `Files` class (development utility class), etc. 
 
-Thus, the `Phrase` and `PhraseBuilder` was created. It combines the `NoteBuilder` and `ChordBuilder` capabilities). 
+(MuseScore is good, but it is also *very* annoying. I will leave it at that.)
 
-If you output the below (with the appropriate util call for writing midi files) and open it in MuseScore, it will look *exactly* like this, which is also the first measure of the e minor Chopin prelude:
+And this was all just to test one tiny thing that I knew my internal representation had the ability to create really quickly... if it weren't for the constructors and immutability and everything else.
+
+Thus, the builders, and, finally, the `Phrase`/`PhraseBuilder` class. It combines the `NoteBuilder` and `ChordBuilder` capabilities and allows you to create one or more measures in an easy way.
+
+If you output the below (with the appropriate `util` calls for writing midi files, etc.) and open it in MuseScore, it will look exactly like this, which is also the first measure of the [e minor Chopin prelude](https://www.youtube.com/watch?v=Hj3daBN5F-o):
 
 ![noteBuilder](images/phrase_builder.png)
 
-Seems the .mark() and goToMark() stuff (fill in right hand; then go back and fill in left hand) is a commonly-arrived-at conclusion, because it's basically how MusicXML handles note appendage; the `PhraseBuilder` actually helped me understand the MusicXML paradigm a lot more quickly. With humility, this was a confidence boost in that I came up with something even remotely resembling an actual approach to doing `x` in a real-world application.
+(In fact, the above graphic/example was indeed produced using the `Phrase` class).
+
+Also, a small pride moment for me was: I devised the .mark() and goToMark() approach - fill in right hand, then go back and fill in left hand - because it seemed natural API-wise, but that's also basically how MusicXML handles note appendage, which I discovered a couple weeks later. So that was kind of a cool confidence boost for me (that I approached something independently that even remotely resembled an approach found in the real-world).
 
 ### Composite
 
-The `Noted` interface includes a single getter `getNotes()` - anyone implementing it needs to yield its Notes, whether it is a Note container, a container of Note containers, or even a Note itself.
+The `Noted` interface includes a single getter `getNotes()`. Any instance of any implementor needs to yield its Notes, whether it is a Note container, a container of Note containers, or even a Note itself.
 
-Here, the Measure does not need to know if the Column is returning a filtered/transformed collection of notes, or a deep or shallow copy, etc. It just calls `getNotes()` on all its constituent components (i.e. the Columns), and those components in turn call `getNotes()`, etc., until the leaf Note, which returns itself.
+Here, the `Measure` does not need to know if the `Column` is returning a filtered/transformed collection of notes, or a deep or shallow copy, etc. 
+
+It just calls `getNotes()` on all its constituent components (i.e. the Columns), and those components in turn call `getNotes()`, etc., until the leaf element is reached (`Note`), which returns itself.
 
 ```java
 @Override
@@ -867,11 +966,19 @@ public ArrayList<Note> getNotes() {
 
 ### Strategy
 
-We talked a bit about a related thing - unless I'm mistaken in the similarities between these two - in the form of the plug-in architecture stuff, which I would like to implement more of in the project, in the future.
+We talked a bit about a related thing - unless I'm mistaken in the similarities between these two - in the form of the plug-in architecture stuff, which I would like to implement more of in this project, in the future.
 
-The problem solved by the approach is that at compile-time, I obviously don't know which MIDI file I will be processing.
+At compile-time, I obviously don't know which MIDI file I will be processing.
 
-The bigger problem, however, is that certain data structures (Column vs. Box) have different breadth of context and might know something the other doesn't in terms of hand-splitting functions or reduction algorithms.
+The problem is that certain data structures (Column vs. Box) have different breadth of context and might know something the other doesn't, which might change the ways the hands should be split up, or which reduction algorithms to apply.
+
+Currently, the kind of reduction my program is capable of is pretty limited to the Column stuff (i.e. vertical analysis; chordal stuff), due to the fact that I need some re-designing of exactly how Notes are stored, accessed, and changed while spread out across many containers and instances (the last section of this report talks about this).
+
+But, in the future, things like:
++ Texture-/rhythm-based reduction: diminution or augmentation (i.e. arpeggiation of unwieldy chords or chord sequences) of rhythm values based on how thick a texture is in a certain region
++ Harmonic-based reduction: what notes can I remove from this Column based on the key area (which would have to be determined using a wider context than a single Column)
+
+are going to need to apply very different reduction algorithms in various contexts.
 
 Right now, the only place implementing this design pattern is the `Column` class, which has a:
 
@@ -898,29 +1005,36 @@ class HandSplittingFunctions {
 	  //...
 ```
 
-I hope to adopt the same approach, or something similar, for the reduction algorithms.
+Right now, `defualtHandSplitter` is the only bona fide splitting function (not including some helpers that look for specific cases and redistribute). But, the plug-in-ibility is there! 
 
-## Biggest Problem with Current Implementation of Reductor
+## Biggest Problems with Current Implementation of Reductor
 
 1. Still no actual reduction algorithms! 
 + Except, at various times in the last couple months, *very* primitive functionality related to eliminating too large of jumps (melody/line detection) and double octave removal (something commonly found in orchestrations and, conversely, commonly omitted in reductions).
-2. Mutability/Immutability/Java handling of passing by value.
+2. Mutability/Immutability and Java references.
 
-Concerning number 1: providing the foundation for reduction (deciding how to split up the data, knowing exactly how to manipulate the data, converting to actual output forms with all the edge cases and associated nastiness) really did take all my time. But every day it feels like I'm that much closer to having something where implementing actual reduction will "simply" (ha) be a matter of writing the algorithms and applying them at the right time and place during the flow of the program. This will mean I won't have to make certain design decisions every step of the way when creating said algorithms.
+**Concerning number 1**: providing the foundation for reduction (deciding how to split up the data, knowing exactly how to manipulate the data, converting to actual output forms with all the edge cases and associated nastiness) really did take all my time. But every day it feels like I'm that much closer to having something where implementing actual reduction will "simply" (ha) be a matter of writing the algorithms and applying them at the right time and place during the flow of the program. This will mean I won't have to make certain design decisions every step of the way when creating said algorithms.
 
-Concerning number 2: I really, and I mean *really*, bungled this one. 
+**Concerning number 2**: I really, and I mean *really*, bungled this one. 
 
-And it wasn't until the last couple weeks (when I was neck-deep in Builder patterns, quantization, musicxml, and other last-minute fix-em-ups) that I realized how big of a problem I had created for myself here. If anything in my program is turned out to be a sword of Damocles, it was this (and it fell).
+And it wasn't until the last couple weeks (when I was neck-deep in builder patterns, quantization, musicxml, and other last-minute fix-em-ups) that I realized how big of a problem I had created for myself.
 
-The issue is: I applied the immutability, safe access (getters/setters), and encapsulation principles so blindly and indiscriminately, that in the end, every single object was an unreachable island, and the whole purpose of the program (to change/manipulate, or at least create a "manipulated" representation of, the original) was defeated. For example:
-+ One Column decides a Note needs to be removed (from its own backing list )because it is a doubled octave. Guess what: that change is not reflected ANYWHERE else.
+The issue is that I applied the principles of "good" immutability, safe access (getters/setters), and encapsulation so blindly and indiscriminately, that, in the end, every single object was an unreachable island, and the whole purpose of the program (to change/manipulate or create a new version of the original) was completely defeated.
 
-When I first realized this 2-3 weeks ago, I thought to myself: "this sounds exactly like some observer pattern thing, where a change to one thing means everybody else with a reference to that thing needs to update too." But there was no time to implement a whole MVVM-style observer pattern and/or SSOT. 
+For example: one `Column` decides a note needs to be removed from its own backing list because it is a doubled octave. Imagine my horror when, after writing my first, basic reduction code, that that change was not reflected ANYWHERE else.
 
-I am also convinced that's not the correct re-design. There are some other approaches I have in mind but I am not sure about those either. I don't think I will even start that until I fully finish with the MusicXML stuff (both in- and out- processing) for the program. I am quite intimidated by fixing it, because it involves some very foundational re-designs.
+When I first realized this 2-3 weeks ago, I thought to myself: "this sounds exactly like some observer pattern thing, where a change to one thing means everybody else with a reference to that thing needs to update itself too."
+
+But there was no time to implement a whole MVVM-style observer pattern and/or SSOT. 
+
+And I'm not even convinced that that's the correct re-design (at least, I sure *hope* it's not). 
+
+There are some other approaches I have in mind but I am not sure about those either. I don't think I will even start that until I fully finish with the MusicXML stuff (both writing-out *and* reading-in stuff) for the program. 
+
+I am quite intimidated by fixing it, because it involves some very foundational fixes.
 
 Additionally, I don't think it will be fixable until my IntervalTree is self-balancing and has add/remove functionality, which is another thing I am procrastinating.
-+ Technically I could pretty quickly/easily just create add/remove functionality, and like we talked about earlier in the semester, the scale of the data being added removed would mean that, yes, the tree would technically be unbalanced, but not enough to have any kind of effect on performance. (I mean, I don't anticipate that the amount of data/computation this program does *ever* will fall into the performance-concerned arena.)
++ Technically I could pretty quickly/easily just create add/remove functionality, and like we talked about earlier in the semester, the scale of the data being added/removed would mean that, yes, the tree would technically be unbalanced, but not enough to have any kind of effect on performance. (I mean, I don't anticipate that the amount of data/computation this program does *ever* will fall into the performance-concerned arena.)
 
 ## Appendix A: The Term "Reduction" and Brief Historical Info
 
@@ -1025,28 +1139,30 @@ Finally, I am not an expert transcriber. My training is in performance, not comp
 
 If you click any of these, let it be [this Beethoven](https://youtu.be/Hn0IS-vlwCI?si=QgjFa4rW9m8IRJIx&t=4399) and [this Liszt transcription](https://youtu.be/I42Afr-OUso?si=li0yIThxkUtwiEdI&t=3326) of the same clip. 
 
-### Arrangement (Vivaldi's Concerto for 4 Violins; Bach-Vivaldi)
+By the way, I don't like the transcription performance (the speed takes away from the majesty), but, it was a video that had the score so I chose that.
+
+### Arrangement Example (Vivaldi's Concerto for 4 Violins; Bach-Vivaldi)
 
 What I would call "arrangement". Bach did this *all* the time.
 + [Original](https://www.youtube.com/watch?v=QSs6HKwhbAA)
 + [Arranged for 4 Keyboards by Bach](https://youtu.be/emkJ0A7IfkY?si=8lv9MpQ9KhvXu8YP&t=7)
 
-### Transcription (Bach's Chaconne from Partita No. 2 for solo violin; Bach-Busoni; Bach-Brahms)
+### Transcription Example (Bach's Chaconne from Partita No. 2 for solo violin; Bach-Busoni; Bach-Brahms)
 
 Technically an "up-reduction" (just transcription actually); solo violin but on piano with added harmony. This is a very, very famous piece in both the violin *and* piano repertoire (the Busoni version, that is). Some consider it heretical to take Bach, especially solo violin Bach, and try and add harmonies to it to better leverage the more harmonically-capable keyboard. Others consider the transcriptions themselves amazing works of art.
 + [Original](https://www.youtube.com/watch?v=Nunk9fRaZZs)
 + [Bach-Busoni Chaconne - transcribed for piano by legendary 19th Century pianist/composer Ferruccio Busoni](https://youtu.be/dOHiI_5yycU?si=9dbrktNVR5z_1kdx&t=50)
 + [Brahms' rendition, for the left hand ONLY](https://youtu.be/Ljb5MvKv0Hw?si=hrNHsY_WXIcJuDSu&t=6)
 
-### Paraphrase (quartet from Verdi's *Rigoletto*)
+### Paraphrase Example (quartet from Verdi's *Rigoletto*)
 
-In the same league as transcription/fantasy. Lots of ad lib. You'll notice the Liszt starts with an extended "solo" before the "transcription" portion starts at `1:05`.
+In the same league as transcription/fantasy. Lots of ad lib. You'll notice Liszt's "transcription" starts with an extended solo before the transcription portion starts at `1:05`.
 
 (Just) the quartet, from Verdi's opera *Rigoletto*
 + [Original](https://youtu.be/sTjbqS7gpBE?si=WzUJQwizKFpvq3Vh&t=93)
 + [*Rigoletto Paraphrase* by Liszt](https://youtu.be/66hWYzbppo0?si=wY2kvwjXXhvXd3HX&t=20)
 
-### Fantasy (Themes from Mozart's *Don Giovanni*)
+### Fantasy Example (Themes from Mozart's *Don Giovanni*)
 
 In the same league as transcription. Lots of ad lib.
 

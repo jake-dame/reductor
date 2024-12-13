@@ -1059,7 +1059,7 @@ First:
 1. Big "C" Classical refers to a specific era and style, roughly 1750-1820, within...
 2. Little "c" classical, which is what people mean when they talk about "classical" music (the whole).
 
-The term classical, in the music context, has the same meaning as it does in classical philosophy, classical architecture, or classical literature. It is all a throwback to Greek and Roman stuff. (In that sense, it might be better termed "neo-classical" music, although that term itself was consequently pushed forward to another movement altogether.)
+The term *classical*, in the music context, has the same meaning as it does in classical philosophy, classical architecture, or classical literature. It is all a throwback to Greek and Roman stuff. (In that sense, it might be better termed "neo-classical" music, although that term itself was consequently pushed forward to another movement altogether.)
 
 It stems from the Classical era's shifting emphasis (vis-a-vis Baroque) to the virtues of symmetry, balance, simplicity; commonality, secular-ness; etc. (All the stuff going on during the Enlightenment was also, of course, happening in music).
 
@@ -1081,51 +1081,60 @@ We talked about value decisions at the end of 6017.
 
 Admittedly, this project focuses purely on **European art music**. It cannot handle different scales, microtonality, instruments, notations, forms, etc., of non-European art music.
 
-This is because European art music is what my training is in, and what my passion is. I simply don't know enough about other classical musics, so much so, that I don't even know if reduction would apply in other cultures' classical musics.
+This is because European art music is what my training is in, and what my passion is. I simply don't know enough about other classical musics - so much so, that I don't even know if reduction would apply in other classical musics.
 
-It's a narrowly focused program, to be sure. But if there were applications in other musics, and another developer wanted to work on additions, I would be all for that.
+It's a narrowly focused program, to be sure. But if there were applications in other musics, and another developer with the respective background/training wanted to work on additions, I would be all for that.
 
 ### Terminology: Reduction
 
 I want to take a moment to discuss terminology (mostly because I like terminology, but also because there are some implications regarding the project).
 
-In the music world, "reduction" is 99% of the time used in the context of "a piano reduction." As in, taking a non-piano piano piece and making it for the piano. Less so, but still common, and referring to the same exact thing, is "orchestral reduction". 
+In the music world, "reduction" is 99% of the time used in the context of "a piano reduction." As in, taking a non-piano piece and making it for the piano. Less so, but still common (and referring to the same exact thing) is "orchestral reduction". 
 
-It just depends on how pedantic you want to be about the qualifier: is it the piano part being reduced (no), or the non-piano part being reduced (yes). So technically speaking, a "piano reduction" is a misnomer.
+So is it **piano** reduction or **orchestral** reduction? It just depends on how pedantic you want to be about the qualifier: is it the piano part being reduced (no), or the non-piano part being reduced (yes). So technically speaking, a "piano reduction" is a misnomer.
 
-Personally, I don't really care and I think I have always said "piano reduction". It wasn't until this project that I actually thought about this. When you're writing a program for months that aims to reduce symphonic works, string quartets, accompanied sonatas, etc., it feels kind of mismatched to call it a "piano reduction," and not a "reduction *for* piano." One is much easier to say, though.
+Personally, I don't really care and I think I have always said "piano reduction". It wasn't until this project that I actually thought about this.
 
-Of course, the subject of the reduction is not always "orchestral", so "orchestral reduction" is itself a non-ideal generalization. 
+Turns out, when you're writing a program for months that aims to reduce symphonic works, string quartets, accompanied sonatas, etc., it feels kind of unnatural to call it a "piano reduction," and not a "reduction *for* piano." One is way easier to say and converse about, though.
+
+(Of course, the subject of the reduction is not always "orchestral", so "orchestral reduction" is itself a non-ideal generalization.) 
 
 If I had to describe the purpose of the program in the most accurate and pedantic way:
 
-	Reductor aims to produce a reduction of a non-piano work so that it is suitable for a solo pianist to play.
+	Reductor aims to produce a reduction of a non-piano work that it is suitable for a solo pianist to play.
 
-For the rest of this section, however, I will use the casual *piano* reduction, and *piano* transcription, etc.
+For the rest of this section, however, I will use the casual *piano* reduction, *piano* transcription, etc.
 
-### Reduction vs. Transcription vs. Other Related Concepts
+### Reduction vs. Transcription and Friends
 
-Disregarding what the words themselves mean outside of music, these terms have yet more connotations and usage-based meanings than what their dictionary definitions dictate. 
+Disregarding what the next few terms mean outside of music, they have slightly different usage in music than what their dictionary definitions dictate. 
 
-For instance, when hearing "transcription", it might conjure the notion of *exact* relocation of information from one medium to another, e.g. RNA transcription or what a stenographer does in a courtroom.
+For instance, when hearing "transcription", it might conjure the notion of *exact* relocation of information from one medium to another, e.g., RNA transcription, or voice-to-text transcription.
 
-You might be surprised to find that piano "**transcriptions**" in the musical sense can imply a quite a wide range of artistic liberty. Novel asides and segues are added in; the score might be interpolated with runs and fioraturas (fancy runs); themes might even be independently developed. Many transcriptions are of "too large" of works (e.g. an entire 3-hour opera, condensed down into a 20-minute solo piano concert work), and be closer aligned with a "medley".
+You might be surprised to find that a musical **transcription** can imply quite a wide range of artistic liberty upon the source material. Novel asides and segues between sections might be added; the score might be interpolated with runs and fioraturas (fancy runs); themes might even be independently developed! Many transcriptions are of works too large to make a reasonable transcription that people would actually want to hear in a performance. Instead, just highlights might be extracted and sewn together - more like a "medley" of selections rather than an exact transcription of the source material.
 
-An **arrangement** doesn't need a whole lot of explanation, as its pretty familiar to even musicians who are not neck-deep in classical mumbo jumbo. It is the term with the least amount of "rules" or connotations. Some piece can be arranged for piano duet, or two guitars, etc. You just take a piece and make it playable for some other instrument or group of instruments. You might add in all sorts of stuff as well, there are no strict rules. There is no shortage of YouTube videos of people making piano arrangements for the Interstellar soundtrack, or Michael Jackson songs, or what have you.
+It's in the listed properties above that takes a transcription and potentially sub-categorizes it into other popular compositional styles within the transcription family:
++ A **fantasy**, which actually refers to 2 disparate types of composition: 
+  + A standalone, original composition, having nothing to do with transcription or any external work, and dating back to the organ fantasias of Bach, etc. Beethoven and Mozart wrote some famous ones too.
+  + The type of work that I'm talking about here (a transcription, essentially). It has the connotation of taking the most amount of liberty in all the works discussed in this section.. In the 19th Century, with the rise of the "pianist-composer-virtuoso", these individuals started writing pieces following the formula of "Fantasy on a Theme by Bellini" or "Fantasy on the opera Norma".
++ A **paraphrase**
+  + Pretty much what it sounds like in its "loose quotation" dictionary definition, but with music; also, pretty much just a Liszt thing
 
-A **fantasy** actually refers to two disparate types of compositions: a standalone, original composition (having nothing to do with transcription or any external work), as well as a type of work that is more akin to a transcription - but with even more liberty taken with the transcribing. It dates back to the Fantasias of the Baroque era (Bach wrote a handful, and are some of his greatest works). Beethoven and Mozart wrote some famous ones too. In the 19th Century, with the rise of the "pianist-composer-virtuoso", these individuals started writing pieces following the formula of "Fantasy on a Theme by Bellini" or "Fantasy on the opera Norma".
+Other related terms that are more-or-less synonymous with fantasy or transcription include **rhapsody** (e.g. Rachmaninoff's [*Rhapsody on a Theme of Paganini*](https://www.youtube.com/watch?v=ThTU04p3drM) from the latter composer's [24th Caprice](https://www.youtube.com/watch?v=PZ307sM0t-0)) and **theme and variations** when its based on another composer's work (e.g. Chopin's [*Variations on "Là ci darem la mano"*](https://www.youtube.com/watch?v=_BiMnduoOcE) from an [aria](https://youtu.be/SJRZxSclj70?si=tq8yeU-iKm2QmWrk&t=50) in Mozart's *Don Giovanni*).
 
-Aside: Transcriptions usually refer to their respective composers with hyphenation. The order is usually based on convention/tradition, such as: the Bach-Busoni Chaconne (Busoni's transcription of the Chaconne from the 2nd violin Partita by Bach) or the Liszt-Beethoven symphonies (backwards).
+Aside: Transcriptions et al. usually refer to their respective composers with hyphenation. The order is usually based on convention/tradition, such as: the Bach-Busoni Chaconne (**Busoni**'s transcription of the Chaconne from the 2nd violin Partita by **Bach**) or the Liszt-Beethoven symphonies (reversed).
 
-Other related terms that are more-or-less synonymous with fantasy or transcription include **rhapsody** (e.g. Rachmaninoff's [*Rhapsody on a Theme of Paganini*](https://www.youtube.com/watch?v=ThTU04p3drM) from the latter composer's [24th Caprice](https://www.youtube.com/watch?v=PZ307sM0t-0)), **paraphrase** (e.g. Liszt's *Concert Paraphrase on Rigoletto* from Verdi's opera), or **theme and variations** (e.g. Chopin's [*Variations on "Là ci darem la mano"*](https://www.youtube.com/watch?v=_BiMnduoOcE) from an [aria](https://youtu.be/SJRZxSclj70?si=tq8yeU-iKm2QmWrk&t=50) in Mozart's *Don Giovanni*).
+Finally, an **arrangement** doesn't need a whole lot of explanation, as its pretty familiar to even musicians who are not fully immersed in classical mumbo-jumbo. It is the term with the least amount of "rules" or connotations. Take some piece, and it can be arranged for piano duet, or two guitars, etc. You might add in all sorts of stuff as well, there are no strict rules. There is no shortage of YouTube videos of people making piano arrangements for the Interstellar soundtrack, or Michael Jackson songs, or what have you.
 
 ### The "Veracity" of Transcriptions and Kin
 
-There is some amount of pearl-clutching in the piano competition or formal jury world as to whether or not it is "proper" to include a transcription in a concert program. A lot of that depends on tradition and convention. Some pieces are considered absolutely okay, and are taken seriously as concert/competition works, like the Bach-Busoni Chaconne (a competition mainstay). But the Liszt-Beethoven symphonies... not so much.
+There is some amount of pearl-clutching in the piano competition or formal jury world as to whether or not it is "proper" to include a transcription in a concert program. A lot of that depends on tradition and convention. Some pieces are considered absolutely okay, and are taken as serious concert/competition works (e.g., the Bach-Busoni Chaconne - a competition mainstay).
+
+But the Liszt-Beethoven symphonies... not so much.
 
 A reduction is the workhorse, functional sibling of the other composition types, which are more for concert performance. A pianist might use a reduction of the score for Swan Lake during ballet rehearsals; a conductor might use a reduction for the musical "Fiddler on the Roof" to conduct off of in performance. They are meant to exactly show what is going on in the full score, but condensed onto a single grand staff. Reductions may even include unplayable notes in a smaller font, with directions as to which instrument is playing. They are more for utility than for performance.
 
-All of Bach's solo harpsichord concertos (back then, "concerto" had a different meaning than how we typically think of concertos - soloist + orchestra) were just solo keyboard arrangements of orchestral works by Vivaldi, Marcello, et al. Those works are very much in the spirit of reduction rather than fantasy or transcription. However, today they are considered standalone works. 
+All of Bach's solo harpsichord concertos (back then, "concerto" had a different meaning than how we typically think of a concerto - soloist + orchestra) were just solo keyboard arrangements of orchestral works by Vivaldi, Marcello, et al. Those works are very much in the spirit of reduction rather than fantasy or transcription. However, today they are considered standalone works. 
 
 There is a lot of variety/context, convention/tradition, and other factors at play, ultimately, on whether something is "just" a transcription or not! Most important at that point is one's own opinion. If you like it, then it's cool.
 
@@ -1138,15 +1147,19 @@ Interestingly, the Liszt-Beethoven symphonies (the work that inspired this proje
 
 The ultimate irony of the Liszt-Beethoven symphonies: they are virtually unplayable. 
 
-Bless his heart, but Liszt was just too much of an otherworldly virtuoso to know what was "playable" by the common (or even typical concert) pianist. They are rarely, if ever, performed. Only a handful of recordings exist. (When compared to the recording-frequency of other standards in the piano repertoire, it's not even close.)
+Bless his heart, but Liszt was just too much of an inhumanly-able virtuoso to know what was "playable" by the common (or even typical concert) pianist. 
+
+They are rarely, if ever, performed. Only a handful of recordings exist. (When compared to the recording-frequency of other standards in the piano repertoire, it's not even close.)
 
 ### Conclusion
 
-What does any of this have to with my project *other* than the mere fact that I love to talk about this stuff? Not a whole lot, but there *are* some implications, believe it or not.
+What does any of this have to with my project other than the mere fact that I love to talk about this stuff? Not a whole lot, but there *are* some implications.
 
 Reduction needs to be a process of as little information loss *or* insertion as possible, and any sort of transformation needs to be purely out of necessity for the pianist to be able to physically play the work.
 
-There are some common patterns that transcribers resort to for various musical textures. For instance, it is extremely common for 2 or more instrumental sections to play tremolos or straight 16ths. Perhaps they are playing at an interval with relation to each other or even doubling at the octave. For a pianist to play rapidly repeating notes takes *an entire hand*, and that's only for repetition on a single key and takes a very specialized technique requiring 2-4 fingers alternating on the key rapidly. To play a chord with the same rapidity is near-impossible, or, at the very least, considered highly un-pianistic. Transcribers will often transform these textures into tremolos, where the hand "rotates" back and forth between the two notes. This is technically information loss, but the texture is preserved, and so it is considered best practice.
+There are some common patterns that transcribers resort to for various musical textures. For instance, it is extremely common for 2 or more instrumental sections to play tremolos or straight 16ths. Perhaps they are playing at an interval with relation to each other or even doubling at the octave.
+
+For a pianist to play rapidly repeating notes takes *an entire hand*, and that's only for repetition on a single key and takes a very specialized technique requiring 2-4 fingers alternating on the key rapidly. To play a chord with the same rapidity is near-impossible, or, at the very least, considered highly un-pianistic. Transcribers will often transform these textures into tremolos, where the hand "rotates" back and forth between the two notes. This is technically information loss, but the texture is preserved, and so it is considered a good practice.
 
 Finally, I am not an expert transcriber. My training is in performance, not composition - and knowing your way around a piano is only 1 part of the equation in creating a good reduction. Having outside input from trained composers is what the project will need eventually.
 
@@ -1154,13 +1167,19 @@ Finally, I am not an expert transcriber. My training is in performance, not comp
 
 If you click any of these, let it be [this Beethoven](https://youtu.be/Hn0IS-vlwCI?si=QgjFa4rW9m8IRJIx&t=4399) and [this Liszt transcription](https://youtu.be/I42Afr-OUso?si=li0yIThxkUtwiEdI&t=3326) of the same clip. 
 
-By the way, I don't like the transcription performance (the speed takes away from the majesty), but, it was a video that had the score so I chose that.
+By the way, I don't like the transcription performance (the speed takes away from the majesty), but, it was a video that had the score too, so I grabbed it.
 
-### Arrangement Example (Vivaldi's Concerto for 4 Violins; Bach-Vivaldi)
+### Arrangement Example
 
-What I would call "arrangement". Bach did this *all* the time.
+Vivaldi's Concerto for 4 Violins, later arranged by Bach (Bach and other Baroque composers did this *all* the time):
 + [Original](https://www.youtube.com/watch?v=QSs6HKwhbAA)
 + [Arranged for 4 Keyboards by Bach](https://youtu.be/emkJ0A7IfkY?si=8lv9MpQ9KhvXu8YP&t=7)
+
+One of the rare instances where a masterpiece is re-arranged and becomes another masterpiece.
++ Bach's Prelude in E minor (near-biblical status in terms of literalism and academic music):
+  + [Original](https://www.youtube.com/watch?v=0PG3WGZlT4A)
++ Arranged into an otherworldy "paraphrase" by the great 19th/20th Century pianist (and student of Liszt) Alexander Siloti
+  + [Arranged](https://www.youtube.com/watch?v=vXbBOWlkR9g)
 
 ### Transcription Example (Bach's Chaconne from Partita No. 2 for solo violin; Bach-Busoni; Bach-Brahms)
 

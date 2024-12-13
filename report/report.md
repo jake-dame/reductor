@@ -543,10 +543,10 @@ I include it here for the sole reason that it is a good illustration of how the 
 
 The purpose of this package is to get MIDI data in a form that the `reductor.dataconversion` classes expect.
 
-In the future, it will probably become part of a sub-package that it shares with a sister musicxml-importing-related package (similar in the way that the `dataconversion` package is bifurcated.
+In the future, it will probably become part of a sub-package that it shares with a sister musicxml-importing-related package (similar in the way that the `dataconversion` package is bifurcated) that focus on the just data acquisition aspects of the program.
 
 The general outline of major classes is as follows:
-+ `MidiFile`: top-level things about the a MIDI file, including a `File`, `Sequence`, and `Events` member
++ `MidiFile`: top-level things about a MIDI file, including a `File`, `Sequence`, and `Events` member
 + `Events`: a "list" class (just contains a bunch of lists)
   + In charge of sorting, typing, and creating all the `Event` instances
 + `EventType`: an enum used to support the `Event` hierarchy
@@ -558,22 +558,22 @@ The biggest impetus for the Event hierarchy was literally to override `toString(
 
 ### Aside: The Java MIDI Library
 
-I hesitate to call the `javax.sound.midi` library "feature-poor", because I have gone through the documentation and I believe it does exactly what it intends to do. It isn't intended to be a full-fledged "composing with MIDI" library (which other libraries like Python's `mido` seems to be). It is meant for reliable and robust file I/O, and acting as a conduit through a Java program to other software (e.g. sequencers), with *some* manipulation abilities. 
+I hesitate to call the `javax.sound.midi` library "feature-poor", because I have gone through the documentation and I believe it does exactly what it intends to do. It isn't intended to be a full-fledged "composing with MIDI" library (which other libraries like Python's `mido` seem to be). It is meant for reliable and robust file I/O, and acting as a Java conduit to other software (e.g. sequencers) - with *some* manipulation abilities. 
 
-However, that said, seeing every message type and manipulating / sorting stuff in a type-safe way is not really a feature of the library. Everything below was written as a response to the needs I had while debugging and figuring out what to do with the data.
+That said, however, seeing every message type and manipulating / sorting stuff in a type-safe way is not really a feature of the library. Everything below was written as a response to the needs I had while debugging and figuring out what to do with the data.
 
-Writing all the code described above was basically done by reading documentation on various websites. The biggest help and best (i.e. most concise, easiest to follow) was [recordingblogs' wiki](https://www.recordingblogs.com/wiki/standards-in-music-index). 
+Writing all the code for this package was basically done by reading MIDI-related documentation on various websites - the biggest help and best (i.e. most concise, easiest to follow) of which was [recordingblogs' wiki](https://www.recordingblogs.com/wiki/standards-in-music-index). 
 + I didn't really consult official MIDI documentation because their (the Music Manufacturer's Association) sites were hard to follow, some of their stuff is behind a paywall, and I didn't really need to know the amount of detail in different MIDI standards like MIDI 2.0 or General Midi, etc. Just tell me what the 3rd byte of a time signature message corresponds to!
 
 ### Future Re-Design
 
-The `Event` class is pretty messy, and I'm not too happy with it. What I am happy about is stated above: it was a great exercise in learning MIDI and basically gave me everything I needed to have/know to implement conversion stuff later; also, it was fun. 
+The `Event` class is pretty messy, and I'm not too happy with it. What I am happy about is stated above: it was a great exercise in learning MIDI and basically gave me everything I needed to have/know in order to implement conversion stuff later. Also, it was actually pretty fun. 
 
-However (although I *thought* I did initially), I still don't fully grasp the details of generics and compile- vs. run-time type-checking it turns out.
+However, although I *thought* I did initially, I still don't fully grasp the details of generics and compile- vs. run-time type-checking as it turns out.
 
-The `Event` class is parameterized so that its `message` field is of type `T`. This was useful because the two (of three that I used) MidiMessage concrete classes have *different* methods to check even basic things, like the status byte: in `MetaMessage`, it is `getStatus()`, and in `ShortMessage` it is `getCommand()`. So, not having to constantly cast before calling those was nice.
+The `Event` class is parameterized so that its `message` field is of type `T`. This was useful because the two (of three that I used) MidiMessage concrete classes have *different* methods to check even basic things, like the status byte - in `MetaMessage`, it is `getStatus()`, and in `ShortMessage` it is `getCommand()`. So, not having to constantly cast before calling those was nice.
 
-To illustrate as best I can: I tried to fix the unchecked thing with all sorts of approaches (the enum, a factory method, etc.). But I guess I still don't fully understand what the right approach is.
+To illustrate as best I can: I tried to fix the unchecked thing with all sorts of approaches (the enum, a factory method, etc.). But I guess I still don't fully understand what the right approach is:
 
 ```java
 /**
@@ -584,8 +584,9 @@ To illustrate as best I can: I tried to fix the unchecked thing with all sorts o
 public abstract class Event<T extends MidiMessage> {
 
     private final MidiEvent event;
-    private final EventType type;
-    private final T message;
+    private final EventType type; // enum type such as `PROGRAM_CHANGE` or `SET_TEMPO`
+    private final T message; // was nice to have this always be a concrete type, and not the abstract `MidiMessage`
+
     private int trackIndex;
     private String trackName;
     private final Long tick;
@@ -593,15 +594,15 @@ public abstract class Event<T extends MidiMessage> {
     Event(MidiEvent event) {
         this.event = event;
         this.tick = event.getTick();
-		// This is unchecked...
+		    // This is unchecked...
         this.message = (T) event.getMessage();
         this.type = EventType.getEnumType(event);
     }
 
-	//...
+	  //...
 ```
 
-However, at that point in the Capstone, I was cognizant of the fact that I was spending too much time making my data acquisition process "optimized" with constant re-designs, and, with the knowledge that it was robust and worked (while not being designed super well), I decided it was time to move on.
+At a certain point during the Capstone, I was cognizant of the fact that I was spending too much time making my data acquisition process "optimized" with constant re-designs, and, with the knowledge that it was robust and worked (while not being designed super well). I decided it was time to move on.
 
 Ultimately, the whole `.midi` package can probably do away with any typing, complex sorting, and basically everything but 1-2 classes: just loop through all the events, grab the ones you want (only need like 30% of the subclasses/types in the end), and provide getters. 
 
@@ -609,57 +610,59 @@ Ultimately, the whole `.midi` package can probably do away with any typing, comp
 
 `dataconversion` is meant to be the bridge between the native format package (either MIDI or musicxml) and my internal representation (`Piece`). 
 
-The reductor.midi's biggest job is to produce a valid `MidiFile` object. The `dataconversion` package expects certain constructs (e.g. `TimeSignatureEvent`, `NoteOnEvent`), and can convert them to their analogous internal representations.
+The `reductor.midi` package's primary purpose is to produce a valid `MidiFile` object. The `dataconversion` package expects certain constructs (e.g. `TimeSignatureEvent`, `NoteOnEvent`), and can convert them to their analogous internal representations.
 
-`dataconversion` doesn't make any (consequential) decisions on its own. It converts the aforementioned constructs using static utility functions that are in the `piece` package (i.e. the internal representation package). The constructors or factories in `piece` can be said to slightly cater to the `dataconversion` class, but that's kind of a chicken-or-the-egg thing.
+`dataconversion` doesn't make any (consequential) decisions on its own. It converts `reductor.midi` object, mostly using static utility functions that are in the `reductor.piece` package (i.e. the internal representation package). The constructors or factories in `piece` can be said to slightly cater to the `dataconversion` class, but that's kind of a chicken-or-the-egg thing.
 
-As shown above, it has 2 sub-packages, corresponding to MIDI and MusicXML. I will just go over the MIDI one, as I sort of went over everything I wanted to say about the MusicXML in the [corresponding](#musicxml) section.
+As shown earlier, `dataconversion` has 2 sub-packages, corresponding to MIDI and MusicXML. I will just go over the MIDI one in this section, as I sort of went over everything I wanted to say about the MusicXML stuff in the [corresponding](#musicxml) section.
 
-Final note: `reductor.dataconversion.midi` contains the [quantization](#quantization) functionality.
+Note: `reductor.dataconversion.midi` contains the [quantization](#quantization) functionality, too.
 
 ### Note-Pairing
 
-`dataconversion` is where note-pairing happens (`reductor.midi` just has gettable lists of `NoteOnEvent`s and `NoteOffEvent`s).
+`dataconversion` is where note-pairing happens (`reductor.midi` just has gettable lists of `NoteOnEvent` and `NoteOffEvent`). That is, constructing a unison object for disparate note ON and OFF events for the same pitch.
 
-This is not new territory, so I will try my best to *summarize* here. 
+Pairing algorithms are leetcode-style questions. They're not particularly complex or anything. I experimented with applying some of the basic (e.g. two-pointer, search forward) approaches to this. And the algorithm essentially is just a search forward pair-matching algorithm that takes in two lists (ONs and OFFs).
 
-Additionally: I *did* encounter (most) of these cases in the wild (a particular Mozart overture and the Brahms *Clarinet Quintet* both had redundant offs, which took a collective 2 hours to figure out).
+However, due to some of the imperfections in MIDI files and some of the nasty things that notation software allows authors to do that does NOT translate well from MusicXML to MIDI (looking at you, multi-voice), a little extra care needs to be taken with the function. Here are the cases to be handled:
 
-The doc comment from the program (slightly edited for use here):
+1. **Absent OFFs ("stuck" notes)**: ON events that have no corresponding OFF event by the end of the sequence
+2. **"Semi-stuck" notes**: notes that are technically stuck ONs, but by virtue of a later identical pitch, get turned off
++ A quarter note C @ `0` --> never turned off
++ A quarter note C @ `480` --> never turned off
++ A quarter note C @ `960` --> never turned off
++ A quarter note C @ `1440` --> turned off @ `1919`
+  + Although you wouldn't be able to hear "overlapping", stuck C's due to the way that MIDI just plays the current ON, the first 3 still never received OFF events.The implication here is that: 
+    + Due to how the pairing algorithm works, it would treat the first three as stuck notes; additionally, without special care, their constructed ranges would be mistakenly constructed as `[0, 480]` (incorrect) instead of `[0, 479]`. Each ON needs to be paired with an OFF, so missing OFFs, even if inconsequential in MIDI, can cause problems for the algorithm.
+1. **Extra OFFs**: extraneous/redundant OFFs sent for ONs that have already been shut off
++ These are harmless, but you should still handle them in the algorithm.
+1. **Extra ONs**: when two notes with the same pitch are turned on at the same tick:
++ On channel 1: A whole note C @ 0 --> *should* be turned off @ `1919`
++ On channel 1: An 8th note C @ 0 --> *should* be turned off @ `239`
+  + Every C (though there is technically only ever one), will be turned off at `239`. The whole note's OFF becomes Case 3, and :
+    + Case 4 is interesting because MIDI spec does not handle or allow two on events corresponding to the same pitch to happen. This won't matter if they are on different channels, of course, but when combining to the same channel, or track (as in the case of reduction -- a violin and trumpet both starting C's at the same time -- extra care needs to be taken.
 
-1. Stuck notes: note on events that are not paired by the end of the list of offs
-2. Semi-stuck notes: notes that are stuck for a time:
-   + A quarter note C @ 0 --> never turned off
-   + A quarter note C @ 480 --> never turned off
-   + A quarter note C @ 960 --> never turned off
-   + A quarter note C @ 1440 --> turned off @ 1919
-+ Each quarter is not turned off except the last, and the last off event turns ALL of them off.
-+ Although each is "effectively" turned off because MIDI does not allow multiple note events of the same pitch to occur simultaneously (see the note about Case 3 below), the implication here is that the on event never received an off event means two things: This algorithm would treat the first three as stuck notes AND their constructed Ranges would not be [0, 479], but [0, 480] without special care!
-3. Redundant offs: extraneous offs sent for ons that have already been shut off
-4. Extra ons: when two notes with the same pitch are turned on at the same tick:
-   + On channel 1 -- A whole note C @ 0 --> _should_ be turned off @ 1919
-   + On channel 1 -- A quarter note C @ 0 --> _should_ turned off @ 479
-+ "Every" C, even though there is really only ever 1, will be turned off at the first off pitch. All 
-subsequent offs become case 2! In this algorithm, since I want to prevent a Range of [0,0] from being created, both the whole note's on and off will be unpaired (both at tick 0), _as well as_ the whole notes extraneous off at 1919. This occurs when multiple-features in notation software allow this sort of thing (like in a piano score), OR the reverse (see the next paragraph).
-+ Case 4 is interesting because MIDI spec does not handle or allow two on events corresponding to the same pitch to happen. This won't matter if they are on different channels, of course, but when combining to the same channel, or track (as in the case of reduction -- a violin and trumpet both starting C's at the same time -- extra care needs to be taken. This is a job for the reverse conversion algorithm below.
+I encountered all but Case 1 (a true stuck ON) in the wild, though the algorithm still handles it. For example, a particular Mozart overture and the Brahms *Clarinet Quintet* both had redundant offs, which took a collective 2 hours to of looking at bytes to track down and figure out.
 
-That final "reverse conversion" ultimately turned out to be not a job for MIDI at all, since it really doesn't have any way to have overlapping voices. This is a job for MusicXML and voice control. 
-+ I experimented for some time writing out overlapping voices on different channels, then using MuseScore's "implode" functionality (puts voices from different staves onto one selected staff), but it was unwieldy and annoying and, of course, not a good solution for an end-product (can't expect a user to do all that just to get a readable score).
+I essentially used two maps/lists to put ONs into, then searched through it to find `unpairedOns` or `unpairedOffs`. Since some of the cases are harmless, or ones that I intentionally wanted to ignore, I ended up separating the pairing with the error-handling aspects.
 
-It turns out that some of these cases are "harmless" - it just depends on how you want to handle it. 
+I'm not sure it's the actual use case for creating your Exception class, I thought it would be cool to make a custom exception at one point, and this seemed the perfect place - thus, `UnpairedNoteException`. In the far future, maybe another developer can choose to ignore certain UnpairedNoteExceptions (I certainly did), rather than me forcing a RuntimeException or something in the note-pairing algorithm. (I still struggle to fully understand exceptions, checking, throwing, etc. So I could be totally off here.)
 
-Even though it may not be the actual use of custom exceptions (another thing I struggle to understand still - that is, exception, try/catch, error propagation, etc., I thought it would be cool to make my own exception at one point and this seemed the perfect place to have `UnpairedNoteException`. In the far future, maybe another developer can choose to ignore certain UnpairedNoteExceptions or something, rather than me throwing a RuntimeException or something in the note-pairing algorithm).
+Going the other way (converting `Note` objects to 2 MidiEvent objects) is super easy.
+
+...except for the whole overlapping voices thing that you heard me complain about in your office numerous times. The TLDR of it is: MIDI is just not a great format to *output* reductions in (that's a MusicXML thing, which has explicit voice handling), due to the nature of collapsing multiple instruments down into a single staff.
++ I experimented for some time writing out overlapping voices on different channels, which notation software will interpret as separate tracks, and then place on separate staffs. Then, using MuseScore's "implode" functionality (puts voices from different staves onto one selected staff), kind of but not really did the trick. Tt was unwieldy and annoying and, of course, not a good solution for an end-product (can't expect a user to do all that just to get a readable score).
 
 ## reductor.piece
 
 I am going to do a real fly-over view of this stuff.
 
-The Piece classes can be roughly categorized as follows (this is not everything, and some of these are not fully implemented, but are placeholders of sorts at the current moment):
-+ "Element" classes: `Note`, `Chord`, `Phrase`
-+ "Sub-component" classes: `TimeSignature`, `KeySignature`, `Tempo`, `Rhythm`
-+ Container classes: `Measure`, `Column`, `Box`, 
+The Piece classes can be roughly categorized as follows (this is not everything, and some of these are not fully implemented, but are placeholders of sorts at the moment):
++ Element classes: `Note`, `Chord`, `Phrase`
++ Element-containing classes: `Measure`, `Column`, `Box`, 
++ Support/component classes: `TimeSignature`, `KeySignature`, `Tempo`, `Rhythm`
 + Heavy-lifting utility classes: `IntervalTree`, `Range`, `Pitch`
-+ "Plug-in" utility classes (algorithms): `HandSplittingFunctions`, `ReductionFunctions`
++ Plug-in utility classes (algorithms): `HandSplittingFunctions`, `ReductionFunctions`
 + Interfaces: `Ranged`, `Noted`
 + Enums: `RhythmType`, `Hand`
 
@@ -670,33 +673,26 @@ I was able to genericize the tree:
 ```java
 public class IntervalTree<T extends Ranged> {
 
-  //...
+    //...
 
-      public class Node implements Ranged {
+    public class Node implements Ranged {
 
-        /// The {@link Range} (i.e., interval) this node represents
         private final Range range;
-
-        /// Max endpoint in subtree rooted at this node (used to ignore left subtrees during queries)
         private long max;
 
-        /// This node's data (a Set of elements with the same range but possibly differing associated data)
         ArrayList<T> elements;
 
         //...
 ```
 
-which means it can be used to store any Ranged object:
+which means it can be used to store any Ranged object, like so:
 
 ```java
 public class Piece implements Ranged, Noted {
 
-    public static int TPQ = 480;
-
     private final IntervalTree<Note> notes;
 
     private final IntervalTree<Column> columns;
-
     private final IntervalTree<Measure> measures;
 
     private final IntervalTree<TimeSignature> timeSigs;
@@ -706,33 +702,35 @@ public class Piece implements Ranged, Noted {
     //...
 ```
 
-This is, of course, probably a place where I could take a more functional programming approach and dynamically construct things. So I would just have the one `Note` tree, and anytime I needed a Measure, it could be lazily created from a query. This would mean either more query methods, or, perhaps, a "plug-in" style where each class has its own specific query method, and the tree can just use that method. 
+This is, of course, probably a place where I could take a more functional programming approach and dynamically construct things. So I would just have the one `Note` tree, and anytime I needed a `Measure`, it could be lazily created from a query. This would mean either more query methods, or, perhaps, a strategy pattern where each class has its own specific `queryTree()` method, and the tree can just use that method.
 
-However, it is really necessary at this point in the process for me to see exactly what lists contained at certain points during the debugging process, so they needed to exist.
+However, it is really necessary at this point in the process for me to see exactly what lists contain at certain points during the debugging process.
 
-A final note: one of the main purposes of the quantization functionality was to force the use of ranges in my program to represent half-open ranges relative to the note duration. However, Range also includes two getters with different purposes (which might be a design mistake - still working this out):
-+ `length()` represents the true length of the Range: `[0,479]` has a length of 479
-+ `duration()` is the "inclusive" representation of the Range: `[0,479]` has a duration of 480
+A final note: one of the main purposes of the quantization functionality was to force the use of ranges in my program to represent half-open ranges relative to the note duration. However, `Range` includes two getters with different purposes (which might be a design mistake - still working this out):
++ `length()` represents the true length of the Range
++ `duration()` is the "inclusive" representation of the Range
++ e.g. `[0,479]` has a length of `479` and a duration of `480`
 
 ### Measures
 
 Measures have to be created from scratch when working with MIDI data, since there is nothing in MIDI having to do with measures.
 
-#### API
+#### API Considerations
 
-I briefly [mentioned](#time-signature-events) some of the issues with pickup measures. Treating a collection of Measures as a simple list does not suffice. Measure 0 should only exist if there is a pickup measure.
-
-Secondly, there is the issue of measures being a 1-indexed sort of thing.
+I briefly [mentioned](#time-signature-events) some of the issues with pickup measures. The fact of the matter is that treating a collection of Measures as a simple list does not suffice.
++ Measure 0 should only exist if there is a pickup measure.
++ There is the issue of measures being a 1-indexed sort of thing.
 
 So access to a collection of Measures has to be controlled in some way. 
 
-If you were a developer using the API, what would you expect these method calls to return... :
+Exercise: if you were a developer using the API, what would you expect these method calls to return?:
 
 ```java
 // The first measure of the piece? Measure 1? The second element in the Measures list?
 piece.getMeasure(1);
 
-// Should this throw an out of bounds index exception if there is no pickup measure?
+// Should this throw an out of bounds index exception if there is no pickup measure? Should it 
+//     just quietly handle things, by automatically ++index without notifying the user?
 piece.getMeasure(0);
 
 // Should this always return Measure 1, regardless of whether or not there is a pickup measure?
@@ -741,9 +739,15 @@ piece.getFirstMeasure();
 
 May seem trivial, but this sort of design stuff gives me many headaches.
 
+I am still making decisions about it, but for now, it works with my mental scheme of things (and potentially only mine).
+
 #### Pickups
 
-The `assignPickup()` method handles the heuristic approaches (although one is slightly redundant, and one isn't heuristic per se) to detecting pickups:
+The `assignPickup()` method handles the "heuristic" approaches (although one is slightly redundant, and one isn't heuristic per se) for detecting pickup measures, which, if left unhandled, would make everything about Measures unusable!
+
+I briefly discussed in [Time Signature Events](#time-signature-events) that notation software seems to just encode pickup measures literally (one measure of, say, 1/4, for a piece in 4/4).
+
+At this point, all of the measures have been assigned and numbered. The task here is whether to "shift" each index up or leave it as is, as well as specially mark potential pickup measures:
 
 ```java
 private boolean assignPickup() {
@@ -752,15 +756,15 @@ private boolean assignPickup() {
 
     /*
     TimeSignature#compareTo will return a negative integer if both denominators are 
-    the same and the numerator is less than
+    the same, and the numerator is less than.
     */
     boolean heuristic1 = firstTimeSig.compareTo(secondTimeSig) < 0;
     
     /*
-    This is technically redundant, I just haven't decided which is best yet, 
+    This is technically redundant relative to heuristic1, I just haven't decided which is best yet, 
     and need to see more cases. Checks if the final measure complements the 
-    anacrusis (which was fairly traditional in classical/baroque works).
-    +
+    anacrusis (which is fairly common in classical/baroque works).
+        + e.g. measure 0 has 1 beat; the final measure will have 3 beats (for 4/4)
     */
     boolean heuristic2 = lastTimeSig.compareTo(penultimateTimeSig) < 0
             && firstTimeSig.getDenominator() + lastTimeSig.getNumerator()  
@@ -770,11 +774,11 @@ private boolean assignPickup() {
     The next heuristic handles the case where the initial measure is *not* encoded as a
     distinct, lesser time signature, and is, instead, authored as a normal measure 
     with a substantial period of rest before the first note. This is the only *truly* 
-    heuristic technique of the 3, but I named them all like this anyway.
+    heuristic technique of the 3, but I named them all as such anyway.
     */
     
     /* Right now, this is exactly an eighth rest (half of the value of a quarter) */
-    final long THRESHOLD = (long) (TPQ * 0.5);
+    final long THRESHOLD = (long) (Piece.resolution * 0.5);
     long amountOfRest = Math.abs(firstMeasure.getRange().low() 
             - firstMeasure.getColumn(0).getRange().low());
     
@@ -792,74 +796,69 @@ private boolean assignPickup() {
 
 ### Custom Data Structures
 
-The idea hierarchically is that you have the Piece, which (theoretically) contains:
+The idea, hierarchically, is that you have a `Piece`, which contains:
 + `Measure`s which contain
 + `Box`es which contain
 + `Column`s which contain
 + `Note`s
 
-This is shown below, and the coloring corresponds to left (blue), middle (yellow), and right (red) hand clusters:
+This is shown below for a single `Measure`; the coloring corresponds to left and right hands, and the middle region (blue, red, and yellow respectively):
 
 ![data structures](images/data_structures.png)
 
-Furthermore:
+The hierarchy is not split, and any structure can be partitioned using any "lesser" structure. So, an entire `Piece` can be split into just Columns, or just Boxes, or just Measures, or any combination thereof.
 
-An entire `Piece` can be split into just Columns, or just Boxes, or just Measures, or any combination thereof, but the important subdivisions of a `Piece`, in terms of analysis, are:
+But the important subdivision/flow, in terms of analysis, is:
 + `Box`: 
-  + "Horizontal" analysis/manipulation of Notes in Columns - that is, left-to-right
-  + Texture- (and pitch-) wise analysis
+  + **Horizontal** analysis/manipulation of Notes in Columns - that is, left-to-right
+  + Texture- (and pitch-) based analysis
   + A `Measure` is just a "special case" of a `Box` (not really class-wise, but theoretically)
   + Can "plug-in" further algorithms for hand-splitting ("Is there lot of jumping around going on that would make certain Column-only hand-splitting decisions untenable?")
 + `Column`:
-  + "Vertical" analysis/manipulation of notes - that is, up-and-down
-  + Purely pitch-wise analysis
-  + Triage first stop for hand-splitting and basic texture-thinning (remove doubled octaves, etc.)
-+ `Note` (leaf element)
+  + **Vertical** analysis/manipulation of notes - that is, up-and-down
+  + Exclusively pitch-based analysis
+  + Triage first stop for hand-splitting and basic texture-thinning (removing doubled octaves, etc.)
++ `Note` (**leaf** element)
 
-Even if Measures were never constructed (or were an on-demand thing), specialized queries could label a Box as being: 
-+ A full beat
-+ Some subdivision of a beat
-+ A strong beat, a weak beat, a pickup beat, etc.
+Theoretically, without actually filling or constructing objects and using only ranges, one could say "Get me the left hand notes of beat 3 of Measure 16" and it would just be a matter of:
++ Getting the Measure range (subdividing the Piece)
++ Getting the Box range (subdividing the Measure)
++ Getting the Column range (subdividing the Box and then splitting to get just the left hand notes)
 
-And then Columns could take that information into account, as well.A sort of "indexing" (that is to say, locating using a determined set of "coordinates") scheme now exists. The following example illustrates this, with just the "middle" hand area selected:
+So, a sort of "indexing" scheme now exists. (That is to say, everything has a determined location or set of "coordinates" within the entire composition represented by the original MIDI file). In the illustration below, just the middle region (not left or right hands) is shown in yellow:
 
 ![indices](images/indices.png)
 
-So, one could say:
-+ "Get me the (middle/LH/RH) notes of beat `b` of Measure `m`.
-
 As I write more actual reduction stuff, rhythmic/beat analysis is going to very important (knowing *where* in a measure a certain Column or Note occurs.)
++ Pickup beats will be the last full Column of a measure
++ Beat-hierarchy-based analysis (i.e. from strong to weak: 1,3,2,4, in 4/4)
 
 #### Column
 
-Of all the data structures, I will only go into depth on Columns, but even then, I will try to keep this brief. 
+Of all the data structures, I will only go into depth on Columns, here. (It's the one I'm most proud of.)
 
-My `Column` class has the most documentation of any of my classes by far, and explains what "pure" and "semi-pure" Columns are, how it assigns "holdovers", splits hands, etc. 
+The `Column` class has the most documentation of any of my classes by far, and explains what "pure" and "semi-pure" Columns are (how notes extend into and out of it); how it assigns "holdovers"; splits hands; etc. 
 
-It makes use of a `Consumer<Column>` type that will (in the future, hopefully) allow Boxes or Measures or other actors to re-split hands based on wider contextual information.
+It makes use of a `Consumer<Column>` type that will (in the future, hopefully) allow Boxes, Measures, or other suitable actors to re-split hands or reduce things based on wider contextual information.
 
-A Column represents the **smallest unit of musical change, regardless of where it happens in the staff.** 
+A Column represents the **smallest unit of musical change, regardless of where it happens in the staff,** always extending vertically up and down (thus `Column`). 
 
 Basically:
 1. Each time a new note occurs, a new Column should be created
-2. The Column should know about notes that extend into it from previous Columns
-3. The Column should only ever manipulate notes that are native to it (i.e. not holdovers -- that's another Column's job/responsibility)
-4. A Column should contain all other notes "on" (i.e. a "vertical" segment, thus the name Column) during its `Range`, but its `Range` should never include notes with different start ticks. Again, if a new start tick occurs, that signals new Column creation.
+2. A Column should know about notes that extend into it from the previous Column(s)
+3. However, a Column should only ever manipulate notes that are native to it (i.e. not holdovers -- that would be a previous Column's job/responsibility)
+4. A Column should contain all other notes "on" (i.e. a "vertical" segment) occurring in its range, but its range should never include notes with different start ticks. Again, if a new start tick occurs, that signals new Column creation.
 
-The purpose of the Column is to compare, analyze, and manipulate notes by pitch. Everywhere else in the program, Notes are used in the "Range" sense of things, NOT by pitch.
-
-But what I am most proud of is the `Column` construction process, so that's what I will highlight here.
+The purpose of the Column is to compare, analyze, and manipulate notes by pitch. This is notable because everywhere else in the program, notes are compared by where they occur in time (horizontally), and not by pitch.
 
 ##### Column Construction
 
-The algorithm to create Columns is something I am particularly proud of, although to somebody who knows math well, it's probably not that cool. But I thought it was. It was mostly cool to me because it came about after a super lengthy and round-about process, and, ultimately, was made possible by stuff my `Range` and `IntervalTree` stuff already paved the way for.
+The algorithm to create Columns is something I thought was pretty cool, although to somebody who knows math well, it's probably not that cool. But I thought it was. It came about after a super lengthy and round-about process, and, ultimately, was made possible by stuff the `Range` and `IntervalTree` classes already sort of did.
 
 It is easier to think in terms of a number line here:
-1. (Optional) Construct a the Notes / Ranges.
-2. Sort all Notes by start tick, then end tick (i.e. Range's natural ordering)
-3. Put all the start ticks into a Set (just to remove duplicates - very important)
-4. Construct Ranges between all the start ticks, as well as a final "terminus" (e.g. last end tick of the last note, which is to be included)
-5. Query the note tree with those Ranges and you have perfect Columns, even when syncopation is involved.
+1. Put all note start ticks into a Set
+2. Construct Ranges between all the start ticks, as well as a final "terminus" (e.g. last end tick of the last note, which is to be included)
+3. Query the note tree with those Ranges and you have perfect Columns, even when syncopation is involved.
 
 For instance:
 
@@ -884,8 +883,24 @@ Slightly more complex (syncopation):
 And 1 more visualization, with a different example (this is some documentation from a unit test, but I like how it is visualized):
 ![columns syncopation](images/range_test.png)
 
-Once a Column is filled with notes, it can decided if it is "pure" (no notes extend outside of it, either forward *or* back), and assign the `isHeld` field of each Note accordingly; apply a hand-splitting (the default, for now) function during construction to separate the notes into Left, Middle, and Right hand Columns; and do some other things, like calculate median pitch, mean pitch, split point (halfway between the thumbs), etc.
-+ Also has leftThumb and rightThumb indices if I decide to do away with the member Columns, since those present a recursive construction issue. They do, however, behave exactly as I need them to for now, and it's nice to see in debugging exactly what is in a sub-Column at any given time.
+##### Column Properties
+
+Once a Column is filled with notes, it can decide if it is:
++ **Pure**: all notes within the Column have the exact same range (nothing extends into it from before; nothing extends past its range into the next Column, either)
+  + These would be the easiest cases to reduce, as they are essentially self-contained units. Think the left and right hands both playing big quarter-note chords.
++ **Semi-pure**: notes may extend past the Column's range into the next Column, but all notes start within the Column (contains no holdovers)
+
+During that process, it can assign `isHeld`, which is a context-based field of a `Note` (still deciding if this is a good idea or not... might need to have a separate set of `heldNotes` *within* Column to keep things better encapsulated).
+
+It can split hands, using a default hand splitting function (the basic one).
+
+It can also do some cool stuff like calculate the "split point" (the imaginary pitch exactly halfway between the thumbs), median/mean pitch (which can sort of shed light on what area of the keyboard the hands are occupying during that Column), etc.
+
+One thing I am still not sure on: right now, Column has three Column members, one for left, right, and middle. This presents a recursive construction issue that I handle pretty messily.
+
+I also have leftThumb and rightThumb indices after the hand-splitting stuff, so those member Columns don't technically need to exist and getters could just return notes from the master list based on stored indices. 
+
+However: I have need of those particular notes as being independent lists that also behave like Columns. Plus, it's nice to see exactly what notes are in each sub-list as I debug.
 
 ## Design Patterns
 

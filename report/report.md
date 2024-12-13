@@ -2,7 +2,7 @@
 
 The internal representation stuff starts [here](#reductorpiece).
 
-If anything, you should definitely check out [Appendix B](#appendix-b-cool-reductions) for some cool YouTube/Spotify links. I think they're pretty cool.
+If anything, you should definitely check out [Appendix B](#appendix-b-cool-music) for some cool YouTube/Spotify links. I think they're pretty cool.
 
 ## MIDI
 

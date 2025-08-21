@@ -15,10 +15,7 @@ public abstract class Event<T extends MidiMessage> {
     private final T message;
     private int trackIndex;
     private String trackName;
-
-
     private final Long tick;
-
 
     Event(MidiEvent event) {
         this.event = event;

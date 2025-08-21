@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Stack;
 
-import static reductor.piece.RhythmType.QUARTER;
+import static reductor.piece.RhythmType.*;
 
 
 @SuppressWarnings("unchecked")
@@ -229,22 +229,22 @@ public class Phrase<T extends Ranged>  {
 
     }
 
-    //public static void main(String[] args) {
-    //
-    //    ArrayList<Ranged> list = Phrase.builder(0)
-    //            .timeSignature(4,4)
-    //            .keySignature("e")
-    //            .tempo(60)
-    //            .then(DOTTED_EIGHTH, "b3")
-    //            .then(SIXTEENTH, "b4")
-    //            .mark()
-    //            .then(DOTTED_HALF, "b4")
-    //            .then(QUARTER, "c")
-    //            .goToMark()
-    //            .then(EIGHTH,"g3", "b3", "e4")
-    //            .repeat(7)
-    //            .build();
-    //
-    //}
+    public static void main(String[] args) {
+
+        ArrayList<Ranged> list = Phrase.builder(0)
+                .timeSignature(4,4)
+                .keySignature("e")
+                .tempo(60)
+                .then(DOTTED_EIGHTH, "b3")
+                .then(SIXTEENTH, "b4")
+                .mark()
+                .then(DOTTED_HALF, "b4")
+                .then(QUARTER, "c")
+                .goToMark()
+                .then(EIGHTH,"g3", "b3", "e4")
+                .repeat(7)
+                .build();
+
+    }
 
 }

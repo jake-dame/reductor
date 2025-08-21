@@ -1,9 +1,7 @@
 package reductor.piece;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class Measure implements Ranged, Noted {
@@ -138,8 +136,18 @@ public class Measure implements Ranged, Noted {
     @Override
     public Range getRange() { return new Range(this.range); }
 
+    //@Override
+    //public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes); }
+
     @Override
-    public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes); }
+    public ArrayList<Note> getNotes() {
+
+        ArrayList<Note> notes = this.columns.stream()
+                .flatMap(col -> col.getNotes().stream())
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        return new ArrayList<>();
+    }
 
     @Override
     public String toString() {

@@ -29,7 +29,7 @@ class QuantizeTest {
             this.tpq = tpq;
 
             this.expected = new Range(start, (long) (start + type.duration - 1));
-            this.offset = offset(expected, tpq);
+            this.offset = offset(expected);
         }
 
         public Range getOffset() { return this.offset; }
@@ -69,31 +69,11 @@ class QuantizeTest {
 
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public static Range offset(Range range, int tpq) {
-        return offset(tpq, range.low(), Rhy.type(range));
+    public static Range offset(Range range) {
+        return offset(range.low(), Rhy.type(range));
     }
 
-    public static Range offset(double tpq, long startTick, Rhy rhy) {
+    public static Range offset(long startTick, Rhy rhy) {
 
         long stop = (long) (rhy.duration - 1);
 

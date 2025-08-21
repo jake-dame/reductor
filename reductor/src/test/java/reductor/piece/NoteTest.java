@@ -69,6 +69,8 @@ class NoteTest {
                 .pitch(60)
                 .isHeld(true)
                 .instrument("violin")
+                .start(0)
+                .stop(480 - 1)
                 .build();
 
         Note note2 = Note.builder()

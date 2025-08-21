@@ -109,12 +109,9 @@ public class ConversionFromMidi {
              3. Extra ons: when two notes with the same pitch are turned on at the same tick:
                      On channel 1 -- A whole note C @ 0 --> _should_ be turned off @ 1919
                      On channel 1 -- A quarter note C @ 0 --> _should_ turned off @ 479
-                 What really happens is that whichever note on for C enters the byte stream last will be the one
-                 chosen, and the other note (depending on the software used to produce the midi file) will
-                 immediately turn off the other note (though this isn't necessary). So:
-                    The "C" (regardless of who started it) will be turned off at 479, because there is not a separate
-                     channel for the whole note
-                 In this algorithm, since I want a Range of [0,0] from being created, both the whole note's on and
+                 "Every" C, even though there is really only ever 1, will be turned off at the first off pitch. All
+                 subsequent offs become case 2!
+                 In this algorithm, since I want to prevent a Range of [0,0] from being created, both the whole note's on and
                  off will be unpaired (both at tick 0), _as well as_ the whole notes extraneous off at 1919.
                  This occurs when multiple-features in notation software allow this sort of thing (like in a piano
                  score), OR the reverse (see the next paragraph).
@@ -140,10 +137,6 @@ public class ConversionFromMidi {
                 if (on.getPitch() == off.getPitch()) {
 
                     if (off.getTick() != on.getTick()) {
-                        //Range range = new Range(on.getTick(), off.getTick()); // TODO: remove if things don't explode
-                        //Note note = new Note(on.getPitch(), range);
-                        //outNotes.add(note);
-
                         Note note = Note.builder()
                                 .pitch(on.getPitch())
                                 .start(on.getTick())
@@ -321,7 +314,7 @@ public class ConversionFromMidi {
     //    Set<Long> set = new HashSet<>();
     //    for (TimeSignatureEvent event : events) { set.add(event.getTick()); }
     //
-    //    ArrayList<Range> ranges = Range.getRangesFromPoints(set, Context.finalTick());
+    //    ArrayList<Range> ranges = Range.fromStartTicks(set, Context.finalTick());
     //
     //    ArrayList<TimeSignature> out = new ArrayList<>();
     //

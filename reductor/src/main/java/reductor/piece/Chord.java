@@ -249,11 +249,8 @@ public class Chord implements Noted, Ranged {
         Chord chord = Chord.builder()
                 .start(0)
                 .stop(479)
-                .add(60, 64, 67)
+                .add("C4", "E4", "G4", "Bb4")
                 .build();
-
-        chord.add( new Note("Bb4"));
-        System.out.println();
 
     }
 

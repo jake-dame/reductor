@@ -23,7 +23,7 @@ class PieceTest {
              + tick length: 24960
              + MeasureList in actual score: 13, fermata whole on last
          */
-        Piece piece = Application.getPiece(CHOPIN_PREL_c);
+        //Piece piece = Application.getPiece(CHOPIN_PREL_c);
 
         // Pickup measure.
         assertFalse(piece.ma.hasPickup);

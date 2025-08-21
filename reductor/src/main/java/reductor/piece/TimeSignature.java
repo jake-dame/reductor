@@ -5,6 +5,8 @@ package reductor.piece;
 Resolution and measure size: I decided that since Time Signature is nothing without resolution and Time Signature
 ultimately determines measure size, these should all be handled and encapsulated by Time Signature.
  */
+
+
 public class TimeSignature implements Ranged, Comparable<TimeSignature> {
 
     private final int numerator;

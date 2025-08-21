@@ -200,7 +200,7 @@ public class Piece implements Ranged, Noted {
         private boolean assignPickup() {
 
             if (measures.isEmpty()  ||  measures.size() == 1) { return false; }
-
+            
             int i = 0;
             Measure firstMeasure = measures.get(i);
             while (firstMeasure.isEmpty()) {
@@ -225,7 +225,6 @@ public class Piece implements Ranged, Noted {
 
             boolean heuristic1 = firstTimeSig.compareTo(secondTimeSig) < 0;
 
-            // TODO: choose one or the other
             boolean heuristic2 = lastTimeSig.compareTo(penultimateTimeSig) < 0
                     && firstTimeSig.getDenominator() + lastTimeSig.getNumerator()  ==  firstTimeSig.getNumerator();
 

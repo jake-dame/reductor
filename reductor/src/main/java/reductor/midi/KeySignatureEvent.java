@@ -16,10 +16,8 @@ public final class KeySignatureEvent extends MetaEvent {
         this.mode = this.getMessage().getData()[1] & 0xFF;
     }
 
-
     public int getAccidentals() { return this.accidentals; }
     public int getMode() { return this.mode; }
-
 
     @Override
     String dataString() {

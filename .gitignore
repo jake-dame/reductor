@@ -3,9 +3,17 @@
 # VSC
 .vscode/
 
-# Intellij
+# Intellij/Eclipse
 .idea/
 out/
+*.iml
+.project
+.classpath
+
+# Gradle
+.gradle/
+build/
+**/build/
 
 # Misc
 .DS_Store

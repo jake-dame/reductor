@@ -251,11 +251,12 @@ public class Main {
         //        "redesignTest"
         //);
 
-        Piece piece = Application.getPiece(CHOPIN_PREL_c);
-
-        ScorePartwise scorePartwise = ConversionToMusicXML.createScorePartwise(piece);
-
-        File musicXml = Util.write(scorePartwise);
+        //Piece piece = Application.getPiece(CHOPIN_PREL_c);
+        //
+        //ScorePartwise scorePartwise = ConversionToMusicXML.createScorePartwise(piece);
+        //
+        //File musicXml = Util.write(scorePartwise);
+        IO.println("beans");
 
     }
 

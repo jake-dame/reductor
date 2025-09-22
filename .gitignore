@@ -1,23 +1,28 @@
-##### reductor .gitignore #####
-###############################
+################ .gitignore for 'reductor'
 
-### IDE (Intellij IDEA CE) ###
-.idea/      # config files (.xml's)
-out/        # build artifacts
-*.iml       # module config xml files
+################ (Dev)
+scratch.md
 
-# Gradle
-.gradle/    		# cache + state
-**/build/   		# (multi-module) build artifacts
-local.properties	# absolute path the to the android sdk
+################ (IntelliJ) config files (.xml's)
+.idea/
+################ (IntelliJ) build artifacts
+out/
+################ (IntelliJ) module config xml files  
+*.iml
 
-# Logs
+################ (Generic) logs
 *.log
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+################ (Gradle) cache + state
+.gradle/
+################ (Gradle) build artifacts (multi-module)  		
+**/build/
+################ (Gradle) absolute path the to the android sdk	
+local.properties
+
+################ (JVM) crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
 
-# Misc
-.DS_Store   # macOS thumbnail thingy
-scratch.md  # scratch/notes
+################ (MacOS) thumbnail thingy
+.DS_Store

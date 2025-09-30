@@ -2,11 +2,13 @@ package reductor.piece;
 
 import java.util.ArrayList;
 
-/// Any class implementing Noted should be considered a "note container"
+/** Noted denotes something as a container -- at some level -- of Note objects. */
 public interface Noted {
 
-    /// Any implementing class should return the Note objects it contains. Whether they are direct references,
-    ///  shallow, or deep copies; are filtered/transformed at all is up to the implementing class.
+    /**
+     * Any implementing class should return the Note objects it contains. The implementing class specifies whether
+     * the Notes are direct references, shallow or deep copies, are filtered/transformed, etc.
+     */
     ArrayList<Note> getNotes();
 
 }

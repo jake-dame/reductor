@@ -9,7 +9,8 @@ Work in progress.
 
 ## Documentation
 
-See `docs/` for narrative and reference documentation, links for supporting software, further reading, etc.
+See [docs/](docs) for narrative and reference documentation, links for supporting software, further reading, 
+etc.
 
 ## Credits
 

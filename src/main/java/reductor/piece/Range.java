@@ -1,24 +1,29 @@
 package reductor.piece;
 
+
 import java.util.*;
-
-// TODO: best practice for default constructor?? null? 0,1?
-
-// TODO: if low + high are final numerical primitives...can't I just expose
-//  them directly, like how Array.length is always an exposed field?
 
 
 public class Range implements Ranged, Comparable<Range> {
 
-    /// This range's low/lesser/left endpoint.
+    /** Lower/lesser/left endpoint of this Range. */
     private final long low;
 
-    /// This range's high/greater/right endpoint.
+    /** Upper/greater/right endpoint of this Range. */
     private final long high;
 
+    // ==========================  CONSTRUCTORS  ========================== //
 
-    /// Primary constructor.
-    /// Ranges must be constructed such that the low endpoint < high endpoint and 0 < low endpoint.
+
+    /**
+     * Creates a range with the given endpoints.
+     * <p>
+     * Valid ranges must be {@code 0 <= low < high}.
+     *
+     * @param low The lower/lesser/left endpoint of the Range to be constructed.
+     * @param high The upper/greater/right endpoint of the Range to be constructed.
+     * @throws IllegalArgumentException if {@code low < 0} or {@code high <= low}
+     */
     public Range(long low, long high) {
 
         if (high <= low) {
@@ -33,63 +38,82 @@ public class Range implements Ranged, Comparable<Range> {
         this.high = high;
     }
 
-    /// Copy constructor
+    /**
+     * Creates a deep copy of the passed Range.
+     *
+     * @param other The other Range object to copy.
+     * @throws NullPointerException If the passed Range is null.
+     * */
     public Range(Range other) {
+
+        if (other == null) {
+            throw new NullPointerException("Other Range can't be null");
+        }
+
         this(other.low, other.high);
     }
 
-    /// Default constructor
+    /**
+     * Creates a default Range object representing the range {@code [0,479]}.
+     * <p>
+     * {@code [0,479]} is the Range for most default quarter notes.
+     */
     public Range() {
         this(0, 479);
     }
 
-    Range(long low, long high, boolean hi) {
-        this.low = low;
-        this.high = high;
-    }
+
+    // =========================  INSTANCE METHODS ========================= //
 
 
-    /* ================
-     * INSTANCE METHODS
-     * ============= */
-
-
-    /// Returns this range's low.
+    /** Returns this Range's low. */
     public long low() { return low; }
 
-    /// Returns this range's high.
+    /** Returns this Range's high. */
     public long high() { return high; }
 
-    /// Returns this range's (half-open) length.
+    /**
+     * Returns this Range's length (i.e. half-open span).
+     * <p>
+     * Example: for a range of {@code [0,479]}, this returns {@code 479}.
+     * @see #duration()
+     * */
     public long length() { return this.high - this.low; }
 
     /**
-     * Returns this Range's (inclusive) length.
-     */
+     * Returns this Range's length (i.e. inclusive span).
+     * <p>
+     * Example: for a range of {@code [0,479]}, this returns {@code 480}.
+     * @see #length()
+     * */
     public long duration() { return length() + 1; }
 
-    /// Returns true if this range overlaps another.
+    /** Returns true if this Range overlaps the passed Range. */
     public boolean overlaps(Range other) {
         return this.low <= other.high  &&  other.low <= this.high;
     }
 
-    /// Returns true if this range contains the passed value.
+    /** Returns true if this Range contains the passed scalar value. */
     public boolean contains(long val) {
         return this.low <= val  &&  val <= this.high;
     }
 
-    /// Returns true if this range fully contains or perfectly overlaps with a passed range.
+    /** Returns true if this range fully contains or perfectly overlaps with a passed range. */
     public boolean contains(Range other) {
         return this.low <= other.low   &&  other.high <= this.high;
     }
 
 
-    /* =========
-     * OVERRIDES
-     * ====== */
+    // ============================  OVERRIDES  ============================ //
 
 
-    /// Compares by low endpoint; ties are broken by the high endpoint.
+    /**
+     * Compares by low endpoint first; the high endpoint wins ties.
+     *
+     * @param other the Range to compare against
+     * @return A negative value if this Range is lesser, {@code 0} if they are the same, and a positive
+     *         value if this Range is greater.
+     */
     @Override
     public int compareTo(Range other) {
         return other.low != this.low
@@ -97,7 +121,12 @@ public class Range implements Ranged, Comparable<Range> {
                 : Long.compare(this.high, other.high);
     }
 
-    /// Returns true is this range is to be considered equal to another object.
+    /**
+     * Returns {@code true} if this range is equal to the specified object.
+     * <p>
+     * Ranges are equal if both their low and high endpoints match,
+     * or if the passed Object is this.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) { return true; }
@@ -105,53 +134,54 @@ public class Range implements Ranged, Comparable<Range> {
         return this.low == range.low  &&  this.high == range.high;
     }
 
-    /// Returns a unique hash value based on this range's properties;
+    /** Returns a hash code derived from this range's endpoints. */
     @Override
     public int hashCode() {
         return Objects.hash(this.low, this.high);
     }
 
-    /// Returns itself (so that it conforms with the Ranged interface)
+    /** Returns this (satisfying contract with {@link Ranged} interface). */
     @Override
     public Range getRange() { return this; }
 
-    /// Returns this range as a string in the form of "\[low, high]".
+    /** Returns a string representation of this range in the form {@code "[low, high]"}. */
     @Override
     public String toString() {
         return "[" + this.low + ", " + this.high + "]";
     }
 
 
-    /* ======================
-     * STATIC UTILITY METHODS
-     * =================== */
+    // =============================  STATIC  ============================= //
 
 
-    /// Return a copy of the range shifted by an offset.
+    /** Return a copy of the passed Range, shifted by an offset. */
     public static Range getShiftedInstance(Range other, long offset) {
+        // TODO: this does not currently clamp or validate offset.
+        //       clamping would require global context value for final tick
         return new Range(other.low + offset, other.high + offset);
-        //if (offset < 0) {
-        //    return new Range(
-        //            Math.max(other.low + offset, 0),
-        //            Math.max(other.high + offset, 1)
-        //    );
-        //} else if (0 < offset) {
-        //    return new Range(
-        //            Math.min(other.low + offset, Context.finalTick() - 1),
-        //            Math.min(other.high + offset, Context.finalTick())
-        //    );
-        //} else {
-        //    return new Range(other);
-        //}
     }
 
-    /// If Java had operator overloading, this would be equivalent to: newRange += 480
-    /// Except also makes a new instance because Ranges are immutable
+    /**
+     * Returns a copy of the passed Range with both endpoints increased by the passed addend.
+     * <p>
+     * Acts as a {@code +=} operator of sorts, for a single Range object.
+     *
+     * @param range The Range to make a copy of.
+     * @param addend The amount to increase each endpoint.
+     */
     public static Range add(Range range, long addend) {
         return new Range(range.low + addend, range.high + addend);
     }
 
-    /// Given multiple ranges, constructs a single range encompassing them.
+    /**
+     * Constructs a single Range from multiple Ranges.
+     * <p>
+     * Example: If given {@code [0,479]}, {@code [480,959]}, {@code [960,1919]}, returns {@code [0,1919]}.
+     *
+     * @param rangedElems Any Collection of {@link Ranged} objects.
+     * @return A single Range object encompassing all Ranges in {@code rangedElems}.
+     * @param <T> Any element that implements the {@link Ranged} interface.
+     */
     public static <T extends Ranged> Range concatenate(Collection<T> rangedElems) {
 
         if (rangedElems.isEmpty()) { throw new RuntimeException("can't concatenate empty list"); }
@@ -166,22 +196,32 @@ public class Range implements Ranged, Comparable<Range> {
         return new Range(min, max);
     }
 
-    /// Given two overlapping ranges, outputs three Range instances of: left, overlapping, and right regions.
-    /// If the two ranges don't overlap, just returns two ranges identical to the input ranges.
-    public static ArrayList<Range> splitOverlapping(Range r1, Range r2) {
-
-        /*
-            Given:
-                0         20
-                |-----------|
-                      |-----------|
-                     10           30
-
-            Returns:
-                      10  20
-                |----||----||----|
-                0   10      20  30
-        */
+    /**
+     * Splits two passed overlapping Ranges into three distinct regions.
+     * <p>
+     * If the Ranges do not overlap at all, just returns copies of those Ranges.
+     * <pre>
+     * Given:
+     *     0         20
+     *     |-----------|
+     *           |-----------|
+     *          10           30
+     *
+     * Returns:
+     *           10  20
+     *     |----||----||----|
+     *     0   10      20  30
+     * </pre>
+     *
+     * @return An ArrayList of Ranges representing the original:
+     *         <ol>
+     *             <li>Left-only region</li>
+     *             <li>Shared region</li>
+     *             <li>Right-only region</li>
+     *         </ol>
+     *         If no overlap exists, the list contains copies of {@code r1} and {@code r2}.
+     */
+    public static ArrayList<Range> splitIntoThree(Range r1, Range r2) {
 
         if (!r1.overlaps(r2)) {
             return new ArrayList<>( List.of(new Range(r1), new Range(r2)) );
@@ -201,16 +241,19 @@ public class Range implements Ranged, Comparable<Range> {
     }
 
     /**
-     * Given a bunch of points on the number line, orders them and then creates ranges representing the intervals
-     * between those points. You must provide the end of the number line (i.e. right endpoint of the last interval).
+     * Creates ranges from a set of points.
      * <p>
-     * This could have been done several ways, including accepting a list of Ranges (less reusable) and
-     * not asking for the last endpoint (this would put the onus on the user to manually add that to the set of
-     * points before passing it to this function).
+     * The points mark the start of each interval, and {@code lastEndpoint}
+     * marks the end of the final interval.
+     * <p>
+     * This design avoids requiring the caller to manually append the final endpoint to the input set.
+     * It also is more reusable by not requiring actual Ranges. This is how Measures, Time Signatures, etc.,
+     * are created from raw MIDI data.
      *
      * @param points A set of points on the number line.
-     * @param lastEndpoint Where the number line should end.
-     * @return A list of {@link Range} representing the intervals between the points provided.
+     * @param lastEndpoint The right terminus of the number line.
+     * @return A list of Ranges representing the intervals between the points provided.
+     * @throws IllegalArgumentException if {@code lastEndpoint <= max(points)}
      */
     public static ArrayList<Range> fromStartTicks(Set<Long> points, long lastEndpoint) {
 
@@ -240,7 +283,14 @@ public class Range implements Ranged, Comparable<Range> {
         return out;
     }
 
-    /// Get ranges: provide window size
+    /**
+     * Splits a single Range up by a uniform window size.
+     *
+     * @param range The Range to be partitioned.
+     * @param windowSize The desired length of the output Ranges.
+     * @return An ArrayList of Ranges, each* of length {@code windowSize}, falling within {@code range}.
+     *         <br>*Remainders at the right end are handled by clamping.
+     */
     public static ArrayList<Range> partition(Range range, long windowSize) {
 
         ArrayList<Range> out = new ArrayList<>();
@@ -265,12 +315,17 @@ public class Range implements Ranged, Comparable<Range> {
         return out;
     }
 
-    /// Get ranges: provide number of ranges to get
+    /**
+     * Overload of {@link #partition(Range, long)} that allows for a divisor specifier rather than
+     * a window length specifier
+     *
+     * @param range The Range to be partitioned.
+     * @param divisor The number of Ranges to create from {@code range}.
+     */
     public static ArrayList<Range> partition(Range range, double divisor) {
 
         double windowSize = range.length() / divisor;
 
-        // TODO: refine this and make decisions
         double leftover = windowSize - ((int) windowSize);
         if (leftover != 0) {
             System.out.println("loss of " + leftover);
@@ -280,14 +335,28 @@ public class Range implements Ranged, Comparable<Range> {
 
     }
 
-    ////////////////
 
+    // ===============================  DEV  =============================== //
+
+
+    /** dev. This is for Phrase Builder `bookmark` member ONLY. For now. */
+    Range(long low, long high, boolean hi) {
+        this.low = low;
+        this.high = high;
+    }
+
+    /** dev */
     public Range setLow(long val) { return new Range(val, this.high); }
+
+    /** dev */
+
     public Range setHigh(long val) { return new Range(this.low, val); }
 
+    /** dev */
     public double overlappingRegion(Range other) {
         // If they don't overlap, the number will be negative, in which case, just return 0.
         return Math.max(this.high - other.low, 0);
     }
+
 
 }

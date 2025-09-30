@@ -1,31 +1,53 @@
 package reductor.piece;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 
 /**
- * Utility class that handles a lot of pitch-related stuff, for both MIDI and piano-ranged pitches, including pitch
- * validation, conversion between string and int, and register calculations.
+ * Utility class for pitch-related functionality.
+ *<p>
+ * Contains functionality related to:
+ * <ul>
+ *     <li> Validation: for both MIDI-spec and piano standard ranges </li>
+ *     <li> Conversion: between int values and string values representing pitches </li>
+ *     <li> "Getters": for register </li>
+ *     <li> Interval constants and a function for shifting a pitch by interval </li>
+ *     <li> Maps/sets for pitches and semitones </li>
+ *     <li> Determining white key vs. black key pitches </li>
+ * </ul>
  */
-public class Pitch {
+public final class Pitch {
 
-    /// Pitch: C-1
-    public static final int MIDI_MIN = 0;
-    /// Pitch: G9
-    public static final int MIDI_MAX = 127;
+    /**
+     * Integer value representing the lowest pitch represented in MIDI spec; corresponds to "C-1" (C negative one).
+     */
+    public static final int MIN_MIDI = 0;
 
-    /// Pitch: A0
-    public static final int PIANO_MIN = 21;
-    /// Pitch: C8
-    public static final int PIANO_MAX = 108;
+    /**
+     * Integer value representing the highest pitch represented in MIDI spec; corresponds to "G9".
+     */
+    public static final int MAX_MIDI = 127;
+
+    /**
+     * Integer value representing the lowest pitch playable on a standard piano; corresponds to "A0".
+     */
+    public static final int MIN_PIANO = 21;
+
+    /**
+     * Integer value representing the highest pitch playable on a standard piano; corresponds to "C8".
+     */
+    public static final int MAX_PIANO = 108;
 
     /*
-     INTERVALS
+     INTERVALS (offset values)
 
      e.g. note.add(Pitch.M3)
           or note.add(-Pitch.M3)
+
+     @see: docs/1-relevant-musical-terminology.md
     */
     public static final int m2 = 1;
     public static final int M2 = 2;
@@ -41,7 +63,6 @@ public class Pitch {
     public static final int OCTAVE = 12;
 
 
-    // Yes, this actually stores all 128 valid pitches. No, I am not interested in doing this programmatically.
     public static final Map<Integer, String> pitchesItoS;
 
     public static final Map<String, Integer> semitonesStoI;
@@ -54,7 +75,8 @@ public class Pitch {
         accidentalsStoI = Map.of("bb", -2, "b", -1, "", 0, "#", 1, "x", 2);
 
         pitchesItoS = new HashMap<>();
-        for (int num = MIDI_MIN; num <= MIDI_MAX; num++) {
+
+        for (int num = MIN_MIDI; num <= MAX_MIDI; num++) {
             String pitch = switch (num % 12) {
                 case 0 -> "C" + (num / 12 - 1);
                 case 1 -> "C#" + (num / 12 - 1);
@@ -71,7 +93,7 @@ public class Pitch {
                 default -> "not a pitch";
             };
             pitchesItoS.put(num, pitch);
-        }
+        } // end for
 
     }
 
@@ -88,19 +110,27 @@ public class Pitch {
      */
     public static int validatePitch(int pitch) {
 
-        if(pitch < MIDI_MIN || MIDI_MAX < pitch) {
+        if(pitch < MIN_MIDI || MAX_MIDI < pitch) {
             throw new IllegalArgumentException("valid pitch values are in [0,127], not: " + pitch);
         }
 
         return pitch;
     }
 
+    /**
+     * @see #validatePitch(int)
+     * @see Pitch#toInt(String)
+     */
     public static int validatePitch(String pitch) {
+
+        // The validation for string pitches is native within toInt()
         int intValue = Pitch.toInt(pitch);
+
         return validatePitch(intValue);
     }
 
     /**
+     * Determines whether a given pitch is a white key on the piano.
      *
      * @param pitch A pitch that exists on the piano (i.e. in [21,108])
      * @return True if the pitch is a white key on the piano; false if it is a black key.
@@ -109,7 +139,7 @@ public class Pitch {
      */
     public static boolean isWhiteKey(int pitch) {
 
-        if (pitch < PIANO_MIN  ||  PIANO_MAX < pitch) {
+        if (pitch < MIN_PIANO ||  MAX_PIANO < pitch) {
             throw new IllegalArgumentException(
                     "that's not a white key or a black key because it doesn't exist on a piano"
             );
@@ -119,39 +149,39 @@ public class Pitch {
     }
 
     /**
-     * @see Pitch#isWhiteKey
+     * @see #isWhiteKey
      */
-    public static boolean isBlackKey(int pitch) {
-        return !isWhiteKey(pitch);
-    }
+    public static boolean isBlackKey(int pitch) { return !isWhiteKey(pitch); }
 
     /**
-     * Clamps a pitch value to be within piano range (does not change the semitone, only the register).
+     * Clamps a pitch value to be within piano range
+     * <p>
+     * This does not alter the semitone -- only the register.
      *
      * @param pitch A pitch to clamp to be within the range that exists on a standard piano
      * @return The same pitch, but either up/down an octave(s) to be within piano range.
      */
     public static int clampToPianoRange(int pitch) {
-        while (pitch < PIANO_MIN) { pitch += OCTAVE; }
-        while (PIANO_MAX < pitch) { pitch -= OCTAVE; }
+        while (pitch < MIN_PIANO) { pitch += OCTAVE; }
+        while (MAX_PIANO < pitch) { pitch -= OCTAVE; }
         return pitch;
     }
 
     /**
-     * Returns the register (octave) that a passed pitch is in. For information on valid registers, see
-     * {@link Pitch#toInt}
+     * Returns the register of a given pitch.
      *
-     * @param pitch A valid pitch value
-     * @return The register the pitch exists in.
+     * @param pitch A valid pitch value; an int in {@code [0,127]}
+     * @return The pitch's register.
+     *
      * @see Pitch#toInt
      */
     public static int getRegister(int pitch) {
 
         validatePitch(pitch);
 
-        // e.g. 60 (middle C, or C4)
-        int register = -2;
-        while (0 <= pitch) { // TODO: double-check
+        // Needs to be -2; will always exit loop as at least -1 (which is valid)
+        int register = -2; // e.g. 60 (middle C, or C4)
+        while (0 <= pitch) {
             pitch -= 12; // 60, 48, 36, 24, 12, 0, break
             register++;  // -1,  0,  1,  2,  3, 4, n/a
         }
@@ -166,10 +196,12 @@ public class Pitch {
 
 
     /**
-     * Converts a MIDI pitch integer value to a string (currently: non-diatonic spelling is always the sharped degree (Ionian mode)).
+     * Converts an integer value (MIDI spec) to a string.
+     * <p>
+     * Currently: non-diatonic spelling is always the sharped degree (Ionian mode).
      *
-     * @param val          A valid MIDI pitch value (an int in {@code [0, 127]}.
-     * @param showRegister {@code true} if the string returned should be in alphanumeric notation (includes register); {@code false} if the string returned should just be the pitch.
+     * @param val          A valid MIDI pitch value (an int in {@code [0, 127]}).
+     * @param showRegister {@code true} if the string returned should include register, e.g. {@code "A#6"}; {@code false} if the string returned should just be the pitch, e.g. {@code "A#"}.
      * @return The string representation of {@code val}.
      * @throws IllegalArgumentException If the passed value is not in {@code [0, 127]}.
      */
@@ -200,18 +232,19 @@ public class Pitch {
     }
 
     /**
-     * Parses an {alphabetical} or alphanumeric string into its corresponding MIDI pitch value,
-     * which are in {@code [0, 127]}. Valid strings:
-     *
+     * Parses an alphabetical/alphanumeric string into its corresponding MIDI pitch value,
+     * which are in {@code [0, 127]}.
+     * <p>
+     * Valid strings:
      * <ul>
-     *     <li>Must have a pitch in upper or lower {@code ['A', 'G']}</li>
-     *     <li>May be followed by an accidental ({@code "#"}, {@code "b"}, {@code "x"}, or {@code "bb"})</li>
-     *     <li>May terminate with a register in {@code ['-1', '9']}; if none is given, default is the {@code -1} register</li>
-     *     <li>Min is {@code "C-1"} and max is {@code "G9"} (or valid enharmonic spellings)</li>
+     *     <li>Must have a pitch. Valid pitch values are in upper-/lower-case {@code ['A', 'G']}</li>
+     *     <li>May be followed by an accidental: {@code {"#", "b", "x", "bb"}}</li>
+     *     <li>May terminate with a register in {@code ['-1', '9']}; if none is given, the default is {@code -1}</li>
+     *     <li>Min is {@code "C-1"} and max is {@code "G9"} or valid enharmonic spellings of those pitches</li>
      * </ul>
      *
      * @param str A string describing a pitch, such as {@code "A4"}, {@code "Ab"}, {@code "A#"}, {@code "Ax3"}, or {@code "Abb-1"}.
-     * @return Returns the MIDI int value corresponding to the pitch described by {@code str}.
+     * @return The MIDI int value corresponding to the pitch represented by {@code str}.
      * @throws IllegalArgumentException If the input string is invalid.
      */
     public static int toInt(String str) {
@@ -235,7 +268,7 @@ public class Pitch {
         Integer semitone = semitonesStoI.get(str.substring(0, 1));
 
         if (semitone == null) {
-            throw new IllegalArgumentException("invalid pitch; valid pitches are in upper or lower ['a','g']");
+            throw new IllegalArgumentException("invalid pitch; valid pitches are in upper or lower ['A','G']");
         }
 
         // It's just a pitch, so return it early
@@ -253,7 +286,6 @@ public class Pitch {
          Afterward, we want just the accidental symbol left over, since it will be easiest to
          parse that on its own (since it can also be 1 (e.g. "#") or 2 chars (e.g. "bb").
         */
-        String[] arr = new String[2];
         if (str.contains("-")) {
             if (str.charAt(str.length() - 1) != '1') {
                 throw new IllegalArgumentException("if there is a hyphen it needs to apply to 1");

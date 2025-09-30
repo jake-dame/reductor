@@ -1,10 +1,19 @@
 # reductor
 
-reductor is an orchestral reduction generation program (takes orchestral or multi-instrument scores and attempts to reduce them to a part playable by a solo pianist).
+## Synopsis
 
-See `report/report.md` for analysis and details.
+`reductor` is an orchestral reduction generation program (takes orchestral or multi-instrument scores and
+attempts to reduce them to a part playable by a solo pianist).
 
-Capstone project by Jake Dame for Master of Software Development (MSD), Fall 2024
+Work in progress.
+
+## Documentation
+
+See `docs/` for narrative and reference documentation, links for supporting software, further reading, etc.
+
+## Credits
+
+Capstone project by Jake Dame for Master of Software Development - MSD, Fall 2024
 
 University of Utah
 

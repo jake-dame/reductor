@@ -1,7 +1,8 @@
 ################ .gitignore for 'reductor'
 
 ################ (Dev)
-scratch.md
+scribblins/
+docs/
 
 ################ (IntelliJ) config files (.xml's)
 .idea/

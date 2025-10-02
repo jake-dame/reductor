@@ -3,13 +3,13 @@ package reductor.dataconverter.musicxml;
 import org.audiveris.proxymusic.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reductor.piece.Measure;
+import reductor.core.Measure;
 
 import java.lang.String;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import static reductor.dataconverter.musicxml.ConversionToMusicXML.factory;
+import static reductor.dataconverter.musicxml.ConversionToMusicXml.factory;
 
 
 public class MeasureBuilder {

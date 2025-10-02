@@ -1,33 +1,33 @@
 package reductor.dataconverter.musicxml;
 
 import org.audiveris.proxymusic.*;
-import reductor.piece.KeySignature;
-import reductor.piece.Measure;
-import reductor.piece.Note;
-import reductor.piece.Range;
+import reductor.core.KeySignature;
+import reductor.core.Measure;
+import reductor.core.Note;
+import reductor.core.Range;
 
 import java.lang.String;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import static reductor.dataconverter.musicxml.ConversionToMusicXML.factory;
-import static reductor.piece.KeySignature.getTonic;
+import static reductor.dataconverter.musicxml.ConversionToMusicXml.factory;
+import static reductor.core.KeySignature.getTonic;
 
 
 public class PartBuilder {
 
     ScorePartwise.Part part;
-    ArrayList<reductor.piece.Measure> pieceMeasures;
+    ArrayList<reductor.core.Measure> pieceMeasures;
 
-    PartBuilder(ScorePartwise.Part part, ArrayList<reductor.piece.Measure> pieceMeasures) {
+    PartBuilder(ScorePartwise.Part part, ArrayList<reductor.core.Measure> pieceMeasures) {
         this.part = part;
         this.pieceMeasures = pieceMeasures;
     }
 
-    //// dev
+    // dev
     KeySignature currKey;
-    ////
+    // end
 
     void build(long tpq) {
 
@@ -35,9 +35,9 @@ public class PartBuilder {
 
         for (Measure pieceMeasure : pieceMeasures) {
 
-            ///// dev
+            // dev
             currKey = pieceMeasure.getKeySignature();
-            /////
+            // end
 
             // Build non-note aspects of measure (check for attribute changes, assign measure number, etc.)
             ScorePartwise.Part.Measure measure = measureBuilder.build(pieceMeasure, tpq);

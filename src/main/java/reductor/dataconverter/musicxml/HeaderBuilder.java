@@ -37,13 +37,14 @@ public class HeaderBuilder {
 
     private static Work buildWork(String name) {
 
+        // EXAMPLE:
         /*
            <work>
              <work-title>Untitled score</work-title>
              </work>
          */
 
-        Work work = ConversionToMusicXML.factory.createWork();
+        Work work = ConversionToMusicXml.factory.createWork();
 
         work.setWorkTitle(name);
 
@@ -52,6 +53,7 @@ public class HeaderBuilder {
 
     private static Credit buildTitle(String title) {
 
+        // EXAMPLE:
         /*
           <credit page="1">
             <credit-type>title</credit-type>
@@ -59,17 +61,17 @@ public class HeaderBuilder {
             </credit>
         */
 
-        Credit credit = ConversionToMusicXML.factory.createCredit();
+        Credit credit = ConversionToMusicXml.factory.createCredit();
 
         /*
-         For some reason the proxymusic has these as JAXBElements in the annotated list in Credit, but no way to create
-         them as proxymusic objects. All you can to is access the Arraylist (Credit#getCreditTypeOrLinkOrBookmark).
-         So these have to to be created manually, just following the MusicXML spec and MuseScore's use of them
+         For some reason the proxymusic has these as JAXBElements in the annotated list in Credit, but there is no way to create
+         them as proxymusic objects. All you can do is access the Arraylist (Credit#getCreditTypeOrLinkOrBookmark).
+         So these have to to be created manually, following the MusicXML spec and MuseScore's use of them.
          */
         JAXBElement<String> creditType = new JAXBElement<>(
-                new QName("credit-type"), // the element type
-                String.class, // what data type the body of the element has
-                "title" // the actual value in the body
+                new QName("credit-type"),   // the element type
+                String.class,               // what data type the body of the element has
+                "title"                     // the actual value in the body
         );
 
         JAXBElement<String> creditWords = new JAXBElement<>(
@@ -80,14 +82,15 @@ public class HeaderBuilder {
 
         credit.setPage(new BigInteger("1"));
 
-        credit.getCreditTypeOrLinkOrBookmark().add(creditType); // attach to parent (Credit)
-        credit.getCreditTypeOrLinkOrBookmark().add(creditWords); // attach to parent (Credit)
+        credit.getCreditTypeOrLinkOrBookmark().add(creditType);  // attach to parent (Credit)
+        credit.getCreditTypeOrLinkOrBookmark().add(creditWords); // "    "
 
         return credit;
     }
 
     private static Credit buildSubtitle(String subtitle) {
 
+        // EXAMPLE:
         /*
           <credit page="1">
             <credit-type>subtitle</credit-type>
@@ -95,7 +98,7 @@ public class HeaderBuilder {
             </credit>
         */
 
-        Credit credit = ConversionToMusicXML.factory.createCredit();
+        Credit credit = ConversionToMusicXml.factory.createCredit();
 
         JAXBElement<String> creditType = new JAXBElement<>(
                 new QName("credit-type"),
@@ -119,6 +122,7 @@ public class HeaderBuilder {
 
     private static Credit buildComposer(String composer) {
 
+        // EXAMPLE:
         /*
           <credit page="1">
             <credit-type>composer</credit-type>
@@ -126,7 +130,7 @@ public class HeaderBuilder {
             </credit>
         */
 
-        Credit credit = ConversionToMusicXML.factory.createCredit();
+        Credit credit = ConversionToMusicXml.factory.createCredit();
 
         JAXBElement<String> creditType = new JAXBElement<>(
                 new QName("credit-type"),
@@ -158,7 +162,7 @@ public class HeaderBuilder {
             </part-list>
         */
 
-        PartList partList = ConversionToMusicXML.factory.createPartList();
+        PartList partList = ConversionToMusicXml.factory.createPartList();
 
         return partList;
     }
@@ -189,29 +193,29 @@ public class HeaderBuilder {
             </score-part>
          */
 
-        ScorePart scorePart = ConversionToMusicXML.factory.createScorePart();
+        ScorePart scorePart = ConversionToMusicXml.factory.createScorePart();
         scorePart.setId("P1");
 
-        PartName partName = ConversionToMusicXML.factory.createPartName();
+        PartName partName = ConversionToMusicXml.factory.createPartName();
         partName.setValue("Piano");
         scorePart.setPartName(partName); // attach to parent (ScorePart)
 
-        PartName partNameAbbrev = ConversionToMusicXML.factory.createPartName();
+        PartName partNameAbbrev = ConversionToMusicXml.factory.createPartName();
         partNameAbbrev.setValue("Pno.");
         scorePart.setPartAbbreviation(partNameAbbrev); // attach to parent (ScorePart)
 
-        ScoreInstrument scoreInstrument = ConversionToMusicXML.factory.createScoreInstrument();
+        ScoreInstrument scoreInstrument = ConversionToMusicXml.factory.createScoreInstrument();
         scoreInstrument.setId("P1-I1");
         scoreInstrument.setInstrumentName("Piano");
         scoreInstrument.setInstrumentSound("keyboard.piano");
         scorePart.getScoreInstrument().add(scoreInstrument); // attach to parent (ScorePart)
 
-        MidiDevice midiDevice = ConversionToMusicXML.factory.createMidiDevice();
+        MidiDevice midiDevice = ConversionToMusicXml.factory.createMidiDevice();
         midiDevice.setId(scoreInstrument);
         midiDevice.setPort(1);
         scorePart.getMidiDeviceAndMidiInstrument().add(midiDevice); // attach to parent (ScorePart)
 
-        MidiInstrument midiInstrument = ConversionToMusicXML.factory.createMidiInstrument();
+        MidiInstrument midiInstrument = ConversionToMusicXml.factory.createMidiInstrument();
         midiInstrument.setId(scoreInstrument);
         midiInstrument.setMidiChannel(1); // TODO hmmm
         midiInstrument.setMidiProgram(1); // TODO hmmm

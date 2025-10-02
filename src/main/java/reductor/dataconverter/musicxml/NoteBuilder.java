@@ -1,8 +1,8 @@
 package reductor.dataconverter.musicxml;
 
 import org.audiveris.proxymusic.*;
-import reductor.piece.Hand;
-import reductor.piece.Note;
+import reductor.core.Hand;
+import reductor.core.Note;
 
 import java.lang.Double;
 import java.lang.String;
@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
-import static reductor.dataconverter.musicxml.ConversionToMusicXML.factory;
-import static reductor.piece.RhythmBases.*;
+import static reductor.dataconverter.musicxml.ConversionToMusicXml.factory;
+import static reductor.core.Bases.*;
 
 
 public class NoteBuilder {
@@ -78,7 +78,7 @@ public class NoteBuilder {
         Pitch pitch = factory.createPitch();
 
         // e.g. "C#" (false boolean means return pitch string without register numeral)
-        String piecePitchString = reductor.piece.Pitch.toStr(pieceNote.pitch(), false);
+        String piecePitchString = reductor.core.Pitch.toStr(pieceNote.pitch(), false);
 
         // e.g. "C"
         String semitone = piecePitchString.substring(0, 1);
@@ -111,7 +111,7 @@ public class NoteBuilder {
         }
 
         // Register
-        int register = reductor.piece.Pitch.getRegister(pieceNote.pitch());
+        int register = reductor.core.Pitch.getRegister(pieceNote.pitch());
         pitch.setOctave(register);
 
         return pitch;

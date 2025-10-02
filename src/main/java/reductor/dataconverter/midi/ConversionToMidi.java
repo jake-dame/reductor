@@ -1,14 +1,23 @@
 package reductor.dataconverter.midi;
 
-import reductor.midi.EventType;
-import reductor.piece.*;
+import reductor.core.KeySignature;
+import reductor.core.Tempo;
+import reductor.core.TimeSignature;
+import reductor.core.Noted;
+import reductor.parsing.midi.EventType;
+import reductor.core.*;
 
 import javax.sound.midi.*;
 import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Defines the necessary functions to convert a valid MIDI files from a `Piece` object.
+ */
 public class ConversionToMidi {
+
+    private ConversionToMidi() { }
 
     public static Sequence toSequence(Piece piece) throws InvalidMidiDataException {
         return toSequence(piece.getNotes(),
@@ -25,13 +34,15 @@ public class ConversionToMidi {
 
         final int RESOLUTION = 480;
         final int CHANNEL = 0;
+        final String TRACK_NAME = "Piano";
+        final String INSTRUMENT_NAME = "Piano";
 
         final Sequence seq = new Sequence(Sequence.PPQ, RESOLUTION);
         final Track track = seq.createTrack();
 
-        track.add(toTrackNameEvent("Piano"));
-        track.add(toInstrumentNameEvent("Piano"));
-        track.add(addProgramChange(CHANNEL));
+        track.add(toTrackNameEvent(TRACK_NAME));
+        track.add(toInstrumentNameEvent(INSTRUMENT_NAME));
+        track.add(toProgramChangeEvent(CHANNEL));
 
         for (TimeSignature timeSig : timeSigs) { track.add(toTimeSignatureEvent(timeSig)); }
         for (KeySignature keySig : keySigs) { track.add(toKeySignatureEvent(keySig)); }
@@ -69,7 +80,7 @@ public class ConversionToMidi {
         byte[] bytes = new byte[]{(byte) keySignature.getAccidentals(), (byte) keySignature.getMode()};
 
         MetaMessage message = new MetaMessage(
-                EventType.KEY_SIGNATURE.getTypeCode(),
+                EventType.KEY_SIGNATURE.getStatusByte(),
                 bytes,
                 bytes.length
         );
@@ -82,7 +93,7 @@ public class ConversionToMidi {
         byte[] bytes = convertBPMToMicroseconds(tempo.getBpm());
 
         MetaMessage message = new MetaMessage(
-                EventType.SET_TEMPO.getTypeCode(),
+                EventType.SET_TEMPO.getStatusByte(),
                 bytes,
                 bytes.length
         );
@@ -146,7 +157,7 @@ public class ConversionToMidi {
             exponent++;
         }
 
-        byte clockTicksPerTick = (byte) (24 * (4 / lowerNumeral)); // TODO: this may not be right
+        byte clockTicksPerTick = (byte) (24 * (4 / lowerNumeral)); // TODO: double-check this
         byte thirtySecondsPerBeat = 8;
 
         byte[] bytes = new byte[]{
@@ -157,7 +168,7 @@ public class ConversionToMidi {
         };
 
         MetaMessage message = new MetaMessage(
-                EventType.TIME_SIGNATURE.getTypeCode(),
+                EventType.TIME_SIGNATURE.getStatusByte(),
                 bytes,
                 bytes.length
         );
@@ -165,10 +176,18 @@ public class ConversionToMidi {
         return new MidiEvent(message, timeSignature.getRange().low());
     }
 
-    public static MidiEvent addProgramChange(int channel) throws InvalidMidiDataException {
-        final int ACOUSTIC_GRAND_PIANO = 0;
-        // Data2 for program change messages (the 0) is ignored as it is not applicable; the method needs it, though
-        ShortMessage message = new ShortMessage(ShortMessage.PROGRAM_CHANGE, channel, ACOUSTIC_GRAND_PIANO, 0);
+    public static MidiEvent toProgramChangeEvent(int channel) throws InvalidMidiDataException {
+
+        final int ACOUSTIC_GRAND_PIANO = 0x0;
+
+        ShortMessage message = new ShortMessage(
+                ShortMessage.PROGRAM_CHANGE,
+                channel,
+                ACOUSTIC_GRAND_PIANO,
+                0  // Data2 for program change messages is ignored as it is n/a; the method needs it, though
+
+        );
+
         return new MidiEvent(message, 0);
     }
 
@@ -177,7 +196,7 @@ public class ConversionToMidi {
         byte[] bytes = trackName.getBytes();
 
         MetaMessage message = new MetaMessage(
-                EventType.TRACK_NAME.getTypeCode(),
+                EventType.TRACK_NAME.getStatusByte(),
                 bytes,
                 bytes.length
         );
@@ -190,7 +209,7 @@ public class ConversionToMidi {
         byte[] bytes = instrumentName.getBytes();
 
         MetaMessage message = new MetaMessage(
-                EventType.TRACK_NAME.getTypeCode(),
+                EventType.TRACK_NAME.getStatusByte(),
                 bytes,
                 bytes.length
         );

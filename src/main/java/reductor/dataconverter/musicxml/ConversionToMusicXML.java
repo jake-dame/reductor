@@ -1,13 +1,15 @@
 package reductor.dataconverter.musicxml;
 
 import org.audiveris.proxymusic.*;
-import reductor.piece.*;
+import reductor.core.*;
 
 
-public class ConversionToMusicXML {
+public class ConversionToMusicXml {
 
-    // This is how you get ANY object in the ProxyMusic library. It has a createX() method for every class
-    //     that is possible to create. It is static in this class just so that every class isn't needing
+    private ConversionToMusicXml() { }
+
+    // This is how you get ANY object in the ProxyMusic library. It has a create<foo>() method for every class
+    //     that can be created. It is static and in this class just so that every class isn't needing
     //     to create a brand new factory.
     static ObjectFactory factory;
 

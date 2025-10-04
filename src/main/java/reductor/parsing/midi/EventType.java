@@ -48,9 +48,6 @@ public enum EventType {
 
     public int getStatusByte() { return this.statusByte; }
 
-    public boolean isMeta() { return this.ordinal() < 14; }
-    public boolean isChannel() { return !isMeta(); }
-
     public static EventType getEnumType(MidiEvent midiEvent) {
 
         // Make sure it is a meta or channel message -- nothing else
@@ -72,6 +69,9 @@ public enum EventType {
         );
 
     }
+
+    public boolean isMeta() { return this.ordinal() < 14; }
+    public boolean isChannel() { return !isMeta(); }
 
     @Override
     public String toString() {

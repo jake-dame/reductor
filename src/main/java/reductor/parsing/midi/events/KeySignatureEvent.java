@@ -1,4 +1,4 @@
-package reductor.parsing.midi;
+package reductor.parsing.midi.events;
 
 import reductor.core.KeySignature;
 

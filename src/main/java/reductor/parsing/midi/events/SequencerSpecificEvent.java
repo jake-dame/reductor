@@ -1,4 +1,4 @@
-package reductor.parsing.midi;
+package reductor.parsing.midi.events;
 
 import javax.sound.midi.MidiEvent;
 import java.util.Arrays;

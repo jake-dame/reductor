@@ -1,8 +1,8 @@
-package reductor.piece;
+package reductor.core;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reductor.piece.IntervalTree.Node;
+import reductor.core.IntervalTree.Node;
 
 import java.util.ArrayList;
 import java.util.Comparator;

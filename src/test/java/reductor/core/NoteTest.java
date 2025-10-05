@@ -1,4 +1,4 @@
-package reductor.piece;
+package reductor.core;
 
 import org.junit.jupiter.api.Test;
 

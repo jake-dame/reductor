@@ -1,13 +1,13 @@
 package reductor.dataconverter;
 
 import org.junit.jupiter.api.Test;
-import reductor.piece.Range;
-import reductor.piece.Rhy;
+import reductor.core.Range;
+import reductor.core.RhythmTypeBeta;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static reductor.dataconverter.midi.Quantize.quantize;
+import static reductor.core.midi.Quantize.quantize;
 
 
 class QuantizeTest {
@@ -20,10 +20,10 @@ class QuantizeTest {
         private final Range expected;
 
         private final long start;
-        private final Rhy type;
+        private final RhythmTypeBeta type;
         private final int tpq;
 
-        private TestPair(long start, Rhy type, int tpq) {
+        private TestPair(long start, RhythmTypeBeta type, int tpq) {
             this.start = start;
             this.type = type;
             this.tpq = tpq;
@@ -41,12 +41,12 @@ class QuantizeTest {
 
         static class TestPairBuilder {
 
-            private Rhy type;
+            private RhythmTypeBeta type;
             private long start;
             private int tpq;
 
 
-            TestPairBuilder type(Rhy type) {
+            TestPairBuilder type(RhythmTypeBeta type) {
                 this.type = type;
                 return this;
             }
@@ -70,10 +70,10 @@ class QuantizeTest {
     }
 
     public static Range offset(Range range) {
-        return offset(range.low(), Rhy.type(range));
+        return offset(range.low(), RhythmTypeBeta.type(range));
     }
 
-    public static Range offset(long startTick, Rhy rhy) {
+    public static Range offset(long startTick, RhythmTypeBeta rhy) {
 
         long stop = (long) (rhy.duration - 1);
 
@@ -156,7 +156,7 @@ class QuantizeTest {
 
         var quantized = quantize(ranges, 480);
         assertEquals(new Range(0, 159), quantized.getFirst());
-        assertEquals(Rhy.r_8in3, Rhy.type(quantized.getFirst().duration() + 1));
+        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.getFirst().duration() + 1));
 
     }
 
@@ -169,7 +169,7 @@ class QuantizeTest {
 
         var quantized = quantize(ranges, 480);
         assertEquals(new Range(160, 319), quantized.getFirst());
-        assertEquals(Rhy.r_8in3, Rhy.type(quantized.getFirst().duration() + 1));
+        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.getFirst().duration() + 1));
 
     }
 
@@ -214,14 +214,14 @@ class QuantizeTest {
         assertEquals(new Range(1440, 1800 - 1), quantized.get(6));
         assertEquals(new Range(1800, 1920 - 1), quantized.get(7));
 
-        assertEquals(Rhy.r_4, Rhy.type(quantized.get(0)));
-        assertEquals(Rhy.r_4in3, Rhy.type(quantized.get(1)));
-        assertEquals(Rhy.r_8in3, Rhy.type(quantized.get(2)));
-        assertEquals(Rhy.r_8in3, Rhy.type(quantized.get(3)));
-        assertEquals(Rhy.r_8in3, Rhy.type(quantized.get(4)));
-        assertEquals(Rhy.r_8in3, Rhy.type(quantized.get(5)));
-        assertEquals(Rhy.r_8dot, Rhy.type(quantized.get(6)));
-        assertEquals(Rhy.r_16, Rhy.type(quantized.get(7)));
+        assertEquals(RhythmTypeBeta.r_4, RhythmTypeBeta.type(quantized.get(0)));
+        assertEquals(RhythmTypeBeta.r_4in3, RhythmTypeBeta.type(quantized.get(1)));
+        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(2)));
+        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(3)));
+        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(4)));
+        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(5)));
+        assertEquals(RhythmTypeBeta.r_8dot, RhythmTypeBeta.type(quantized.get(6)));
+        assertEquals(RhythmTypeBeta.r_16, RhythmTypeBeta.type(quantized.get(7)));
 
     }
 

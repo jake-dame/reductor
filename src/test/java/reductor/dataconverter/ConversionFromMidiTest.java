@@ -2,12 +2,10 @@ package reductor.dataconverter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reductor.Application;
-import reductor.dataconverter.midi.ConversionFromMidi;
-import reductor.dataconverter.midi.UnpairedNoteException;
-import reductor.midi.NoteOffEvent;
-import reductor.midi.NoteOnEvent;
-import reductor.piece.Piece;
+import reductor.core.midi.ConversionFromMidi;
+import reductor.core.midi.UnpairedNoteException;
+import reductor.parsing.midi.events.NoteOffEvent;
+import reductor.parsing.midi.events.NoteOnEvent;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
@@ -15,10 +13,9 @@ import javax.sound.midi.ShortMessage;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static reductor.Files.TEST_3;
 
 
-class fromMIDITest {
+class ConversionFromMidiTest {
 
     static final int C4 = 60;
     static final int D4 = 62;
@@ -70,12 +67,7 @@ class fromMIDITest {
     }
 
     @Test
-    void test5() throws InvalidMidiDataException, UnpairedNoteException {
-
-        Application dh = new Application();
-
-        // Test 3 is a piano track (everything is on one channel) with 2 TIED whole notes (C4) and 4 half notes (C4)
-        Piece piece = dh.getPiece(TEST_3);
+    void test5() {
 
         // Overlapping notes
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 479) ); // quarter C
@@ -90,7 +82,9 @@ class fromMIDITest {
             ShortMessage message = new ShortMessage(ShortMessage.NOTE_ON, pitch, 64);
             MidiEvent event = new MidiEvent(message, tick);
             return new NoteOnEvent(event);
-        } catch (InvalidMidiDataException e) { throw new RuntimeException(e); }
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static NoteOffEvent noteOff(int pitch, long tick) {
@@ -98,7 +92,9 @@ class fromMIDITest {
             ShortMessage message = new ShortMessage(ShortMessage.NOTE_OFF, pitch, 0);
             MidiEvent event = new MidiEvent(message, tick);
             return new NoteOffEvent(event);
-        } catch (InvalidMidiDataException e) { throw new RuntimeException(e); }
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

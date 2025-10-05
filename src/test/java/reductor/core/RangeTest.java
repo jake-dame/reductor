@@ -1,4 +1,4 @@
-package reductor.piece;
+package reductor.core;
 
 import org.junit.jupiter.api.Test;
 
@@ -156,12 +156,12 @@ public class RangeTest {
     }
 
     @Test
-    void splitOverlapping() {
+    void splitIntoThree() {
 
         Range r1 = new Range(0,20);
         Range r2 = new Range(10,30);
 
-        var actual = Range.splitOverlapping(r1, r2);
+        var actual = Range.splitIntoThree(r1, r2);
 
         Range e1 = new Range(0,10);
         Range e2 = new Range(10,20);

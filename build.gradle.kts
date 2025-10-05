@@ -1,13 +1,9 @@
-plugins {
-    java
-}
+plugins { java }
 
 group = "reductor"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
+repositories { mavenCentral() }
 
 java {
     toolchain {
@@ -24,6 +20,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks.test { useJUnitPlatform() }
+
+tasks.register<Delete>("cleanOutputs") {
+    delete("outputs")
+    doFirst { println("hello from gradle task") }
+    doLast{ println("goodbye from gradle task") }
 }

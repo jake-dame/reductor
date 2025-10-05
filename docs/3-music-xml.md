@@ -68,6 +68,10 @@ The first section within the
 It is all optional, save for one element: the `<part-list>` element, which contains
 `<score-part>` elements and is basically a mapping for the rest of the document. It provides id's, the ability to give names to the parts (e.g. "trumpet"), specification of staff quantity, etc.
 
+Things like `<work>` and `<identifcation>` are metadata-only elements, and do not include anything that will be rendered. This can be confusing because title and composer are referenced here. Again, this is more metadata, but can also be applicable in larger, more complex pieces/opuses (multi-movement, catalog numbers, front page vs. title cover, etc.). The stuff that is rendered will be down in one of the 5 or 6 `<credit>` elements.
+
+`<defaults` is rendering stuff, and can be ignored. 
+
 
 ## Body
 
@@ -77,11 +81,12 @@ I have diagrammed it below, but also provided a barebones example in actual Musi
                         _
         Metadata 1       |
         Metadata 2       |---- score header
-        ...              |
+        Render nonsense  |
+        Credits section  |
         Part-List       _|
 
         Part 1          
-            Measure 1   
+            Measure 1
                 Attributes
                 Note
                     ...

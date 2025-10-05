@@ -503,14 +503,6 @@ standard and most all MIDI devices.
 Add'l: A MIDI "beat clock" is used to synchronize timing across multiple devices and isn't really an important
 concept when just dealing with MIDI files (i.e. not playback/performance/recording).
 
-## Resources
+## Misc.
 
-[insanely high quality "wiki"](https://www.recordingblogs.com/wiki/musical-instrument-digital-interface-midi)
-
-[reintech.io tutorial](https://reintech.io/blog/java-midi-programming-creating-manipulating-midi-data)
-
-All the official specs (though some are members only??): [midi.org ](midi.org)
-
-a patch is just an "industry" word for sound file. patch 1 in general midi is piano. patch x is clarinet, etc.
-but different DAW or software can have their own list of patches assigned because they want to use different
-sound files
+A "patch" is just the industry term for sound file. Patch 1 in general midi is piano. Patch x is clarinet, etc. but different DAW or software can have their own list of patches assigned because they want to use different sound files.

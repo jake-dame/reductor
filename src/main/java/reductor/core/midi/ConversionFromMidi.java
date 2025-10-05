@@ -1,0 +1,267 @@
+package reductor.core.midi;
+
+import reductor.core.KeySignature;
+import reductor.core.Tempo;
+import reductor.core.TimeSignature;
+import reductor.core.Ranged;
+import reductor.parsing.midi.events.Event;
+import reductor.parsing.midi.EventType;
+import reductor.parsing.midi.events.NoteOffEvent;
+import reductor.parsing.midi.events.NoteOnEvent;
+import reductor.core.*;
+
+import javax.sound.midi.*;
+import java.util.*;
+
+
+/**
+ * Defines the necessary function to build a `Piece` object out of MIDI data.
+ */
+public class ConversionFromMidi {
+
+
+    private ConversionFromMidi() { }
+
+
+    // See `docs/note-pairing-and-midi.md`
+    public static ArrayList<Note> toNotes(
+            ArrayList<NoteOnEvent> noteOnEvents,
+            ArrayList<NoteOffEvent> noteOffEvents
+    ) throws UnpairedNoteException {
+
+        // Don't want to alter the original lists (by sorting them)
+        // LinkedLists work fine for us here (need easy removals, but don't care about random access)
+        ArrayList<NoteOnEvent> noteOnEventsCopy = new ArrayList<>(noteOnEvents);
+        noteOnEventsCopy.sort(Comparator.comparingLong(NoteOnEvent::getTick));
+        LinkedList<NoteOnEvent> ons = new LinkedList<>(noteOnEvents);
+
+        ArrayList<NoteOffEvent> noteOffEventsCopy = new ArrayList<>(noteOffEvents);
+        noteOffEventsCopy.sort(Comparator.comparingLong(NoteOffEvent::getTick));
+        LinkedList<NoteOffEvent> offs = new LinkedList<>(noteOffEvents);
+
+        ArrayList<Note> outNotes = new ArrayList<>();
+        NoteOnEvent on;
+        NoteOffEvent off;
+        Iterator<NoteOnEvent> onsIterator = ons.iterator();
+        while(onsIterator.hasNext()) {
+
+            on = onsIterator.next();
+
+            Iterator<NoteOffEvent> offsIterator = offs.iterator();
+            while(offsIterator.hasNext()) {
+
+                off = offsIterator.next();
+
+                // Criterion 1: matching pitches
+                if (on.getPitch() == off.getPitch()) {
+
+                    // Criterion 2: Don't create a range of [0,0]. Quantization
+                    //     should have created only exclusive ranges.
+                    //     Inclusive ones are a big problem for this program.
+                    if (off.getTick() != on.getTick()) {
+
+                        // Found a match/pair --> construct the `Note` object
+                        Note note = Note.builder()
+                                .pitch(on.getPitch())
+                                .start(on.getTick())
+                                .stop(off.getTick())
+                                .instrument(on.getTrackName())
+                                .build();
+
+                        outNotes.add(note);
+                    }
+
+                    // Overlapping pairs (on @ 0, off @ 0) removed here as well
+                    onsIterator.remove();
+                    offsIterator.remove();
+                    break;
+                }
+
+            } // end offs while()
+
+        } // end ons while()
+
+        // For testing / debugging purposes
+        ArrayList<NoteOnEvent> unpairedOns = new ArrayList<>(ons);
+        ArrayList<NoteOffEvent> unpairedOffs = new ArrayList<>(offs);
+        // end
+
+        if (!ons.isEmpty()) {
+            throw new UnpairedNoteException(
+                    "unpaired note on", new Throwable(unpairedOns.toString())
+            );
+        }
+
+        if (!offs.isEmpty()) {
+            throw new UnpairedNoteException(
+                    "unpaired note off", new Throwable(unpairedOffs.toString())
+            );
+        }
+
+        return outNotes;
+    }
+
+    /**
+     * Returns a {@link KeySignature} given a valid MIDI key signature event:
+     *
+     * @param event A {@link javax.sound.midi.MidiEvent}
+     *
+     * @return A {@link KeySignature} corresponding to the MIDI data.
+     */
+    public static KeySignature toKeySignature(MidiEvent event, Range range) {
+
+        byte[] data;
+
+        if (event.getMessage() instanceof MetaMessage mm
+                &&  mm.getType() == EventType.KEY_SIGNATURE.getStatusByte()) {
+            data = mm.getData();
+        } else {
+            throw new RuntimeException(
+                    "toKeySignature was given an event that is not a key signature event"
+            );
+        }
+
+        int accidentalCount = data[0];
+        int mode = data[1];
+
+        if (accidentalCount < -7 || accidentalCount > 7) {
+            throw new IllegalArgumentException(
+                    "bytes representing accidental counts must have a value of between -7 and 7"
+            );
+        }
+
+        if (mode == 0  ||  mode == 1) {
+            return new KeySignature(accidentalCount, mode, range);
+        } else {
+            throw new IllegalArgumentException(
+                    "bytes representing modes must have a value of either 0 (major) or 1 (minor)"
+            );
+        }
+
+    }
+
+    /**
+     * Returns a {@link Tempo} given a valid MIDI set tempo event:
+     *
+     * @param event A {@link javax.sound.midi.MidiEvent}
+     *
+     * @return A {@link Tempo} corresponding to the MIDI data.
+     */
+    public static Tempo toTempo(MidiEvent event, Range range) {
+
+        byte[] data;
+        if (event.getMessage() instanceof MetaMessage mm) {
+            if (mm.getType() == EventType.SET_TEMPO.getStatusByte()) {
+                data = mm.getData();
+            } else {
+                throw new RuntimeException("toTempo was given an event that is not a set tempo event");
+            }
+        } else {
+            throw new RuntimeException("toTempo was given an event that is not a set tempo event");
+        }
+
+        return new Tempo(convertMicrosecondsToBPM(data), range);
+    }
+
+    public static TimeSignature toTimeSignature(MidiEvent event, Range range) {
+
+        byte[] data;
+        if (event.getMessage() instanceof MetaMessage mm
+                &&  mm.getType() == EventType.TIME_SIGNATURE.getStatusByte()) {
+            data = mm.getData();
+        } else {
+            throw new RuntimeException("toTimeSignature was given an event that is not time signature event");
+        }
+
+        int upperNumeral = data[0] & 0xFF;
+        int lowerNumeralExponent = data[1] & 0xFF;
+        int lowerNumeral = (int) Math.pow(2, lowerNumeralExponent);
+
+        int clockTicksPerTick = data[2] & 0xFF; // don't delete
+        int thirtySecondNotesPerBeat = data[3] & 0xFF; // don't delete
+
+        return new TimeSignature(
+                upperNumeral,
+                lowerNumeral,
+                range
+        );
+
+    }
+
+    /**
+     * Given a value in microseconds (per quarter note), converts to beats-per-minute (bpm),
+     * which is what humans use to specify tempo. Easily retrieved with getData() on set tempo
+     * messages from (Java) MetaMessage class.
+     *
+     * @param data The tempo as a number split into three LTR bytes
+     * @return The same tempo in beats-per-minute
+     */
+    public static int convertMicrosecondsToBPM(byte[] data) {
+
+        int byteIndex = 0;
+        long microsecondsPerQuarterNote = 0;
+
+        while (byteIndex < data.length) {
+            microsecondsPerQuarterNote <<= 8;
+            microsecondsPerQuarterNote |= (data[byteIndex] & 0xFF);
+            byteIndex++;
+        }
+
+        final int microsecondsPerMinute = 60_000_000;
+
+        // This cast is fine because none of the numbers here, if valid MIDI spec,
+        //     will never get remotely near INTEGER_MAX.
+        return microsecondsPerMinute / (int) microsecondsPerQuarterNote;
+    }
+
+
+    public static <E extends Event<?>, C extends Ranged> ArrayList<C> assignRanges(
+            List<E> midiEvents,
+            long sequenceLengthInTicks,
+            Class<C> classToConvertTo
+    ) {
+
+        if (midiEvents.isEmpty()) { return new ArrayList<>(); }
+        ArrayList<E> eventsCopy = new ArrayList<>(midiEvents);
+        eventsCopy.sort(Comparator.comparingLong(Event::getTick));
+
+        ArrayList<C> out = new ArrayList<>();
+
+        int size = eventsCopy.size();
+        for (int i = 0; i < size; i++) {
+
+            Event<?> event = eventsCopy.get(i);
+
+            long tick = event.getTick();
+            long nextTick;
+
+            nextTick = i == size - 1
+                    ? sequenceLengthInTicks + 1
+                    : eventsCopy.get(i+1).getTick();
+
+            // This checks for the "same" midi meta event being sent at the same time, just on different tracks
+            if (tick == nextTick) { continue; }
+
+            // Meta events don't get "off" messages, it's just whenever the next event occurs.
+            // So really this "should" be tick, nextTick, like [0,480], but that range.high() value won't even be
+            // used in the reverse conversion process - the only thing that matters is the internal representation
+            // and what Piece needs, which is that standard range.high() is nextTick - 1.
+            Range range = new Range(tick, nextTick - 1);
+
+            C instance = switch (classToConvertTo.getSimpleName()) {
+                case "TimeSignature" -> classToConvertTo.cast(toTimeSignature(event.getMidiEvent(), range));
+                case "KeySignature" -> classToConvertTo.cast(toKeySignature(event.getMidiEvent(), range));
+                case "Tempo" -> classToConvertTo.cast(toTempo(event.getMidiEvent(), range));
+                default -> throw new RuntimeException(
+                        "invalid class for using assignRanges function: " + classToConvertTo
+                );
+            };
+
+            out.add(instance);
+        }
+
+        return out;
+    }
+
+
+}

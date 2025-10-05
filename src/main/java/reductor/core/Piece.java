@@ -26,19 +26,15 @@ public class Piece implements Ranged, Noted {
     private final IntervalTree<KeySignature> keySigs;
     private final IntervalTree<Tempo> tempos;
 
-    private final String name;
-
-    public Piece(
+    Piece(
             ArrayList<Note> notes,
             ArrayList<TimeSignature> timeSignatures,
             ArrayList<KeySignature> keySignatures,
             ArrayList<Tempo> tempos,
-            int ticksPerQuarter,
-            String name
+            int ticksPerQuarter
     ) {
 
         Piece.TPQ = ticksPerQuarter;
-        this.name = name;
 
         this.notes = new IntervalTree<>(notes);
 
@@ -163,7 +159,6 @@ public class Piece implements Ranged, Noted {
     public ArrayList<TimeSignature> getTimeSignatures() { return new ArrayList<>(this.timeSigs.toList()); }
     public ArrayList<KeySignature> getKeySignatures() { return new ArrayList<>(this.keySigs.toList()); }
     public ArrayList<Tempo> getTempos() { return new ArrayList<>(this.tempos.toList()); }
-    public String getName() { return this.name; }
     public long getTPQ() { return Piece.TPQ; }
 
 
@@ -342,8 +337,7 @@ public class Piece implements Ranged, Noted {
                 timeSignatures,
                 keySignatures,
                 tempos,
-                TPQ,
-                name
+                TPQ
         );
 
     }

@@ -1,10 +1,13 @@
 ################ .gitignore for 'reductor'
 
 ################ (Dev)
-assets/musescores/
+assets/sourced-midis/
+**/.mscbackup/
 **/outputs/
 **/scribblins/
 aaa-todo.md
+partwise.dtd
+musicxml.xsd
 
 ################ (Generic) logs
 *.log

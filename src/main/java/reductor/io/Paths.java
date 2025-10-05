@@ -1,5 +1,6 @@
 package reductor.io;
 
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,12 +8,20 @@ import java.nio.file.Path;
 
 public class Paths {
 
-    private Paths() { }
 
     public static final Path DIR_PIECES = Path.of("assets", "pieces");
     public static final Path DIR_TESTS = Path.of("assets", "tests");
-    public static final Path DIR_OUTPUTS = Path.of("outputs");
 
+    private static final Path DIR_OUTPUTS = Path.of("outputs");
+
+
+    private Paths() {}
+
+
+    public static String getFileBaseName(Path path) {
+        String fileName = path.getFileName().toString();
+        return fileName.substring(0, fileName.lastIndexOf('.'));
+    }
 
     static Path getOutPath(String baseName, String extension) throws IOException {
         createOutputDirectory();

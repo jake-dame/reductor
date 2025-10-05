@@ -1,5 +1,6 @@
 package reductor.io;
 
+
 import javax.sound.midi.*;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -14,7 +15,7 @@ public class MidiExporter {
     private static final int MIDI_FILE_TYPE = 0;
 
 
-    private MidiExporter() { }
+    private MidiExporter() {}
 
 
     /**
@@ -26,7 +27,7 @@ public class MidiExporter {
      */
     public static Path write(Sequence sequence, String baseName) throws IOException {
 
-        Path path = Paths.getOutPath(baseName, EXTENSION);
+        Path path = Paths.getOutPath(baseName + "-OUT", EXTENSION);
 
         MidiSystem.write(sequence, MIDI_FILE_TYPE, path.toFile());
 

@@ -1,23 +1,16 @@
 package reductor;
 
-import reductor.dataconverter.midi.ConversionToMidi;
-import reductor.dataconverter.midi.UnpairedNoteException;
+
 import reductor.app.Application;
 
-import javax.sound.midi.InvalidMidiDataException;
-
-import static reductor.dev.Catalog.MusicFile.*;
-import static reductor.dev.Helpers.play;
+import java.nio.file.Path;
 
 
 public class Main {
 
-    static void main()
-            throws InvalidMidiDataException,
-            UnpairedNoteException {
+    static void main() {
 
-        var piece = Application.getPiece(BACH_BEFIEHL_DU_DEINE_WEGE_NEW);
-        play(ConversionToMidi.toSequence(piece));
+        Application.run(Path.of("/Users/work/jcode/reductor/assets/tests/test1/test1.mid"));
 
     }
 

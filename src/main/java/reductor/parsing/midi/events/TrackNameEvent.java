@@ -1,9 +1,11 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 
 
 public final class TrackNameEvent extends MetaEvent {
+
 
     private final String trackName;
 
@@ -14,10 +16,11 @@ public final class TrackNameEvent extends MetaEvent {
     }
 
 
-    public String getTrackNameAsString() { return this.trackName; }
+    public String getTrackNameAsString() {return this.trackName;}
 
 
     @Override
-    String dataString() { return this.trackName; }
+    String dataString() {return this.trackName;}
+
 
 }

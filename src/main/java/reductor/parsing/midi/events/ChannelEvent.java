@@ -1,10 +1,12 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 
 
 public abstract class ChannelEvent extends Event<ShortMessage> {
+
 
     private final int channel;
     //private final ShortMessage message;
@@ -19,10 +21,11 @@ public abstract class ChannelEvent extends Event<ShortMessage> {
     //@Override
     //public ShortMessage getMessage() { return this.message; }
 
-    public final int getChannel() { return this.channel; }
+    public final int getChannel() {return this.channel;}
 
 
     @Override
-    String dataString() { return "Ch. " + this.channel + " -> "; }
+    String dataString() {return "Ch. " + this.channel + " -> ";}
+
 
 }

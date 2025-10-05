@@ -1,5 +1,6 @@
 package reductor.parsing.midi.events;
 
+
 import reductor.parsing.midi.EventType;
 
 import javax.sound.midi.*;
@@ -11,6 +12,7 @@ import javax.sound.midi.*;
  * @param <T> The type of MidiMessage the Event holds
  */
 public abstract class Event<T extends MidiMessage> {
+
 
     private final MidiEvent event;
     private final EventType type;
@@ -40,7 +42,8 @@ public abstract class Event<T extends MidiMessage> {
                 case NOTE_ON -> {
                     int velocity = sm.getData2();
                     if (velocity == 0) {
-                        sm.setMessage(EventType.NOTE_OFF.getStatusByte(), sm.getChannel(), sm.getData1(), sm.getData2());
+                        sm.setMessage(EventType.NOTE_OFF.getStatusByte(), sm.getChannel(), sm.getData1(),
+                                sm.getData2());
                         yield new NoteOffEvent(event);
                     } else {
                         yield new NoteOnEvent(event);
@@ -89,7 +92,8 @@ public abstract class Event<T extends MidiMessage> {
 
     @Override
     public final String toString() {
-        return String.format("{track %d (%s), tick %d -> %s",
+        return String.format(
+                "{track %d (%s), tick %d -> %s",
                 this.trackIndex,
                 this.getTrackName(),
                 this.tick,
@@ -98,21 +102,23 @@ public abstract class Event<T extends MidiMessage> {
     }
 
     // Get the original javax MidiEvent object used to create this Event
-    public final MidiEvent getMidiEvent() { return event; }
+    public final MidiEvent getMidiEvent() {return event;}
 
     // Get the original javax MidiMessage (either ShortMessage or MetaMessage) used
     //     use to create this Event
-    public final T getMessage() { return message; }
+    public final T getMessage() {return message;}
 
-    public final EventType getType() { return type; }
+    public final EventType getType() {return type;}
 
-    public final long getTick() { return this.tick; }
+    public final long getTick() {return this.tick;}
 
-    public String getTrackName() { return this.trackName != null ? trackName : ""; }
-    public final void setTrackName(String trackName) { this.trackName = trackName; }
+    public String getTrackName() {return this.trackName != null ? trackName : "";}
 
-    public final int getTrackIndex() { return trackIndex; }
-    public final void setTrackIndex(int trackIndex) { this.trackIndex = trackIndex; }
+    public final void setTrackName(String trackName) {this.trackName = trackName;}
+
+    public final int getTrackIndex() {return trackIndex;}
+
+    public final void setTrackIndex(int trackIndex) {this.trackIndex = trackIndex;}
 
 
 }

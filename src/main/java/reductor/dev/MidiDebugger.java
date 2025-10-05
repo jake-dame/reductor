@@ -10,8 +10,9 @@ import java.util.ArrayList;
 
 
 /**
- * This is purely a dev debug helpers printing class and most of them are pretty bad. So, caution.
+ * These are messy, purely curated to me and my workflow... use with caution and sorry.
  */
+@SuppressWarnings("ForLoopReplaceableByForEach")
 public class MidiDebugger {
 
 

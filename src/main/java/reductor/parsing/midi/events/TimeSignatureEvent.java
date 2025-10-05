@@ -1,9 +1,11 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 
 
 public final class TimeSignatureEvent extends MetaEvent {
+
 
     private final int upperNumeral;
     private final int lowerNumeral;
@@ -26,13 +28,17 @@ public final class TimeSignatureEvent extends MetaEvent {
         this.thirtySecondNotesPerBeat = data[3] & 0xFF;
     }
 
-    public int getUpperNumeral() { return upperNumeral; }
-    public int getLowerNumeral() { return lowerNumeral; }
-    public long getClockTicksPerQuarter() { return clockTicksPerTick; }
-    public long getThirtySecondNotesPerBeat() { return thirtySecondNotesPerBeat; }
+    public int getUpperNumeral() {return upperNumeral;}
+
+    public int getLowerNumeral() {return lowerNumeral;}
+
+    public long getClockTicksPerQuarter() {return clockTicksPerTick;}
+
+    public long getThirtySecondNotesPerBeat() {return thirtySecondNotesPerBeat;}
 
 
     @Override
-    String dataString() { return upperNumeral + "/" + lowerNumeral; }
+    String dataString() {return upperNumeral + "/" + lowerNumeral;}
+
 
 }

@@ -1,10 +1,12 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 import java.util.Map;
 
 
 public final class ControlChangeEvent extends ChannelEvent {
+
 
     public static final Map<Integer, String> controllers;
 
@@ -49,8 +51,9 @@ public final class ControlChangeEvent extends ChannelEvent {
         this.controllerValue = this.getMessage().getData2();
     }
 
-    public int getControllerCode() { return controllerCode; }
-    public int getControllerValue() { return controllerValue; }
+    public int getControllerCode() {return controllerCode;}
+
+    public int getControllerValue() {return controllerValue;}
 
     @Override
     String dataString() {
@@ -72,5 +75,6 @@ public final class ControlChangeEvent extends ChannelEvent {
 
         return instrument;
     }
+
 
 }

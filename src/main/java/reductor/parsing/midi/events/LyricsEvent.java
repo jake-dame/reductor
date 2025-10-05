@@ -1,9 +1,11 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 
 
 public final class LyricsEvent extends MetaEvent {
+
 
     private final String lyrics;
 
@@ -14,10 +16,11 @@ public final class LyricsEvent extends MetaEvent {
     }
 
 
-    public String getLyrics() { return this.lyrics; }
+    public String getLyrics() {return this.lyrics;}
 
 
     @Override
-    String dataString() { return lyrics; }
+    String dataString() {return lyrics;}
+
 
 }

@@ -1,9 +1,11 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 
 
 public final class CopyrightNoticeEvent extends MetaEvent {
+
 
     private final String copyrightNotice;
 
@@ -15,6 +17,7 @@ public final class CopyrightNoticeEvent extends MetaEvent {
 
 
     @Override
-    String dataString() { return this.copyrightNotice; }
+    String dataString() {return this.copyrightNotice;}
+
 
 }

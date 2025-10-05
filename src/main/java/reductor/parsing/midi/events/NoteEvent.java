@@ -1,11 +1,13 @@
 package reductor.parsing.midi.events;
 
+
 import reductor.core.Pitch;
 
 import javax.sound.midi.MidiEvent;
 
 
 public abstract class NoteEvent extends ChannelEvent {
+
 
     private final int pitch;
     private final int velocity;
@@ -18,13 +20,15 @@ public abstract class NoteEvent extends ChannelEvent {
     }
 
 
-    public final int getPitch() { return this.pitch; }
-    public final int getVelocity() { return velocity; }
+    public final int getPitch() {return this.pitch;}
+
+    public final int getVelocity() {return velocity;}
 
 
     @Override
     final String dataString() {
         return super.dataString() + Pitch.toStr(this.pitch, true) + ", vel: " + this.velocity;
     }
+
 
 }

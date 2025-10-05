@@ -1,10 +1,12 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 import java.util.Map;
 
 
 public final class ProgramChangeEvent extends ChannelEvent {
+
 
     public static final Map<Integer, String> instruments;
 
@@ -60,7 +62,7 @@ public final class ProgramChangeEvent extends ChannelEvent {
     }
 
 
-    public int getInstrumentCode() { return this.instrumentCode; }
+    public int getInstrumentCode() {return this.instrumentCode;}
 
 
     @Override
@@ -81,5 +83,6 @@ public final class ProgramChangeEvent extends ChannelEvent {
 
         return instrument;
     }
+
 
 }

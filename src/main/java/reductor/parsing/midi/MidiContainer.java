@@ -1,5 +1,6 @@
 package reductor.parsing.midi;
 
+
 import reductor.parsing.midi.events.*;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 
 
 public class MidiContainer {
+
 
     private final int resolution;
     private final long lengthInTicks;
@@ -40,18 +42,24 @@ public class MidiContainer {
         eventSorter.sortEvents(sequence.getTracks());
     }
 
-    public int getResolution() { return this.resolution; }
-    public long getSequenceLengthInTicks() { return this.lengthInTicks; }
+    public int getResolution() {return this.resolution;}
 
-    public ArrayList<NoteOnEvent> getNoteOnEvents() { return this.noteOnEvents; }
-    public ArrayList<NoteOffEvent> getNoteOffEvents() { return this.noteOffEvents; }
-    public ArrayList<TimeSignatureEvent> getTimeSignatureEvents() { return this.timeSignatureEvents; }
-    public ArrayList<KeySignatureEvent> getKeySignatureEvents() { return this.keySignatureEvents; }
-    public ArrayList<SetTempoEvent> getSetTempoEvents() { return this.setTempoEvents; }
+    public long getSequenceLengthInTicks() {return this.lengthInTicks;}
+
+    public ArrayList<NoteOnEvent> getNoteOnEvents() {return this.noteOnEvents;}
+
+    public ArrayList<NoteOffEvent> getNoteOffEvents() {return this.noteOffEvents;}
+
+    public ArrayList<TimeSignatureEvent> getTimeSignatureEvents() {return this.timeSignatureEvents;}
+
+    public ArrayList<KeySignatureEvent> getKeySignatureEvents() {return this.keySignatureEvents;}
+
+    public ArrayList<SetTempoEvent> getSetTempoEvents() {return this.setTempoEvents;}
 
 
     // Inner class meant as just a dispatcher for MidiContainer class
     private class EventSorter {
+
 
         // this is tracked throughout the creation loop to give
         //    this metadata attributed to each Event object. It can be helpful.
@@ -133,6 +141,7 @@ public class MidiContainer {
                 default -> throw new RuntimeException("no case for MetaEvent type: " + type);
             }
         }
+
 
     }
 

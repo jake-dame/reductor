@@ -1,8 +1,10 @@
 package reductor.parsing.midi;
 
+
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
+
 
 // This is a wrapper and hook class that provides useful functionality
 //    concerning a MIDI message's type (i.e. meta, channel, status bytes, etc.)
@@ -46,7 +48,7 @@ public enum EventType {
     }
 
 
-    public int getStatusByte() { return this.statusByte; }
+    public int getStatusByte() {return this.statusByte;}
 
     public static EventType getEnumType(MidiEvent midiEvent) {
 
@@ -70,8 +72,9 @@ public enum EventType {
 
     }
 
-    public boolean isMeta() { return this.ordinal() < 14; }
-    public boolean isChannel() { return !isMeta(); }
+    public boolean isMeta() {return this.ordinal() < 14;}
+
+    public boolean isChannel() {return !isMeta();}
 
     @Override
     public String toString() {

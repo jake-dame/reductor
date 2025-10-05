@@ -1,11 +1,13 @@
 package reductor.parsing.midi.events;
 
+
 import reductor.core.KeySignature;
 
 import javax.sound.midi.MidiEvent;
 
 
 public final class KeySignatureEvent extends MetaEvent {
+
 
     private final int accidentals;
     private final int mode;
@@ -16,12 +18,14 @@ public final class KeySignatureEvent extends MetaEvent {
         this.mode = this.getMessage().getData()[1] & 0xFF;
     }
 
-    public int getAccidentals() { return this.accidentals; }
-    public int getMode() { return this.mode; }
+    public int getAccidentals() {return this.accidentals;}
+
+    public int getMode() {return this.mode;}
 
     @Override
     String dataString() {
         return KeySignature.toString(this.mode, this.accidentals);
     }
+
 
 }

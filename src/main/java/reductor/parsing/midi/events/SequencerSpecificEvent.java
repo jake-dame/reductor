@@ -1,11 +1,13 @@
 package reductor.parsing.midi.events;
 
+
 import javax.sound.midi.MidiEvent;
 import java.util.Arrays;
 import java.util.Map;
 
 
 public final class SequencerSpecificEvent extends MetaEvent {
+
 
     public static final Map<Integer, String> manufacturerCodes;
 
@@ -48,5 +50,6 @@ public final class SequencerSpecificEvent extends MetaEvent {
 
         return manufacturer;
     }
+
 
 }

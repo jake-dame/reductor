@@ -15,7 +15,33 @@ Work in progress.
 See [docs/](docs) for narrative and reference documentation, links for supporting software, further reading, etc.
 
 
+## MuseScore CLI
+
+In order to use Gradle tasks that utilize the MuseScore CLI, you will need to add the executable to the gradle daemon's path. Probably a good idea to add it to your shell, too. zshrc example: 
+
+    export PATH="/Applications/MuseScore 4.app/Contents/MacOS/mscore"
+
+Whether you have Gradle installed system-wide, or editing the wrapper, etc., introduces too many variants for now. So you can also just add a variable in the `build.gradle.kts` next to the macOS one.
+
+This article, "Revert to Factory Settings", is where it discusses installation location stuff:
+
++ [For macOS](https://musescore.org/en/handbook/4/revert-factory-settings#macOS)
++ [For Windows](https://musescore.org/en/handbook/4/revert-factory-settings#Windows)
++ [For Linux](https://musescore.org/en/handbook/4/revert-factory-settings#Linux)
+
+
+Further: [MuseScore 4 CLI handbook page](https://musescore.org/en/handbook/4/command-line-usage#NAME)
+
+
 ## Nits
+
+
+### Opening MIDI Files in Tabs (IntelliJ)
+
+Open `.mid` files in IntelliJ tabs as hex:
+
+1. Install/Enablge the BinEd Hex Viewer
+2. In Settings > Editor > File Types > "Binary File (Opened by BinEd plugin)" > + > `*.mid`, and re-assign from Text.
 
 
 ### MusicXML External Resources

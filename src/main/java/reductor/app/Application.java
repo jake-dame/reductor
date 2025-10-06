@@ -23,16 +23,27 @@ import java.nio.file.Path;
 public class Application {
 
 
-    public static String ID = "idPlaceholder";
+    private static Application instance;
+    private final String fileName;
 
 
-    private Application() {}
+    private Application(String fileName) {
+        this.fileName = fileName;
+    }
 
+    public static Application getInstance() {
+        if (instance == null) { throw new IllegalStateException("Application not built yet"); }
+        return instance;
+    }
+
+    public String fileName() { return this.fileName; }
 
     public static void run(Path path) {
 
         String fileName = path.getFileName().toString();
-        ID = fileName.substring(0, fileName.lastIndexOf("."));
+        fileName = fileName.substring(0, fileName.lastIndexOf("."));
+
+        Application.instance = new Application(fileName);
 
         Sequence inSeq = MidiImporter.readInMidiFile(path);
         Sequence outSeq;
@@ -44,16 +55,17 @@ public class Application {
             Piece piece = PieceFactory.getPiece(mc);
 
             outSeq = ConversionToMidi.getSequence(piece);
-            Path outMidi = MidiExporter.write(outSeq, "chilean-miners");
+            Path outMidi = MidiExporter.write(outSeq, "hello-from-hi");
 
             ScorePartwise scorePartwise = ScorePartwiseBuilder.getScorePartwise(piece);
-            Path outXml = MusicXmlExporter.write(scorePartwise, ID);
+            Path outXml = MusicXmlExporter.write(scorePartwise, Application.getInstance().fileName());
 
-            //Helpers.openWithMuseScore(outMidi);
+            Helpers.openWithMuseScore(outMidi);
 
             Helpers.play(outMidi);
 
-        } catch (InvalidMidiDataException | IOException | UnpairedNoteException | Marshalling.MarshallingException e) {
+        } catch (InvalidMidiDataException | IOException | UnpairedNoteException |
+                 Marshalling.MarshallingException e) {
             throw new RuntimeException(e);
         }
 

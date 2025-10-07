@@ -1,5 +1,17 @@
 # Architecture & Package Structure
 
+# Overview
+
+`reductor` consists of a number of packages. The main package, `core`, representing the "domain" classes, is the core of the code base. It is largely a Domain-Driven Design (DDD).
+
+Outside of the `core` package, are several data flow and program execution packages:
+
++ `app`: program runner, as well as container for program-wide data/classes
++ `io`: handles I/O of MusicXML and MIDI data
++ `parsing`: validates, sanitizes, and parses input MIDI/MusicXML files
++ `core`: internal domain models and algorithms
++ `dev`: development helpers, debugging, file catalog
+
 # parsing
 
 The main purpose of the parsing package is to convert raw MIDI/MusicXML data into objects. Invalid files, important high-level metadata, etc., is handled at this stage. In other words, it is at this stage that the MIDI file is validated -- though not necessarily the musical data within.

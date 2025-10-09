@@ -2,9 +2,11 @@ package reductor.core;
 
 import reductor.core.midi.ConversionFromMidi;
 import reductor.core.midi.UnpairedNoteException;
+import reductor.io.MidiImporter;
 import reductor.parsing.midi.MidiContainer;
-import reductor.parsing.musicxml.MusicXmlContainer;
 
+import javax.sound.midi.InvalidMidiDataException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 
@@ -35,6 +37,20 @@ public class PieceFactory {
                 mc.getResolution()
         );
 
+    }
+
+    static Piece getTester(Path filePath) {
+
+        Piece piece = null;
+        try {
+            var sequence = MidiImporter.readInMidiFile(filePath);
+            var mc = new MidiContainer(sequence);
+            piece = PieceFactory.getPiece(mc);
+        } catch(InvalidMidiDataException | UnpairedNoteException e) {
+            System.err.println(e.getMessage());
+        }
+
+        return piece;
     }
 
     //public void getPiece(MusicXmlContainer mc) {

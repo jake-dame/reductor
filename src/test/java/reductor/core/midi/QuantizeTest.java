@@ -1,4 +1,4 @@
-package reductor.dataconverter;
+package reductor.core.midi;
 
 import org.junit.jupiter.api.Test;
 import reductor.core.Range;

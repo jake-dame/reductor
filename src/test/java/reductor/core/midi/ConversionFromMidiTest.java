@@ -1,9 +1,7 @@
-package reductor.dataconverter;
+package reductor.core.midi;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reductor.core.midi.ConversionFromMidi;
-import reductor.core.midi.UnpairedNoteException;
 import reductor.parsing.midi.events.NoteOffEvent;
 import reductor.parsing.midi.events.NoteOnEvent;
 

@@ -9,17 +9,18 @@ import java.util.regex.Pattern;
 
 public class KeySignatureUtil {
 
+
     private final static Pattern PATTERN_KEY_SIG = Pattern.compile("""
-        (?i)^
-        \\s*
-        (?<letter>[A-G])
-        \\s*
-        (?<accidental>#|b|sharp|flat)?
-        \\s*
-        (?<mode>m|maj(or)?|min(or)?)?
-        \\s*
-        $
-        """);
+           (?ix)^
+           \\s*
+           (?<letter>[A-G])
+           \\s*
+           (?<accidental>\\#|b|sharp|flat)?
+           \\s*
+           (?<mode>m|maj(or)?|min(or)?)?
+           \\s*
+           $
+           """);
 
     static final Map<Integer, String> keysMajorItoS;
     static final Map<Integer, String> keysMinorItoS;
@@ -78,6 +79,7 @@ public class KeySignatureUtil {
 
     // ========================================  METHODS ======================================== //
 
+    // Semantic validation only. For domain-level validation, see: KeySignature#KeySignature(String)
     public static Matcher parse(String str) {
         Matcher matcher = PATTERN_KEY_SIG.matcher(str);
         if (!matcher.matches()) {
@@ -85,5 +87,6 @@ public class KeySignatureUtil {
         }
         return matcher;
     }
+
 
 }

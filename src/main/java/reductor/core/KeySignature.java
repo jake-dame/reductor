@@ -35,6 +35,7 @@ public class KeySignature implements Ranged {
         this.accidentals = other.accidentals;
     }
 
+
     public KeySignature(String str, Range range) {
 
         Matcher matcher = KeySignatureUtil.parse(str);
@@ -43,20 +44,55 @@ public class KeySignature implements Ranged {
         String accidental = matcher.group("accidental");
         String mode = matcher.group("mode");
 
-        boolean sharpKey = accidental != null
-                && (accidental.equals("#") || accidental.equals("sharp"));
+        boolean isMinorKey = false;
+        if (mode == null) {
+            if (Character.isLowerCase(letter.charAt(0))) {
+                isMinorKey = true;
+            }
+        } else {
+            isMinorKey = mode.equals("m")
+                    || mode.equalsIgnoreCase("min")
+                    || mode.equalsIgnoreCase("minor");
+        }
 
-        letter += sharpKey ? "#" : "b";
+        if (accidental != null) {
+            if ((accidental.equals("#") || accidental.equals("sharp"))) {
+                letter += "#";
+            } else {
+                letter += "b";
+            }
+        }
 
-        boolean minorKey = mode != null
-                && (mode.equals("m")
-                || mode.equalsIgnoreCase("min")
-                || mode.equalsIgnoreCase("minor"));
-
-        this.mode = minorKey ? 1 : 0;
-        this.accidentals = minorKey ? keysMinorStoI.get(letter) : keysMajorStoI.get(letter);
+        this.mode = isMinorKey ? 1 : 0;
+        this.accidentals = isMinorKey ? keysMinorStoI.get(letter.toLowerCase()) :
+                keysMajorStoI.get(letter.toUpperCase());
         this.range = range;
     }
+
+
+    //public KeySignature(String str, Range range) {
+    //
+    //    Matcher matcher = KeySignatureUtil.parse(str);
+    //
+    //    String letter = matcher.group("letter");
+    //    String accidental = matcher.group("accidental");
+    //    String mode = matcher.group("mode");
+    //
+    //    boolean minorKey = mode != null
+    //            && (mode.equals("m")
+    //            || mode.equalsIgnoreCase("min")
+    //            || mode.equalsIgnoreCase("minor"));
+    //
+    //    boolean sharpKey = accidental != null
+    //            && (accidental.equals("#") || accidental.equals("sharp"));
+    //
+    //    letter += sharpKey ? "#" : (accidental == null ? "" : "b");
+    //
+    //    this.mode = minorKey ? 1 : 0;
+    //    this.accidentals = minorKey ? keysMinorStoI.get(letter.toLowerCase()) :
+    //            keysMajorStoI.get(letter.toUpperCase());
+    //    this.range = range;
+    //}
 
     // This is weird but it works with what I have
     // "tonic" ==> scale degree 1

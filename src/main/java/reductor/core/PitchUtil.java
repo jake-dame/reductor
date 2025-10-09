@@ -1,5 +1,6 @@
 package reductor.core;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -9,21 +10,17 @@ import java.util.regex.Pattern;
 public final class PitchUtil {
 
 
-    // TODO: incorporate edge cases either here or in Pitch.java
-    //     /* Clunky but checks special cases: valid enharmonic spellings of min/max. */
-    //        switch (str) {
-    //            case "b#-2", "dbb-1": return 0;
-    //            case "bx-2": return 1;
-    //            case "fx9", "abb9": return 127;
-    //        }
     private static final Pattern PATTERN_PITCH = Pattern.compile("""
-            (?i)^
-            \\s*(?<letter>[A-G])
-            \\s*(?<accidental>#|x|bb|b)?
-            \\s*(?<register>-1|[0-9])?
-            \\s*
-            $
-            """);
+             (?x)^
+             \\s*
+             (?<letter>(?i:[A-G]))
+             \\s*
+             (?<accidental>\\#|x|bb|b)?
+             \\s*
+             (?<register>-2|-1|[0-9])?
+             \\s*
+             $
+             """);
 
     public static final int MIN_MIDI = 0;
     public static final int MAX_MIDI = 127;
@@ -60,7 +57,8 @@ public final class PitchUtil {
                 "f", 5,
                 "g", 7,
                 "a", 9,
-                "b", 11);
+                "b", 11
+        );
         lettersItoS = new HashMap<>();
         for (Map.Entry<String, Integer> entry : lettersStoI.entrySet()) {
             lettersItoS.put(entry.getValue(), entry.getKey());
@@ -106,13 +104,40 @@ public final class PitchUtil {
 
     public static Matcher parse(String str) {
         Matcher matcher = PATTERN_PITCH.matcher(str);
-        if (!matcher.matches()) {
+        if (!matcher.matches() || !isValidOrSpecialCase(matcher)) {
+            // this is IllegalState rather than IllegalArgument because the Matcher object being
+            //     null was bad state, I decided. Could be either though.
             throw new IllegalStateException("invalid pitch string: " + str);
         }
         return matcher;
     }
 
-    public static int getValidPitch(int pitch) {
+    // This pre-validates
+    // Because of the 3 special/edge cases that are valid, we have to let -2 and 9
+    //     through on the PATTERN, and check them here before passing them to the
+    //     Pitch ctor.
+    private static boolean isValidOrSpecialCase(Matcher matcher) {
+        String letter = matcher.group("letter").toLowerCase();
+        String accidental = matcher.group("accidental") == null ? "" : matcher.group("accidental");
+        String register = matcher.group("register") == null ? "" : matcher.group("register");
+
+        String pitch = letter + accidental;
+        if (register.equals("-2") && !pitch.equals("bx") && !pitch.equals("b#")) {
+            return false;
+        }
+
+        if (register.equals("9")) {
+            if (letter.equals("b"))  { return false; }
+            if (letter.equals("a") && !accidental.equals("bb"))  { return false; }
+            if (letter.equals("g") && (accidental.equals("#") || accidental.equals("x"))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static int validatePitch(int pitch) {
 
         if (pitch < MIN_MIDI || MAX_MIDI < pitch) {
             throw new IllegalArgumentException(
@@ -145,13 +170,13 @@ public final class PitchUtil {
     }
 
     public static int getRegister(int pitch) {
-        getValidPitch(pitch);
+        validatePitch(pitch);
         return (pitch / 12) - 1;
     }
 
     public static int shift(int pitch, int intervallicDistance) {
         var shiftedPitch = pitch + intervallicDistance;
-        return PitchUtil.getValidPitch(shiftedPitch);
+        return PitchUtil.validatePitch(shiftedPitch);
     }
 
     // This defaults to always spelling with sharps!
@@ -161,7 +186,7 @@ public final class PitchUtil {
         // This, plus the Number type, makes it so bytes (from raw MIDI data) can also be used
         int intValue = val.intValue() & 0xFF;
 
-        String pitchStr = pitchesItoS.get( getValidPitch(intValue) );
+        String pitchStr = pitchesItoS.get(validatePitch(intValue));
 
         if (showRegister) {
             return pitchStr;

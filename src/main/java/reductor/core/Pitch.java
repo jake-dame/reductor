@@ -16,7 +16,7 @@ public class Pitch implements Comparable<Pitch> {
 
     Pitch(String str) { this(str, true); }
 
-    Pitch(int midiValue) { this(PitchUtil.parseMidiValue(midiValue, true), true); }
+    public Pitch(int midiValue) { this(PitchUtil.parseMidiValue(midiValue, true), true); }
 
     Pitch(Pitch other) {
         this.str = other.str;
@@ -32,19 +32,24 @@ public class Pitch implements Comparable<Pitch> {
 
         this.str = str;
 
-        var l = matcher.group("letter").toUpperCase();
-        var a = matcher.group("accidental");
-        var r = matcher.group("register");
+        String letter = matcher.group("letter").toLowerCase();
+        String accidental = matcher.group("accidental");
+        String register = matcher.group("register");
 
-        final String defaultAccidental = "";
-        final String defaultRegister = "4";
-        a = a == null ? defaultAccidental : a;
-        r = r == null ? defaultRegister : r;
+        accidental = accidental == null ? "" : accidental;
 
-        this.letter = PitchUtil.lettersStoI.get(l);
-        this.accidental = PitchUtil.accidentalsStoI.get(a);
-        this.register = Integer.parseInt(r);
-        this.value = letter + ((register + 1) * 12) + accidental;
+        final String DEFAULT_REGISTER = "-1";
+        register = register == null ? "-1" : register;
+
+        this.letter = PitchUtil.lettersStoI.get(letter);
+        this.accidental = PitchUtil.accidentalsStoI.get(accidental);
+        this.register = Integer.parseInt(register);
+
+        // Special cases:
+        //     b#-2    11        -2                      1 ==> 0
+        //     bx-2    11        -2                      2 ==> 1
+        //     abb9     9         9                     -2 ==> 127
+        this.value = this.letter + ((this.register + 1) * 12) + this.accidental;
     }
 
 

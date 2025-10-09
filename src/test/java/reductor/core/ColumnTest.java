@@ -27,7 +27,7 @@ class ColumnTest {
 
     @Test
     void givenOneNoteInBass() {
-        Column c = new Column( Note.toList( List.of("C3") ), new Range());
+        Column c = new Column( NoteUtil.toList( List.of("C3") ), new Range());
 
         assertEquals(1, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
@@ -40,7 +40,7 @@ class ColumnTest {
 
     @Test
     void givenOneNoteInTreble() {
-        Column c = new Column( Note.toList( List.of("C5") ), new Range());
+        Column c = new Column( NoteUtil.toList( List.of("C5") ), new Range());
 
         assertEquals(0, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
@@ -56,7 +56,7 @@ class ColumnTest {
 
         // Middle C and above should go to the RH (it is the decision boundary when distributing)
 
-        Column col = new Column( Note.toList( List.of("C4") ), new Range());
+        Column col = new Column( NoteUtil.toList( List.of("C4") ), new Range());
 
         assertEquals(0, col.getLeftHand().size());
         assertEquals(0, col.getMiddle().size());
@@ -73,7 +73,7 @@ class ColumnTest {
         // There should be no middle or leftover here, and both treble notes go to hands (RH and LH)
         // The two notes are too far apart to be played by one hand (2 octaves apart)
 
-        Column c = new Column( Note.toList( List.of("C5", "C7") ), new Range());
+        Column c = new Column( NoteUtil.toList( List.of("C5", "C7") ), new Range());
 
         assertEquals(1, c.getLeftHand().size());
         assertEquals(0, c.getMiddle().size());
@@ -89,7 +89,7 @@ class ColumnTest {
 
         // Should be split evenly, with edges on SPAN_MAX
 
-        ArrayList<Note> list = Note.toList( List.of(
+        ArrayList<Note> list = NoteUtil.toList( List.of(
                 "C3", // ↓
                 "D4", // SPAN_MAX (from anchor)
 
@@ -113,7 +113,7 @@ class ColumnTest {
     @Test
     void notesMaxEdges() {
 
-        ArrayList<Note> list = Note.toList( List.of(
+        ArrayList<Note> list = NoteUtil.toList( List.of(
                 "C3", // ↓
                 "D3",
                 "E3",
@@ -147,7 +147,7 @@ class ColumnTest {
     @Test
     void LHOnly() {
 
-        ArrayList<Note> list = Note.toList( List.of(
+        ArrayList<Note> list = NoteUtil.toList( List.of(
                 "C3", "E3", "G3"
         ));
 
@@ -169,7 +169,7 @@ class ColumnTest {
 
         // Should all be in RH
 
-        ArrayList<Note> list =Note.toList( List.of(
+        ArrayList<Note> list =NoteUtil.toList( List.of(
                 "C6", "E6", "G6"
         ));
 
@@ -189,7 +189,7 @@ class ColumnTest {
 
         // Exactly 2-hands-worth of notes, but everything above middle C
 
-        ArrayList<Note> list = Note.toList( List.of(
+        ArrayList<Note> list = NoteUtil.toList( List.of(
             "C5", "D5", "E5", "F5", "G5", "A5",          "C6", "D6", "E6", "F6", "G6", "A6"
         ));
 
@@ -210,7 +210,7 @@ class ColumnTest {
         // Step-wise contrary motion --> the thumbs CANNOT meet on the same key (E and Eb instead)
         // So the upper semitone is grabbed à la upper median.
 
-        ArrayList<Note> list = Note.toList( List.of(
+        ArrayList<Note> list = NoteUtil.toList( List.of(
                 "C3", "E3", "G3",         "C5", "E5", "G5"
         ));
 
@@ -224,7 +224,7 @@ class ColumnTest {
 
         assertTrue(c.isTwoHanded());
 
-        assertEquals(Pitch.toInt("E4"), c.getSplitPointPitch());
+        assertEquals(new Pitch("E4").value(), c.getSplitPointPitch());
     }
 
     @Test
@@ -232,7 +232,7 @@ class ColumnTest {
 
         // Step-wise contrary motion --> the thumbs meet on the same key (Eb)
 
-        ArrayList<Note> list = Note.toList( List.of(
+        ArrayList<Note> list = NoteUtil.toList( List.of(
                 "C3", "E3", "G3",      "B4", "E5", "G5"
         ));                          // ^ down 1
 
@@ -246,7 +246,7 @@ class ColumnTest {
 
         assertTrue(c.isTwoHanded());
 
-        assertEquals(Pitch.toInt("Eb4"), c.getSplitPointPitch());
+        assertEquals(new Pitch("Eb4").value(), c.getSplitPointPitch());
     }
 
 
@@ -267,7 +267,7 @@ class ColumnTest {
     //
     //    // Unfortunately the program cannot know how to do this correctly without horizontal analysis
     //
-    //    ArrayList<Note> list = Note.toList( List.of(
+    //    ArrayList<Note> list = NoteUtil.toList( List.of(
     //            "C3",
     //            "G3",
     //            "C4",
@@ -295,7 +295,7 @@ class ColumnTest {
     //
     //    // First chord of Liszt-Beethoven: Symphony 3 (iii)
     //
-    //    ArrayList<Note> list = Note.toList( List.of(
+    //    ArrayList<Note> list = NoteUtil.toList( List.of(
     //            "Ab2", "Eb3",       "Ab3", "C4"
     //    ));
     //
@@ -318,7 +318,7 @@ class ColumnTest {
     //
     //    // First column/"chord" of Mozart K545 (i)
     //
-    //    ArrayList<Note> list = Note.toList( List.of(
+    //    ArrayList<Note> list = NoteUtil.toList( List.of(
     //            "C4",
     //
     //            "C5"

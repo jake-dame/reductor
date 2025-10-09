@@ -1,7 +1,11 @@
 package reductor.core;
 
 import org.junit.jupiter.api.Test;
+import reductor.dev.Catalog;
+import reductor.io.MidiImporter;
+import reductor.parsing.midi.MidiContainer;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -229,11 +233,9 @@ public class RangeTest {
     }
 
     //@Test
-    //void fromStartTicksWithFile() throws InvalidMidiDataException, UnpairedNoteException {
+    //void fromStartTicksWithFile() {
     //
-    //
-    //    Application dh = new Application();
-    //    Piece piece = dh.getPiece(COLUMN_TEST_2);
+    //    var piece = PieceFactory.getTester(Catalog.COLUMN_TEST_2);
     //
     //    var cols = piece.getColumns();
     //

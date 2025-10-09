@@ -35,7 +35,7 @@ class IntervalTreeTest<T extends Ranged> {
 
         Exact duplicates should occur nowhere in the tree.
     */
-    /// Pitch constants
+    /// PitchUtil constants
     static final int C = 0x3C;
     static final int D = 0x3E;
     private ArrayList<Note> distinctElems;
@@ -45,26 +45,29 @@ class IntervalTreeTest<T extends Ranged> {
     void setup() {
         distinctElems = new ArrayList<>();
         quasiDupElems = new ArrayList<>();
-        Note e1 = new Note(C, new Range(5, 30));
+        Note e1 = Note.builder().pitch(C).start(5).stop(30).build();
         distinctElems.add(e1);
-        Note e2 = new Note(C, new Range(7, 20));
+        Note e2 = Note.builder().pitch(C).start(7).stop(20).build();
         distinctElems.add(e2);
-        Note e3 = new Note(C, new Range(10, 15));
+        Note e3 = Note.builder().pitch(C).start(10).stop(15).build();
         distinctElems.add(e3);
-        Note e4 = new Note(C, new Range(10, 17));
+        Note e4 = Note.builder().pitch(C).start(10).stop(17).build();
         distinctElems.add(e4);
-        Note e5 = new Note(C, new Range(10, 20));
+        Note e5 = Note.builder().pitch(C).start(10).stop(20).build();
         distinctElems.add(e5);
-        Note e6 = new Note(C, new Range(10, 22));
+        Note e6 = Note.builder().pitch(C).start(10).stop(22).build();
         distinctElems.add(e6);
-        Note e7 = new Note(C, new Range(10, 25));
+        Note e7 = Note.builder().pitch(C).start(10).stop(25).build();
         distinctElems.add(e7);
-        Note e8 = new Note(C, new Range(12, 30));
+        Note e8 = Note.builder().pitch(C).start(12).stop(30).build();
         distinctElems.add(e8);
-        Note e9 = new Note(C, new Range(15, 20));
+        Note e9 = Note.builder().pitch(C).start(15).stop(20).build();
         distinctElems.add(e9);
         for (Note note : distinctElems) {
-            quasiDupElems.add(new Note(D, note.getRange()));
+            quasiDupElems.add(Note.builder()
+                    .pitch(D)
+                    .between(note.getRange().low(), note.getRange().high())
+                    .build());
         }
     }
 

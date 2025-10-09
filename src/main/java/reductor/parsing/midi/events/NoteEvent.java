@@ -1,7 +1,7 @@
 package reductor.parsing.midi.events;
 
 
-import reductor.core.Pitch;
+import reductor.core.PitchUtil;
 
 import javax.sound.midi.MidiEvent;
 
@@ -27,7 +27,7 @@ public abstract class NoteEvent extends ChannelEvent {
 
     @Override
     final String dataString() {
-        return super.dataString() + Pitch.toStr(this.pitch, true) + ", vel: " + this.velocity;
+        return super.dataString() + PitchUtil.parseMidiValue(this.pitch, true) + ", vel: " + this.velocity;
     }
 
 

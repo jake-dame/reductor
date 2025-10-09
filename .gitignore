@@ -8,6 +8,9 @@ assets/sourced-midis/
 aaa-todo.md
 partwise.dtd
 musicxml.xsd
+.jqwik-database
+gradle.properties
+junit-platform.properties
 
 ################ (Generic) logs
 *.log

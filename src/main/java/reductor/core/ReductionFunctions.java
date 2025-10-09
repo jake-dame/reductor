@@ -10,7 +10,7 @@ public class ReductionFunctions {
     static void removeOctaveDoubling(Column col) {
 
         ArrayList<Note> notes = new ArrayList<>(col.getNotes());
-        notes.sort(Comparator.comparingInt(Note::pitch));
+        notes.sort(Comparator.comparingInt(n -> n.getPitch().value()));
 
         ArrayList<Note> fromTop = new ArrayList<>(notes.reversed());
 

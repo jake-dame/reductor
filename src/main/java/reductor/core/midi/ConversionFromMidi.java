@@ -62,7 +62,7 @@ public class ConversionFromMidi {
 
                         // Found a match/pair --> construct the `Note` object
                         Note note = Note.builder()
-                                .pitch(on.getPitch())
+                                .pitch(new Pitch(on.getPitch()))
                                 .start(on.getTick())
                                 .stop(off.getTick())
                                 .instrument(on.getTrackName())
@@ -160,7 +160,7 @@ public class ConversionFromMidi {
             throw new RuntimeException("toTempo was given an event that is not a set tempo event");
         }
 
-        return new Tempo(convertMicrosecondsToBPM(data), range);
+        return new Tempo(Util.convertMicrosecondsToBPM(data), range);
     }
 
     public static TimeSignature toTimeSignature(MidiEvent event, Range range) {
@@ -187,33 +187,6 @@ public class ConversionFromMidi {
         );
 
     }
-
-    /**
-     * Given a value in microseconds (per quarter note), converts to beats-per-minute (bpm),
-     * which is what humans use to specify tempo. Easily retrieved with getData() on set tempo
-     * messages from (Java) MetaMessage class.
-     *
-     * @param data The tempo as a number split into three LTR bytes
-     * @return The same tempo in beats-per-minute
-     */
-    public static int convertMicrosecondsToBPM(byte[] data) {
-
-        int byteIndex = 0;
-        long microsecondsPerQuarterNote = 0;
-
-        while (byteIndex < data.length) {
-            microsecondsPerQuarterNote <<= 8;
-            microsecondsPerQuarterNote |= (data[byteIndex] & 0xFF);
-            byteIndex++;
-        }
-
-        final int microsecondsPerMinute = 60_000_000;
-
-        // This cast is fine because none of the numbers here, if valid MIDI spec,
-        //     will never get remotely near INTEGER_MAX.
-        return microsecondsPerMinute / (int) microsecondsPerQuarterNote;
-    }
-
 
     public static <E extends Event<?>, C extends Ranged> ArrayList<C> assignRanges(
             List<E> midiEvents,

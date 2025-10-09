@@ -157,11 +157,11 @@ public class MeasureBuilder {
 
         Time time = factory.createTime();
 
-        String numerator = String.valueOf(pieceMeasure.getTimeSignature().getNumerator());
+        String numerator = String.valueOf(pieceMeasure.getTimeSignature().numerator());
         var timeBeats = factory.createTimeBeats(numerator);
         time.getTimeSignature().add(timeBeats);
 
-        String denominator = String.valueOf(pieceMeasure.getTimeSignature().getDenominator());
+        String denominator = String.valueOf(pieceMeasure.getTimeSignature().denominator());
         var timeBeatType = factory.createTimeBeatType(denominator);
         time.getTimeSignature().add(timeBeatType);
 
@@ -173,17 +173,17 @@ public class MeasureBuilder {
         // ProxyMusic (and most notation programs in general) don't need to know about mode for this part. So we can't
         // use compareTo() here.
         if (prevPieceMeasure != null
-                && pieceMeasure.getKeySignature().getAccidentals()
-                == prevPieceMeasure.getKeySignature().getAccidentals()) {
+                && pieceMeasure.getKeySignature().accidentals()
+                == prevPieceMeasure.getKeySignature().accidentals()) {
             return null;
         }
 
         Key key = factory.createKey();
 
-        String accidentalsVal = String.valueOf(pieceMeasure.getKeySignature().getAccidentals());
+        String accidentalsVal = String.valueOf(pieceMeasure.getKeySignature().accidentals());
         key.setFifths(new BigInteger(accidentalsVal));
 
-        String modeVal = pieceMeasure.getKeySignature().getMode() == 0 ? "major" : "minor";
+        String modeVal = pieceMeasure.getKeySignature().mode() == 0 ? "major" : "minor";
         key.setMode(modeVal);
 
         return key;

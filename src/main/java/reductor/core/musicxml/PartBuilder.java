@@ -97,7 +97,7 @@ public class PartBuilder {
 
         // This gets things in the order I want. No touch.
         pieceNotes.sort(Comparator.comparing(Note::start)
-                .thenComparing(Note::pitch)
+                .thenComparing(Note::getPitch)
                 .thenComparing(Note::stop)
         );
 

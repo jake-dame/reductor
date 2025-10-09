@@ -13,7 +13,7 @@ public class NoteUtil {
      */
     public static ArrayList<Note> toList(List<String> strings) {
         ArrayList<Note> out = new ArrayList<>();
-        for (String str : strings) { out.add( Note.builder().pitch(str).build() ); }
+        for (String str : strings) { out.add( Note.builder().pitch(new Pitch(str)).build() ); }
         return out;
     }
 

@@ -161,7 +161,8 @@ public class Measure implements Ranged, Noted {
     Comparator<Note> comp = new Comparator<>() {
         @Override
         public int compare(Note note, Note other) {
-            if (note.pitch() != other.pitch()) { return Integer.compare(note.pitch(), other.pitch()); }
+            if (note.getPitch() != other.getPitch()) { return Integer.compare(note.pitch(),
+                    other.pitch()); }
             return note.getRange().compareTo(other.getRange());
         }
     };
@@ -185,7 +186,7 @@ public class Measure implements Ranged, Noted {
             }
         }
 
-        for (Note note : set) { note.setHand(Hand.RIGHT); }
+        for (Note note : set) { note.devSetHand(Hand.RIGHT); }
 
         return new ArrayList<>(set);
     }
@@ -201,7 +202,7 @@ public class Measure implements Ranged, Noted {
             }
         }
 
-        for (Note note : set) { note.setHand(Hand.NONE); }
+        for (Note note : set) { note.devSetHand(Hand.NONE); }
 
         return new ArrayList<>(set);
     }
@@ -217,7 +218,7 @@ public class Measure implements Ranged, Noted {
             }
         }
 
-        for (Note note : set) { note.setHand(Hand.LEFT); }
+        for (Note note : set) { note.devSetHand(Hand.LEFT); }
 
         return new ArrayList<>(set);
     }

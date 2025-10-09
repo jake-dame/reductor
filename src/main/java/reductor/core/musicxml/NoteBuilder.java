@@ -3,8 +3,8 @@ package reductor.core.musicxml;
 
 import org.audiveris.proxymusic.*;
 import reductor.core.Hand;
-import reductor.core.Measure;
 import reductor.core.Note;
+import reductor.core.PitchUtil;
 
 import java.lang.Double;
 import java.lang.String;
@@ -136,7 +136,7 @@ public class NoteBuilder {
         Pitch pitch = factory.createPitch();
 
         // e.g. "C#"
-        String pitchStr = reductor.core.Pitch.toStr(pieceNote.pitch(), false);
+        String pitchStr = PitchUtil.parseMidiValue(pieceNote.pitch(), false);
 
         // e.g. "C"
         String pitchLetter = pitchStr.substring(0, 1);
@@ -165,7 +165,7 @@ public class NoteBuilder {
             pitch.setAlter(new BigDecimal(alter));
         }
 
-        int octave = reductor.core.Pitch.getRegister(pieceNote.pitch());
+        int octave = PitchUtil.getRegister(pieceNote.pitch());
         pitch.setOctave(octave);
 
         return pitch;
@@ -180,14 +180,14 @@ public class NoteBuilder {
 
         NoteType type = factory.createNoteType();
 
-        String noteTypeString = baseMap.get(pieceNote.getRhy().base());
+        String noteTypeString = baseMap.get(pieceNote.devGetRhy().base());
         type.setValue(noteTypeString);
 
         return type;
     }
 
     private static BigInteger buildStaff(Note pieceNote) {
-        return switch (pieceNote.hand()) {
+        return switch (pieceNote.getHand()) {
             case Hand.RIGHT -> new BigInteger("1");
             case Hand.LEFT -> new BigInteger("2");
             default -> {
@@ -201,20 +201,20 @@ public class NoteBuilder {
     }
 
     private static EmptyPlacement buildDot(Note pieceNote) {
-        if (!pieceNote.getRhy().isDotted()) { return null; }
+        if (!pieceNote.devGetRhy().isDotted()) { return null; }
         return new EmptyPlacement();
     }
 
     private static TimeModification buildTimeModification(Note pieceNote) {
 
-        if (pieceNote.getRhy().isRegular()) { return null; }
+        if (pieceNote.devGetRhy().isRegular()) { return null; }
 
         TimeModification timeModification = factory.createTimeModification();
 
-        BigInteger actualNotes = BigInteger.valueOf((long) pieceNote.getRhy().divisor());
+        BigInteger actualNotes = BigInteger.valueOf((long) pieceNote.devGetRhy().divisor());
         timeModification.setActualNotes(actualNotes);
 
-        BigInteger normalNotes = BigInteger.valueOf((long) pieceNote.getRhy().multiplier());
+        BigInteger normalNotes = BigInteger.valueOf((long) pieceNote.devGetRhy().multiplier());
         timeModification.setNormalNotes(normalNotes);
 
         return timeModification;

@@ -23,7 +23,7 @@ class HeaderBuilder {
         Work work = buildWork("workPlaceholder"); // jake: don't inline any of these
         scorePartwise.setWork(work);
 
-        Credit title = buildTitle(Application.ID);
+        Credit title = buildTitle("titlePlaceholder");
         scorePartwise.getCredit().add(title);
 
         Credit subtitle = buildSubtitle("subtitlePlaceholder");

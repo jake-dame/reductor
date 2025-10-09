@@ -64,11 +64,13 @@ public class ConversionToMidi {
             ArrayList<Note> notes = elem.getNotes();
 
             for (Note note : notes) {
-                ShortMessage onMessage = new ShortMessage(ShortMessage.NOTE_ON, channel, note.pitch(), MEDIAN_VELOCITY);
+                ShortMessage onMessage = new ShortMessage(ShortMessage.NOTE_ON, channel,
+                        note.pitch(), MEDIAN_VELOCITY);
                 MidiEvent noteOnEvent = new MidiEvent(onMessage, note.start());
                 out.add(noteOnEvent);
 
-                ShortMessage offMessage = new ShortMessage(ShortMessage.NOTE_OFF, channel, note.pitch(), 0);
+                ShortMessage offMessage = new ShortMessage(ShortMessage.NOTE_OFF, channel,
+                        note.pitch(), 0);
                 MidiEvent noteOffEvent = new MidiEvent(offMessage, note.stop());
                 out.add(noteOffEvent);
             }
@@ -79,7 +81,7 @@ public class ConversionToMidi {
     }
 
     public static MidiEvent toKeySignatureEvent(KeySignature keySignature) throws InvalidMidiDataException {
-        byte[] bytes = new byte[]{(byte) keySignature.getAccidentals(), (byte) keySignature.getMode()};
+        byte[] bytes = new byte[]{(byte) keySignature.accidentals(), (byte) keySignature.mode()};
 
         MetaMessage message = new MetaMessage(
                 EventType.KEY_SIGNATURE.getStatusByte(),
@@ -92,7 +94,7 @@ public class ConversionToMidi {
 
     public static MidiEvent toTempoEvent(Tempo tempo) throws InvalidMidiDataException {
 
-        byte[] bytes = convertBPMToMicroseconds(tempo.getBpm());
+        byte[] bytes = Util.convertBPMToMicroseconds(tempo.getBpm());
 
         MetaMessage message = new MetaMessage(
                 EventType.SET_TEMPO.getStatusByte(),
@@ -103,46 +105,11 @@ public class ConversionToMidi {
         return new MidiEvent(message, tempo.getRange().low());
     }
 
-    /**
-     * Given a beats-per-minute (bpm) value (1 <= x <= 60,000,000),
-     * converts to microseconds per quarter note, which is what MIDI spec uses to control tempo.
-     * Returns a byte array of length 3, which is how that information is transmitted over the wire.
-     *
-     * @param bpm The tempo in beats-per-minute
-     * @return The same tempo in microseconds per quarter note
-     */
-    public static byte[] convertBPMToMicroseconds(int bpm) {
-
-        /*
-         8,355,711 translates to 0x7F7F7F, or the highest possible value MIDI set tempo message data
-         sections (which are always 3 bytes long) can accommodate (data bytes cannot go to 0xFF because
-         in MIDI, the only bytes allowed to have a set MSB are status bytes (or the "Reset" SysEx message).
-
-         The higher the microseconds-per-quarter-note, the slower the tempo.
-
-         The reverse formula is bpm = 60,000,000 usecs-per-min / usecs-per-quarter-note
-
-         *Lowest valid is actually 7.18071747575, but int is the safer type here since dealing with division.
-        */
-        if (bpm < 8 || bpm > 60_000_000) {
-            throw new IllegalArgumentException("lowest valid bpm is 8; highest is 60,000,000");
-        }
-
-        final int microsecondsPerMinute = 60_000_000;
-        final int microsecondsPerQuarterNote = microsecondsPerMinute / bpm;
-
-        byte[] data = new byte[3];
-        data[0] = (byte) ((microsecondsPerQuarterNote & 0xFF0000) >> 16);
-        data[1] = (byte) ((microsecondsPerQuarterNote & 0x00FF00) >> 8);
-        data[2] = (byte) (microsecondsPerQuarterNote & 0x0000FF);
-
-        return data;
-    }
 
     public static MidiEvent toTimeSignatureEvent(TimeSignature timeSignature) throws InvalidMidiDataException {
 
-        int upperNumeral = timeSignature.getNumerator();
-        int lowerNumeral = timeSignature.getDenominator();
+        int upperNumeral = timeSignature.numerator();
+        int lowerNumeral = timeSignature.denominator();
 
         if (upperNumeral > 128 || upperNumeral < 1) {
             throw new IllegalArgumentException("invalid upperNumeral: " + upperNumeral);

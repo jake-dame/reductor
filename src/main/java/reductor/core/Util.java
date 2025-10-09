@@ -4,7 +4,7 @@ package reductor.core;
 public class Util {
 
     public static long calculateMeasureSize(TimeSignature timeSig) {
-        return Util.calculateMeasureSize(timeSig.getNumerator(), timeSig.getDenominator());
+        return Util.calculateMeasureSize(timeSig.numerator(), timeSig.denominator());
     }
 
     public static long calculateMeasureSize(int upperNumeral, int lowerNumeral) {

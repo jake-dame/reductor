@@ -10,13 +10,11 @@ public class Piece implements Ranged, Noted {
 
     public static int TPQ = 480;
 
-    /// This Piece's range (start and end ticks)
+    /** This Piece's range (start and end ticks). */
     private final Range range;
 
-    /// All this Piece's notes
     private final IntervalTree<Note> notes;
 
-    /// All this Piece's notes partitioned into columns
     final IntervalTree<Column> columns;
 
     final IntervalTree<Measure> measures;
@@ -119,7 +117,7 @@ public class Piece implements Ranged, Noted {
         long marker = this.range.low();
         while (marker < this.range.high()) {
             startTicks.add(marker);
-            marker += TimeSignature.calculateMeasureSize(getTimeSigAt(marker));
+            marker += Util.calculateMeasureSize(getTimeSigAt(marker));
         }
 
         return Range.fromStartTicks(startTicks, this.range.high());
@@ -135,18 +133,18 @@ public class Piece implements Ranged, Noted {
      * ================ */
 
 
-    /**
-     * Because there can be multiple tempi in a piece, you cannot just provide a bpm. You must scale every tempo
-     * up/down together.
-     *
-     * @param scale A number like 1.5 (to up the tempo by 50%).
-     */
-    public void scaleTempo(float scale) {
-        for (Tempo tempo : this.tempos.toList()) {
-            int newBpm = (int) (tempo.getBpm() * scale);
-            tempo.setBpm(newBpm);
-        }
-    }
+    ///**
+    // * Because there can be multiple tempi in a piece, you cannot just provide a bpm. You must scale every tempo
+    // * up/down together.
+    // *
+    // * @param scale A number like 1.5 (to up the tempo by 50%).
+    // */
+    //public void scaleTempo(float scale) {
+    //    for (Tempo tempo : this.tempos.toList()) {
+    //        int newBpm = (int) (tempo.getBpm() * scale);
+    //        tempo.setBpm(newBpm);
+    //    }
+    //}
 
 
     /* =======
@@ -195,7 +193,7 @@ public class Piece implements Ranged, Noted {
         private boolean assignPickup() {
 
             if (measures.isEmpty()  ||  measures.size() == 1) { return false; }
-            
+
             int i = 0;
             Measure firstMeasure = measures.get(i);
             while (firstMeasure.isEmpty()) {
@@ -221,7 +219,7 @@ public class Piece implements Ranged, Noted {
             boolean heuristic1 = firstTimeSig.compareTo(secondTimeSig) < 0;
 
             boolean heuristic2 = lastTimeSig.compareTo(penultimateTimeSig) < 0
-                    && firstTimeSig.getDenominator() + lastTimeSig.getNumerator()  ==  firstTimeSig.getNumerator();
+                    && firstTimeSig.denominator() + lastTimeSig.numerator()  ==  firstTimeSig.numerator();
 
             // Right now, this is exactly an eighth rest (half of the value of a quarter)
             final long THRESHOLD = (long) (TPQ * 0.5);

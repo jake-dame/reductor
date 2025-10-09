@@ -1,6 +1,6 @@
 package reductor.dev;
 
-import reductor.core.Pitch;
+import reductor.core.PitchUtil;
 
 import javax.sound.midi.*;
 import java.io.File;
@@ -32,9 +32,9 @@ public class MidiDebugger {
                 if (message instanceof ShortMessage sm) {
 
                     if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() != 0) {
-                        System.out.println(Pitch.toStr(sm.getData1(), true) +"("+sm.getData1()+")" + " on: " + event.getTick()); }
+                        System.out.println(PitchUtil.parseMidiValue(sm.getData1(), true) +"("+sm.getData1()+")" + " on: " + event.getTick()); }
                     if ((sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0) || sm.getCommand() == ShortMessage.NOTE_OFF) {
-                        System.out.println("\t" + Pitch.toStr(sm.getData1(), true) + " off: " + event.getTick()); }
+                        System.out.println("\t" + PitchUtil.parseMidiValue(sm.getData1(), true) + " off: " + event.getTick()); }
 
                 }
                 // ========================================
@@ -71,10 +71,10 @@ public class MidiDebugger {
                 tab = "\t";
             }
 
-            // Use Pitch class to take int value and turn into English note name
+            // Use PitchUtil class to take int value and turn into English note name
             String pitchStr = "n/a";
             if (command == ShortMessage.NOTE_ON || command == ShortMessage.NOTE_OFF) {
-                pitchStr = Pitch.toStr(message.getData1(), true);
+                pitchStr = PitchUtil.parseMidiValue(message.getData1(), true);
             }
 
             String printThis = String.format(
@@ -161,10 +161,10 @@ public class MidiDebugger {
                 MidiMessage message = event.getMessage();
                 if (message instanceof ShortMessage sm) {
                     if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() != 0) {
-                        System.out.print(Pitch.toStr(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + " : ");
+                        System.out.print(PitchUtil.parseMidiValue(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + " : ");
                     }
                     if (sm.getCommand() == ShortMessage.NOTE_OFF || (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0)) {
-                        System.out.print("(" + Pitch.toStr(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + ") : ");
+                        System.out.print("(" + PitchUtil.parseMidiValue(sm.getData1(), true) + " @ " + event.getTick() + "/" + sm.getChannel() + ") : ");
                     }
                 }
             }
@@ -187,7 +187,7 @@ public class MidiDebugger {
                     } else {
                         continue;
                     }
-                    System.out.println(event.getTick() + " (" + Pitch.pitchesItoS.get(shortMessage.getData1()) + ")");
+                    System.out.println(event.getTick() + " (" + PitchUtil.pitchesItoS.get(shortMessage.getData1()) + ")");
                 }
             }
         }

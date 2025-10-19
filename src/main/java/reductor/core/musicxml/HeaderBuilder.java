@@ -35,7 +35,9 @@ class HeaderBuilder {
         PartList partList = buildPartList();
         scorePartwise.setPartList(partList);
 
-        ScorePart scorePart = buildScorePart(partList);
+        ScorePart scorePart = buildScorePart(
+
+        );
         partList.getPartGroupOrScorePart().add(scorePart);
 
         return scorePart;
@@ -224,45 +226,52 @@ class HeaderBuilder {
      * }
      * </pre>
      */
-    private static ScorePart buildScorePart(PartList partList) {
+    private static ScorePart buildScorePart() {
 
-        final String SCORE_PART_ID = "P1";
-        final String PART_NAME_CONTENT = "Piano";
-        final String PART_ABBREV_CONTENT = "Pno.";
-        final String SCORE_INSTRUMENT_ID = "P1-I1";
-        final String INSTRUMENT_NAME_CONTENT = "Piano";
-        final String INSTRUMENT_SOUND_CONTENT = "keyboard.piano";
+        final String scorePartId = "P1";
+        final String partNameContent = "Piano";
+        final String partAbbrevContent = "Pno.";
+        final String scoreInstrumentId = "P1-I1";
+        final String instrumentNameContent = "Piano";
+        final String instrumentSoundContent = "keyboard.piano";
+        final int midiDevicePort = 1;
+        final int midiChannel = 1;
+        final int midiPort = 1;
+        // TODO: see notes about volume and pan, below
 
         ScorePart scorePart = ScorePartwiseBuilder.factory.createScorePart();
 
-        scorePart.setId(SCORE_PART_ID);
+        scorePart.setId(scorePartId);
 
         PartName partName = ScorePartwiseBuilder.factory.createPartName();
-        partName.setValue(PART_NAME_CONTENT);
+        partName.setValue(partNameContent);
         scorePart.setPartName(partName); // attach to parent (ScorePart)
 
         PartName partNameAbbrev = ScorePartwiseBuilder.factory.createPartName();
-        partNameAbbrev.setValue(PART_ABBREV_CONTENT);
+        partNameAbbrev.setValue(partAbbrevContent);
         scorePart.setPartAbbreviation(partNameAbbrev); // attach to parent (ScorePart)
 
         ScoreInstrument scoreInstrument = ScorePartwiseBuilder.factory.createScoreInstrument();
-        scoreInstrument.setId(SCORE_INSTRUMENT_ID);
+        scoreInstrument.setId(scoreInstrumentId);
 
-        scoreInstrument.setInstrumentName(INSTRUMENT_NAME_CONTENT);
-        scoreInstrument.setInstrumentSound(INSTRUMENT_SOUND_CONTENT);
+        scoreInstrument.setInstrumentName(instrumentNameContent);
+        scoreInstrument.setInstrumentSound(instrumentSoundContent);
         scorePart.getScoreInstrument().add(scoreInstrument); // attach to parent (ScorePart)
 
         MidiDevice midiDevice = ScorePartwiseBuilder.factory.createMidiDevice();
         midiDevice.setId(scoreInstrument);
-        midiDevice.setPort(1);
+        midiDevice.setPort(midiDevicePort);
         scorePart.getMidiDeviceAndMidiInstrument().add(midiDevice); // attach to parent (ScorePart)
 
+        final BigDecimal museScoreVolumeDefault = new BigDecimal("78.7402");
+        final BigDecimal museScorePanDefault = new BigDecimal("0");
         MidiInstrument midiInstrument = ScorePartwiseBuilder.factory.createMidiInstrument();
         midiInstrument.setId(scoreInstrument);
-        midiInstrument.setMidiChannel(1);
-        midiInstrument.setMidiProgram(1);
-        midiInstrument.setVolume(new BigDecimal("78.7402"));
-        midiInstrument.setPan(new BigDecimal("0"));
+        midiInstrument.setMidiChannel(midiChannel);
+        midiInstrument.setMidiProgram(midiPort);
+        midiInstrument.setVolume(museScoreVolumeDefault);
+        midiInstrument.setPan(museScorePanDefault);
+        // Those todos ^^^ is what MuseScore seems to output by default from what I've seen so far
         scorePart.getMidiDeviceAndMidiInstrument().add(midiInstrument); // attach to parent (ScorePart)
 
         return scorePart;

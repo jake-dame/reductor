@@ -1,6 +1,7 @@
 package reductor.core.musicxml;
 
 
+import jakarta.xml.bind.JAXBElement;
 import org.audiveris.proxymusic.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,12 +159,12 @@ public class MeasureBuilder {
         Time time = factory.createTime();
 
         String numerator = String.valueOf(pieceMeasure.getTimeSignature().numerator());
-        var timeBeats = factory.createTimeBeats(numerator);
-        time.getTimeSignature().add(timeBeats);
+        JAXBElement<String> beats = factory.createTimeBeats(numerator);
+        time.getTimeSignature().add(beats);
 
         String denominator = String.valueOf(pieceMeasure.getTimeSignature().denominator());
-        var timeBeatType = factory.createTimeBeatType(denominator);
-        time.getTimeSignature().add(timeBeatType);
+        JAXBElement<String>  beatType = factory.createTimeBeatType(denominator);
+        time.getTimeSignature().add(beatType);
 
         return time;
     }

@@ -6,15 +6,9 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 
 
-// This is a wrapper and hook class that provides useful functionality
-//    concerning a MIDI message's type (i.e. meta, channel, status bytes, etc.)
-// It also provides actual typing for MIDI messages types!
 public enum EventType {
 
-    // The javax midi library uses two differently named methods to
-    // retrieve the status byte/typecode of a midi message... not sure why. Same data.
-
-    // Meta message types (MetaMessage#getType())
+    // Meta messages (14 total)
     TEXT(0x1),
     COPYRIGHT_NOTICE(0x2),
     TRACK_NAME(0x3),
@@ -30,7 +24,7 @@ public enum EventType {
     KEY_SIGNATURE(0x59),
     SEQUENCER_SPECIFIC(0x7F),
 
-    // Channel message commands (ShortMessage#getCommand())
+    // Channel/Voice messages (7 total)
     NOTE_OFF(0x80),
     NOTE_ON(0x90),
     POLY_TOUCH(0xA0),
@@ -42,44 +36,45 @@ public enum EventType {
 
     private final int statusByte;
 
-
-    EventType(int statusByte) {
-        this.statusByte = statusByte;
-    }
+    EventType(int statusByte) { this.statusByte = statusByte; }
 
 
-    public int getStatusByte() {return this.statusByte;}
+    // TODO: this is brittle -- delete unless you add every single type in the MIDI spec
+    public boolean isMeta() { return this.ordinal() < 15; }
+    public boolean isChannel() { return !isMeta(); }
 
-    public static EventType getEnumType(MidiEvent midiEvent) {
+    public int getStatusByte() { return this.statusByte; }
 
-        // Make sure it is a meta or channel message -- nothing else
-        int statusByte = switch (midiEvent.getMessage()) {
+    /** Given a {@link javax.sound.midi.MidiEvent}, returns the enum constant/object
+     * corresponding to a MIDI message. */
+    public static EventType getValue(MidiEvent midiEvent) {
+
+        /* The javax midi library uses two differently named methods to
+           retrieve the status byte/typecode of a midi message. This means you can't just start
+           directly with the .values() loop using something like .getTheStatusByte().
+           This also serves double-duty of catching any sysex messages that for some reason
+           might exist in a SMF (rare, if ever). Even if it ever happens, they can be safely
+           ignored. */
+        final int statusByte = switch (midiEvent.getMessage()) {
             case MetaMessage mm -> mm.getType();
             case ShortMessage sm -> sm.getCommand();
-            default -> throw new RuntimeException("unsupported message (sysex) in SMF");
+            default -> throw new RuntimeException("found sysex message");
         };
 
-        // Loop through the enum values to find the match
-        for (EventType enumType : EventType.values()) {
-            if (enumType.statusByte == statusByte) {
-                return enumType;
-            }
-        } // if here, there is no match -- exception will be thrown
+        for (EventType val : EventType.values()) {
+            if (val.statusByte == statusByte) { return val; }
+        }
 
-        throw new RuntimeException(
-                "New message type that is not currently in enum: 0x" + Integer.toHexString(statusByte)
+        throw new RuntimeException("New message type that is not currently in enum: 0x%s"
+                        .formatted(Integer.toHexString(statusByte))
         );
 
     }
 
-    public boolean isMeta() {return this.ordinal() < 14;}
-
-    public boolean isChannel() {return !isMeta();}
-
-    @Override
-    public String toString() {
-        // Do NOT use `this` here!
-        return this.name() + " (0x" + Integer.toHexString(this.statusByte) + ")";
+    @Override public String toString() {
+        // Do not use `this` sans `.name()`
+        return this.name() + " (0x%s)"
+                .formatted(Integer.toHexString(this.statusByte));
     }
 
 

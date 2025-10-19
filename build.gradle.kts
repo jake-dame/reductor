@@ -70,4 +70,3 @@ val testResourceDir: java.nio.file.Path = Paths.get("src/test/resources")
 tasks.register<Delete>("deleteMuseScoreBackup") {
     delete(testResourceDir.resolve(".mscbackup"))
 }
-

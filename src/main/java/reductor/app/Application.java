@@ -24,11 +24,13 @@ public class Application {
 
 
     private static Application instance;
-    private final String fileName;
+    private static Metadata metadata;
+
+    private final Path inputPath;
 
 
-    private Application(String fileName) {
-        this.fileName = fileName;
+    private Application(Path path) {
+        this.inputPath = path;
     }
 
     public static Application getInstance() {
@@ -36,32 +38,34 @@ public class Application {
         return instance;
     }
 
-    public String fileName() { return this.fileName; }
-
     public static void run(Path path) {
 
-        String fileName = path.getFileName().toString();
-        fileName = fileName.substring(0, fileName.lastIndexOf("."));
-
-        Application.instance = new Application(fileName);
+        Application.instance = new Application(path);
 
         Sequence inSeq = MidiImporter.readInMidiFile(path);
-        Sequence outSeq;
 
+        Sequence outSeq;
         try {
+
+            /* IN */
 
             MidiContainer mc = new MidiContainer(inSeq);
 
+            /* --- */
+
             Piece piece = PieceFactory.getPiece(mc);
+
+            /* OUT */
 
             outSeq = ConversionToMidi.getSequence(piece);
             Path outMidi = MidiExporter.write(outSeq, "hello-from-hi");
 
             ScorePartwise scorePartwise = ScorePartwiseBuilder.getScorePartwise(piece);
-            Path outXml = MusicXmlExporter.write(scorePartwise, Application.getInstance().fileName());
+            Path outXml = MusicXmlExporter.write(scorePartwise, Application.getInstance().getId());
+
+            /* DEV */
 
             Helpers.openWithMuseScore(outMidi);
-
             Helpers.play(outMidi);
 
         } catch (InvalidMidiDataException | IOException | UnpairedNoteException |
@@ -69,6 +73,11 @@ public class Application {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public String getId() {
+        String fileName = this.inputPath.getFileName().toString();
+        return fileName.substring(0, fileName.lastIndexOf("."));
     }
 
 

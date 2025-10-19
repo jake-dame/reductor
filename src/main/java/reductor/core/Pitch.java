@@ -14,7 +14,7 @@ public class Pitch implements Comparable<Pitch> {
     private final int value;
 
 
-    Pitch(String str) { this(str, true); }
+    public Pitch(String str) { this(str, true); }
 
     public Pitch(int midiValue) { this(PitchUtil.parseMidiValue(midiValue, true), true); }
 

@@ -25,7 +25,7 @@ public abstract class Event<T extends MidiMessage> {
         this.event = event;
         this.tick = event.getTick();
         this.message = (T) event.getMessage();
-        this.type = EventType.getEnumType(event);
+        this.type = EventType.getValue(event);
     }
 
     // Public factory for Event construction
@@ -34,7 +34,7 @@ public abstract class Event<T extends MidiMessage> {
         int typeCode;
         EventType type;
         if (message instanceof ShortMessage sm) {
-            type = EventType.getEnumType(event);
+            type = EventType.getValue(event);
             return switch (type) {
 
                 // Note events have one more layer down, so these are more complex
@@ -60,7 +60,7 @@ public abstract class Event<T extends MidiMessage> {
                 default -> throw new RuntimeException();
             };
         } else if (message instanceof MetaMessage mm) {
-            type = EventType.getEnumType(event);
+            type = EventType.getValue(event);
             return switch (type) {
                 case TEXT -> new TextEvent(event);
                 case COPYRIGHT_NOTICE -> new CopyrightNoticeEvent(event);
@@ -86,8 +86,18 @@ public abstract class Event<T extends MidiMessage> {
         }
     }
 
-    // Use by this's toString(), but implementing classes "customize" due to the large
-    //    variety of types of info across message types
+    public final MidiEvent getMidiEvent() {return event;}
+
+    public final T getMessage() {return message;}
+    public final EventType getType() {return type;}
+    public final long getTick() {return this.tick;}
+
+    public String getTrackName() {return this.trackName != null ? trackName : "";}
+    public final void setTrackName(String trackName) {this.trackName = trackName;}
+
+    public final int getTrackIndex() {return trackIndex;}
+    public final void setTrackIndex(int trackIndex) {this.trackIndex = trackIndex;}
+
     abstract String dataString();
 
     @Override
@@ -100,25 +110,5 @@ public abstract class Event<T extends MidiMessage> {
                 dataString()
         );
     }
-
-    // Get the original javax MidiEvent object used to create this Event
-    public final MidiEvent getMidiEvent() {return event;}
-
-    // Get the original javax MidiMessage (either ShortMessage or MetaMessage) used
-    //     use to create this Event
-    public final T getMessage() {return message;}
-
-    public final EventType getType() {return type;}
-
-    public final long getTick() {return this.tick;}
-
-    public String getTrackName() {return this.trackName != null ? trackName : "";}
-
-    public final void setTrackName(String trackName) {this.trackName = trackName;}
-
-    public final int getTrackIndex() {return trackIndex;}
-
-    public final void setTrackIndex(int trackIndex) {this.trackIndex = trackIndex;}
-
 
 }

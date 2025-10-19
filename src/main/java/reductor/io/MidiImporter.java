@@ -20,7 +20,7 @@ public class MidiImporter {
 
         try {
             sequence = MidiSystem.getSequence(path.toFile());
-            validateJavaSoundSequence(sequence, path);
+            validateSequence(sequence, path);
         } catch (InvalidMidiDataException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -28,7 +28,7 @@ public class MidiImporter {
         return sequence;
     }
 
-    private static void validateJavaSoundSequence(Sequence sequence, Path path)
+    private static void validateSequence(Sequence sequence, Path path)
             throws InvalidMidiDataException, IOException {
 
         if (sequence.getDivisionType() != Sequence.PPQ) {

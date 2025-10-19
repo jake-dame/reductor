@@ -1,7 +1,7 @@
 ################ .gitignore for 'reductor'
 
 ################ (Dev)
-assets/sourced-midis/
+assets/
 **/.mscbackup/
 **/outputs/
 **/scribblins/

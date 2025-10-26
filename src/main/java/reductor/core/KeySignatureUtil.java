@@ -77,7 +77,6 @@ public class KeySignatureUtil {
 
     }
 
-    // ========================================  METHODS ======================================== //
 
     // Semantic validation only. For domain-level validation, see: KeySignature#KeySignature(String)
     public static Matcher parse(String str) {

@@ -5,14 +5,14 @@ import org.audiveris.proxymusic.ScorePartwise;
 import org.audiveris.proxymusic.util.Marshalling;
 import reductor.core.Piece;
 import reductor.core.PieceFactory;
-import reductor.core.midi.ConversionToMidi;
-import reductor.core.midi.UnpairedNoteException;
-import reductor.core.musicxml.ScorePartwiseBuilder;
+import reductor.midi.exporter.Exporter;
+import reductor.midi.importer.UnpairedNoteException;
+import reductor.musicxml.exporter.dev.unholy.OldScPaBu;
 import reductor.dev.Helpers;
-import reductor.io.MidiExporter;
-import reductor.io.MidiImporter;
-import reductor.io.MusicXmlExporter;
-import reductor.parsing.midi.MidiContainer;
+import reductor.midi.reader.Reader;
+import reductor.musicxml.exporter.dev.unholy.OldNoBu;
+import reductor.musicxml.writer.Writer;
+import reductor.midi.parser.MidiContainer;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Sequence;
@@ -42,7 +42,7 @@ public class Application {
 
         Application.instance = new Application(path);
 
-        Sequence inSeq = MidiImporter.readInMidiFile(path);
+        Sequence inSeq = Reader.readInMidiFile(path);
 
         Sequence outSeq;
         try {
@@ -57,11 +57,11 @@ public class Application {
 
             /* OUT */
 
-            outSeq = ConversionToMidi.getSequence(piece);
-            Path outMidi = MidiExporter.write(outSeq, "hello-from-hi");
+            outSeq = Exporter.getSequence(piece);
+            Path outMidi = reductor.midi.writer.Writer.write(outSeq, "hello-from-hi");
 
-            ScorePartwise scorePartwise = ScorePartwiseBuilder.getScorePartwise(piece);
-            Path outXml = MusicXmlExporter.write(scorePartwise, Application.getInstance().getId());
+            ScorePartwise scorePartwise = OldScPaBu.getScorePartwise(piece);
+            Path outXml = Writer.write(scorePartwise, Application.getInstance().getId());
 
             /* DEV */
 

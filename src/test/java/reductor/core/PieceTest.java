@@ -1,10 +1,7 @@
 package reductor.core;
 
 import org.junit.jupiter.api.Test;
-import reductor.app.Application;
-import reductor.core.midi.UnpairedNoteException;
 
-import javax.sound.midi.InvalidMidiDataException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;

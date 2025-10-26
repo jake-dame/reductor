@@ -1,11 +1,7 @@
 package reductor.core;
 
 import org.junit.jupiter.api.Test;
-import reductor.dev.Catalog;
-import reductor.io.MidiImporter;
-import reductor.parsing.midi.MidiContainer;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

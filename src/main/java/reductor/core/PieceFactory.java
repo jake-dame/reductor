@@ -1,9 +1,9 @@
 package reductor.core;
 
-import reductor.core.midi.ConversionFromMidi;
-import reductor.core.midi.UnpairedNoteException;
-import reductor.io.MidiImporter;
-import reductor.parsing.midi.MidiContainer;
+import reductor.midi.importer.Importer;
+import reductor.midi.importer.UnpairedNoteException;
+import reductor.midi.reader.Reader;
+import reductor.midi.parser.MidiContainer;
 
 import javax.sound.midi.InvalidMidiDataException;
 import java.nio.file.Path;
@@ -20,13 +20,13 @@ public class PieceFactory {
 
         Piece.TPQ = mc.getResolution();
 
-        ArrayList<Note> notes = ConversionFromMidi.toNotes(mc.getNoteOnEvents(),
+        ArrayList<Note> notes = Importer.toNotes(mc.getNoteOnEvents(),
                 mc.getNoteOffEvents());
-        ArrayList<TimeSignature> timeSigs = ConversionFromMidi.assignRanges(mc.getTimeSignatureEvents(),
+        ArrayList<TimeSignature> timeSigs = Importer.assignRanges(mc.getTimeSignatureEvents(),
                 mc.getSequenceLengthInTicks(), TimeSignature.class);
-        ArrayList<KeySignature> keySigs = ConversionFromMidi.assignRanges(mc.getKeySignatureEvents(),
+        ArrayList<KeySignature> keySigs = Importer.assignRanges(mc.getKeySignatureEvents(),
                 mc.getSequenceLengthInTicks(), KeySignature.class);
-        ArrayList<Tempo> tempos = ConversionFromMidi.assignRanges(mc.getSetTempoEvents(),
+        ArrayList<Tempo> tempos = Importer.assignRanges(mc.getSetTempoEvents(),
                 mc.getSequenceLengthInTicks(), Tempo.class);
 
         return new Piece(
@@ -43,7 +43,7 @@ public class PieceFactory {
 
         Piece piece = null;
         try {
-            var sequence = MidiImporter.readInMidiFile(filePath);
+            var sequence = Reader.readInMidiFile(filePath);
             var mc = new MidiContainer(sequence);
             piece = PieceFactory.getPiece(mc);
         } catch(InvalidMidiDataException | UnpairedNoteException e) {

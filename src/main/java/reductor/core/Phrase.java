@@ -10,6 +10,25 @@
 //@SuppressWarnings("unchecked")
 //public class Phrase<T extends Ranged>  {
 //
+//    static void main(String[] args) {
+//
+//        //ArrayList<Ranged> list = Phrase.builder(0)
+//        //        .timeSignature(4,4)
+//        //        .keySignature("e")
+//        //        .tempo(60)
+//        //        .then(DOTTED_EIGHTH, "b3")
+//        //        .then(SIXTEENTH, "b4")
+//        //        .mark()
+//        //        .then(DOTTED_HALF, "b4")
+//        //        .then(QUARTER, "c")
+//        //        .goToMark()
+//        //        .then(EIGHTH,"g3", "b3", "e4")
+//        //        .repeat(7)
+//        //        .build();
+//
+//    }
+//
+//
 //    private Phrase() { }
 //
 //    public static <T extends Ranged> PhraseBuilder<T> builder(long startTick) {
@@ -227,22 +246,5 @@
 //
 //    }
 //
-//    static void main(String[] args) {
-//
-//        ArrayList<Ranged> list = Phrase.builder(0)
-//                .timeSignature(4,4)
-//                .keySignature("e")
-//                .tempo(60)
-//                .then(DOTTED_EIGHTH, "b3")
-//                .then(SIXTEENTH, "b4")
-//                .mark()
-//                .then(DOTTED_HALF, "b4")
-//                .then(QUARTER, "c")
-//                .goToMark()
-//                .then(EIGHTH,"g3", "b3", "e4")
-//                .repeat(7)
-//                .build();
-//
-//    }
 //
 //}

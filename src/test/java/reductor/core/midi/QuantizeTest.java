@@ -7,7 +7,7 @@ import reductor.core.RhythmTypeBeta;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static reductor.core.midi.Quantize.quantize;
+import static reductor.midi.importer.Quantize.quantize;
 
 
 class QuantizeTest {

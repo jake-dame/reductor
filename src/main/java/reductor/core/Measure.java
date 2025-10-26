@@ -3,6 +3,8 @@ package reductor.core;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static reductor.core.RhythmTypeAlpha.QUARTER;
+
 
 public class Measure implements Ranged, Noted {
 
@@ -23,7 +25,6 @@ public class Measure implements Ranged, Noted {
     private boolean pickupSet;
     private boolean numberSet;
 
-    /// Primary constructor
     Measure(ArrayList<Column> columns, Range range, TimeSignature timeSig, KeySignature keySig, Tempo tempo) {
 
         this.range = range;
@@ -81,7 +82,6 @@ public class Measure implements Ranged, Noted {
         this.numberSet = false;
     }
 
-    /// Copy constructor
     Measure(Measure other) {
         this.notes = new Bucket(other.getNotes());
         this.columns = new ArrayList<>(other.columns);
@@ -136,9 +136,6 @@ public class Measure implements Ranged, Noted {
     @Override
     public Range getRange() { return new Range(this.range); }
 
-    //@Override
-    //public ArrayList<Note> getNotes() { return new ArrayList<>(this.notes); }
-
     @Override
     public ArrayList<Note> getNotes() {
 
@@ -155,8 +152,6 @@ public class Measure implements Ranged, Noted {
         return "m." + number + " " + this.range + ": " + this.timeSig + " and " + this.size() + " " +
                 "notes";
     }
-
-    ////////////////
 
     Comparator<Note> comp = new Comparator<>() {
         @Override
@@ -222,5 +217,183 @@ public class Measure implements Ranged, Noted {
 
         return new ArrayList<>(set);
     }
+
+    //public Measure(Integer number) {
+    //
+    //}
+
+
+    // ========================================================================================== //
+
+    //public static <T extends Ranged> MeasureBuilder<T> builder(long startTick) {
+    //    return new MeasureBuilder<>(startTick);
+    //}
+    //
+    //public static class MeasureBuilder<T extends Ranged>  {
+    //
+    //    private TimeSignature timeSig = null;
+    //    private Integer pickupBeats = null;
+    //    private KeySignature keySig = null;
+    //    private Tempo tempo = null;
+    //
+    //    private Integer number;
+    //
+    //    private final long startTick;
+    //
+    //    private final Stack<T> stack = new Stack<>();
+    //
+    //    private MeasureBuilder(long startTick) { this.startTick = Math.max(startTick, 0); }
+    //
+    //    public MeasureBuilder<T> number(Integer number) {
+    //        this.number = number;
+    //        return this;
+    //    }
+    //
+    //
+    //
+    //
+    //    // ====================================== METADATA ====================================== //
+    //
+    //
+    //    public MeasureBuilder<T> keySignature(String str) {
+    //        keySig = new KeySignature(str, new Range(startTick, Long.MAX_VALUE));
+    //        return this;
+    //    }
+    //
+    //    public MeasureBuilder<T> timeSignature(int numerator, int denominator) {
+    //        timeSig = new TimeSignature(numerator, denominator, new Range(startTick, Long.MAX_VALUE));
+    //        return this;
+    //    }
+    //
+    //    public MeasureBuilder<T> timeSignature(TimeSignature timeSig) {
+    //        this.timeSig = timeSig;
+    //        return this;
+    //    }
+    //
+    //    public MeasureBuilder<T> tempo(int bpm) {
+    //        tempo = new Tempo(bpm, new Range(startTick, Long.MAX_VALUE));
+    //        return this;
+    //    }
+    //
+    //    public MeasureBuilder<T> pickupOf(int numBeats) {
+    //        this.pickupBeats = numBeats;
+    //        return this;
+    //    }
+    //
+    //    // ======================================== THEN ======================================== //
+    //
+    //    public MeasureBuilder<T> then(Pitch... pitches) {
+    //        RhythmTypeAlpha rhythm = stack.isEmpty()
+    //                ? QUARTER
+    //                : RhythmTypeAlpha.getEnumType(stack.peek().getRange().length() + 1L);
+    //        return then(rhythm, pitches);
+    //    }
+    //
+    //    public MeasureBuilder<T> then(RhythmTypeAlpha rhythm, Pitch... pitches) {
+    //
+    //        long start = stack.isEmpty() ? 0 : stack.peek().getRange().high() + 1;
+    //
+    //        Note note = null;
+    //        Chord chord = null;
+    //        if (pitches.length == 1) {
+    //            note = Note.builder()
+    //                    .pitch(pitches[0])
+    //                    .start(start)
+    //                    .stop(start + rhythm.getDuration() - 1)
+    //                    .build();
+    //        } else {
+    //            chord = Chord.builder()
+    //                    .add(pitches)
+    //                    .start(start)
+    //                    .stop(start + rhythm.getDuration() - 1)
+    //                    .build();
+    //        }
+    //
+    //        T elem = null;
+    //        if (note != null) { elem = (T) note; }
+    //        if (chord != null) { elem = (T) chord; }
+    //
+    //        if (elem != null) { stack.add(elem); };
+    //
+    //        return this;
+    //    }
+    //
+    //
+    //    // ======================================  BUILD  ======================================= //
+    //
+    //
+    //    public Measure build() {
+    //
+    //        // Pre-process elems
+    //        ArrayList<T> out = new ArrayList<>(stack);
+    //
+    //        handleMetaElements(out);
+    //
+    //        Measure measure = new Measure();
+    //
+    //        return measure;
+    //    }
+    //
+    //    private void handleMetaElements(ArrayList<T> out) {
+    //
+    //        // Handle creation of Meta elements and final tick.
+    //        final long DEFAULT_END = timeSig != null
+    //                ?  Piece.TPQ * (long) timeSig.numerator()
+    //                :  Piece.TPQ * 4L;
+    //
+    //        final long FINAL_TICK = Math.max(stack.peek().getRange().high(), DEFAULT_END);
+    //
+    //        if (timeSig == null) {
+    //            timeSig = new TimeSignature(4, 4, new Range(startTick, FINAL_TICK));
+    //        }
+    //
+    //        if (pickupBeats != null) {
+    //
+    //            double multiplier = (double) pickupBeats / timeSig.denominator();
+    //            double length = multiplier * timeSig.range().length();
+    //            long endTick = (long) length - 1;
+    //
+    //            TimeSignature pickupSig = new TimeSignature(
+    //                    pickupBeats,
+    //                    timeSig.denominator(),
+    //                    new Range(startTick, endTick)
+    //            );
+    //
+    //            out.add((T) pickupSig);
+    //
+    //            timeSig = new TimeSignature(
+    //                    timeSig.numerator(),
+    //                    timeSig.denominator(),
+    //                    new Range(pickupSig.getRange().high() + 1, FINAL_TICK)
+    //            );
+    //            System.out.println();
+    //        }
+    //
+    //        if (keySig == null) {
+    //            keySig = new KeySignature("C", new Range(startTick, FINAL_TICK));
+    //        } else {
+    //            keySig = new KeySignature(
+    //                    keySig.accidentals(),
+    //                    keySig.mode(),
+    //                    new Range(this.startTick, FINAL_TICK)
+    //            );
+    //        }
+    //
+    //        if (tempo == null) {
+    //            tempo = new Tempo(120, new Range(startTick, FINAL_TICK));
+    //        } else {
+    //            tempo = new Tempo(
+    //                    tempo.getBpm(),
+    //                    new Range(this.startTick, FINAL_TICK)
+    //            );
+    //        }
+    //
+    //        out.add((T) timeSig);
+    //        out.add((T) keySig);
+    //        out.add((T) tempo);
+    //    }
+    //
+    //}
+
 
 }

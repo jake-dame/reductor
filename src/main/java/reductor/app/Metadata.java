@@ -5,7 +5,7 @@ import org.audiveris.proxymusic.Credit;
 import org.audiveris.proxymusic.Defaults;
 import org.audiveris.proxymusic.Identification;
 import org.audiveris.proxymusic.Work;
-import reductor.parsing.midi.events.*;
+import reductor.midi.parser.events.*;
 
 import java.util.List;
 

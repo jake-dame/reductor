@@ -11,7 +11,7 @@ Background Information:
 
 Conceptual Documentation:
 
-4. [Architecture & Package Structure](4-arch.md)
+4. [Architecture & Package Structure](4-packages-and-arch.md)
 5. [Domain Classes](5-domain-classes.md)
    + [Columns](5a-columns.md)
 
@@ -20,6 +20,7 @@ Appendices:
 
 + [Appendix A: The Term "Classical", The Term "Reduction", and Brief Historical Info](A-classical-music-and-reduction.md)
 + [Appendix B: Examples of Reductions, Transcriptions, Etc.](B-music-videos.md)
++ [Appendiex C: Time Signatures](C-time-signatures.md)
 
 
 # Resources, Links, & Further Reading

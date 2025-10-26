@@ -11,6 +11,7 @@ musicxml.xsd
 .jqwik-database
 gradle.properties
 junit-platform.properties
+src/main/java/reductor/musicxml/exporter/dev/
 
 ################ (Generic) logs
 *.log

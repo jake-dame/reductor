@@ -1,41 +1,39 @@
-################ .gitignore for 'reductor'
-
-################ (Dev)
-assets/
-**/.mscbackup/
+################################ .gitignore for 'reductor'
+################ dev
+assets/resources
+assets/tests
 **/outputs/
 **/scribblins/
-aaa-todo.md
-partwise.dtd
-musicxml.xsd
-.jqwik-database
+.aaa-todo.md
 gradle.properties
-junit-platform.properties
-src/main/java/reductor/musicxml/exporter/dev/
+src/main/java/reductor/devv
 
-################ (Generic) logs
-*.log
-
-################ (Gradle) cache + state
+################ Gradle
 .gradle/
-################ (Gradle) build artifacts (multi-module)
 **/build/
-################ (Gradle) absolute path the to the android sdk
-local.properties
 
-################ (IntelliJ) config files (.xml's)
+################ IntelliJ
 .idea/
-################ (IntelliJ) build artifacts
-out/
-################ (IntelliJ) module config xml files
 *.iml
+out/
 
-################ (JVM) crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+################ jqwik
+.jqwik-database
+junit-platform.properties
+
+################ JVM: crash logs
 hs_err_pid*
 replay_pid*
 
-################ (MacOS) Finder view prefs
+################ macOS
 .DS_Store
 
-################ (Windows) thumbnail previews
-Thumbs.db
+################ MuseScore
+**/.mscbackup/
+
+################ misc
+*.log
+
+################ XML
+partwise.dtd
+musicxml.xsd

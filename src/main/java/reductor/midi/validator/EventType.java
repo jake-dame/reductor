@@ -1,4 +1,4 @@
-package reductor.midi.parser;
+package reductor.midi;
 
 
 import javax.sound.midi.MetaMessage;
@@ -68,13 +68,11 @@ public enum EventType {
         throw new RuntimeException("New message type that is not currently in enum: 0x%s"
                         .formatted(Integer.toHexString(statusByte))
         );
-
     }
 
     @Override public String toString() {
-        // Do not use `this` sans `.name()`
-        return this.name() + " (0x%s)"
-                .formatted(Integer.toHexString(this.statusByte));
+        // Do not use `this` and `.name()` alone
+        return this.name() + " (0x%s)".formatted(Integer.toHexString(this.statusByte));
     }
 
 

@@ -1,7 +1,7 @@
-package reductor.midi.parser.events;
+package reductor.midi.importer.parser.events;
 
 
-import reductor.core.PitchUtil;
+import reductor.util.PitchUtil;
 
 import javax.sound.midi.MidiEvent;
 

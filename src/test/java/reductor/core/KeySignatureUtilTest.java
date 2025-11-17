@@ -2,6 +2,7 @@ package reductor.core;
 
 
 import net.jqwik.api.*;
+import reductor.util.KeySignatureUtil;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 

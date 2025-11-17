@@ -1,14 +1,19 @@
 package reductor.midi.importer;
 
+import reductor.app.Application;
 import reductor.core.KeySignature;
 import reductor.core.Tempo;
 import reductor.core.TimeSignature;
 import reductor.core.Ranged;
+import reductor.core.builders.NoteBuilder;
+import reductor.core.builders.PieceBuilder;
+import reductor.midi.parser.MidiContainer;
 import reductor.midi.parser.events.Event;
-import reductor.midi.parser.EventType;
+import reductor.midi.EventType;
 import reductor.midi.parser.events.NoteOffEvent;
 import reductor.midi.parser.events.NoteOnEvent;
 import reductor.core.*;
+import reductor.util.TimeUtil;
 
 import javax.sound.midi.*;
 import java.util.*;
@@ -17,11 +22,32 @@ import java.util.*;
 /**
  * Defines the necessary function to build a `Piece` object out of MIDI data.
  */
-public class Importer {
+public class MidiAdapter {
 
 
-    private Importer() { }
+    private MidiAdapter() { }
 
+
+    public static Piece toPiece(MidiContainer mc) throws UnpairedNoteException {
+
+        Application.resolution = mc.getResolution();
+
+        ArrayList<Note> notes = toNotes(mc.getNoteOnEvents(), mc.getNoteOffEvents());
+        ArrayList<TimeSignature> timeSigs = assignRanges(mc.getTimeSignatureEvents(),
+                mc.getSequenceLengthInTicks(), TimeSignature.class);
+        ArrayList<KeySignature> keySigs = assignRanges(mc.getKeySignatureEvents(),
+                mc.getSequenceLengthInTicks(), KeySignature.class);
+        ArrayList<Tempo> tempos = assignRanges(mc.getSetTempoEvents(),
+                mc.getSequenceLengthInTicks(), Tempo.class);
+
+        return PieceBuilder.builder()
+                .notes(notes)
+                .timeSigs(timeSigs)
+                .keySigs(keySigs)
+                .tempos(tempos)
+                .resolution(mc.getResolution())
+                .build();
+    }
 
     // See `docs/note-pairing-and-midi.md`
     public static ArrayList<Note> toNotes(
@@ -61,7 +87,7 @@ public class Importer {
                     if (off.getTick() != on.getTick()) {
 
                         // Found a match/pair --> construct the `Note` object
-                        Note note = Note.builder()
+                        Note note = NoteBuilder.builder()
                                 .pitch(new Pitch(on.getPitch()))
                                 .start(on.getTick())
                                 .stop(off.getTick())
@@ -160,7 +186,7 @@ public class Importer {
             throw new RuntimeException("toTempo was given an event that is not a set tempo event");
         }
 
-        return new Tempo(Util.convertMicrosecondsToBPM(data), range);
+        return new Tempo(TimeUtil.convertMicrosecondsToBPM(data), range);
     }
 
     public static TimeSignature toTimeSignature(MidiEvent event, Range range) {

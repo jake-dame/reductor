@@ -1,4 +1,4 @@
-package reductor.musicxml.exporter;
+package reductor.musicxml.exporter.builder;
 
 
 public class PartBuilder {

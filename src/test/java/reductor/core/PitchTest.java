@@ -25,6 +25,7 @@ public class PitchTest {
         assertEquals(10, new Pitch("bb").value());
         // Similarly, this is not an accidental-only string -- it's just a B.
         assertEquals(11, new Pitch("b").value());
+
         assertEquals(23, new Pitch("b0").value());
         assertEquals(10, new Pitch("bb-1").value());
         assertEquals(11, new Pitch("b-1").value());
@@ -36,7 +37,7 @@ public class PitchTest {
         // top edge
         assertEquals(127, new Pitch("g9").value());
         assertEquals(127, new Pitch("fx9").value());
-        // special case of valid register of -9
+        // special case of valid register of 9
         assertEquals(127, new Pitch("abb9").value());
     }
 

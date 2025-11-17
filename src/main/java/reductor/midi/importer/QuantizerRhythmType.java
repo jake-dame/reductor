@@ -98,7 +98,7 @@ public enum RhythmTypeBeta {
     }
 
     public static RhythmTypeBeta type(Range range) {
-        return type(range.high() - range.low());
+        return type(range.getHigh() - range.getLow());
     }
 
     public static RhythmTypeBeta type(double duration) {

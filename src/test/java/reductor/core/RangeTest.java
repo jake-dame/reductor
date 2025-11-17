@@ -1,6 +1,7 @@
 package reductor.core;
 
 import org.junit.jupiter.api.Test;
+import reductor.util.IntervalTree;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,16 +17,16 @@ public class RangeTest {
     @Test
     void construction() {
         Range range = new Range(0, 1);
-        assertEquals(0, range.low(), "low should match first arg");
-        assertEquals(1, range.high(), "high should match second arg");
+        assertEquals(0, range.getLow(), "low should match first arg");
+        assertEquals(1, range.getHigh(), "high should match second arg");
     }
 
     @Test
     void copyConstruction() {
         Range original = new Range(0, 1);
         Range copy = new Range(original);
-        assertEquals(original.low(), copy.low(), "copy low should match original low");
-        assertEquals(original.high(), copy.high(), "copy high should match original high");
+        assertEquals(original.getLow(), copy.getLow(), "copy low should match original low");
+        assertEquals(original.getHigh(), copy.getHigh(), "copy high should match original high");
     }
 
     @Test
@@ -152,7 +153,7 @@ public class RangeTest {
                 new Range(10, 20)
         ));
 
-        assertEquals(new Range(0, 400), Range.concatenate(ranges));
+        assertEquals(new Range(0, 400), RangeUtil.concatenate(ranges));
     }
 
     @Test
@@ -161,7 +162,7 @@ public class RangeTest {
         Range r1 = new Range(0,20);
         Range r2 = new Range(10,30);
 
-        var actual = Range.splitIntoThree(r1, r2);
+        var actual = RangeUtil.splitIntoThree(r1, r2);
 
         Range e1 = new Range(0,10);
         Range e2 = new Range(10,20);
@@ -215,14 +216,14 @@ public class RangeTest {
         ));
 
         IntervalTree<Range> tree = new IntervalTree<>(noteRanges);
-        ArrayList<Range> list = tree.toListOfRanges();
+        List<Range> list = tree.toListRangesOnly();
 
-        Set<Long> set = new HashSet<>();
+        Set<Integer> set = new HashSet<>();
         for (Range range : list) {
-            set.add(range.low());
+            set.add(range.getLow());
         }
 
-        ArrayList<Range> actual = Range.fromStartTicks(set, 480L);
+        ArrayList<Range> actual = RangeUtil.fromStartTicks(set, 480L);
 
         assertEquals(expected, actual);
 
@@ -231,7 +232,7 @@ public class RangeTest {
     //@Test
     //void fromStartTicksWithFile() {
     //
-    //    var piece = PieceFactory.getTester(Catalog.COLUMN_TEST_2);
+    //    var piece = XmlImportAdapter.getTester(Catalog.COLUMN_TEST_2);
     //
     //    var cols = piece.getColumns();
     //

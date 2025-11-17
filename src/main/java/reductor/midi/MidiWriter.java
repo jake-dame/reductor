@@ -29,7 +29,7 @@ public class Writer {
      */
     public static Path write(Sequence sequence, String baseName) throws IOException {
 
-        Path path = Paths.getOutPath(baseName + "-OUT", EXTENSION);
+        Path path = Paths.getOutPath(baseName, EXTENSION);
 
         MidiSystem.write(sequence, MIDI_FILE_TYPE, path.toFile());
 

@@ -2,8 +2,7 @@ package reductor.core.midi;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reductor.midi.importer.Importer;
-import reductor.midi.importer.UnpairedNoteException;
+import reductor.midi.importer.MidiImporter;
 import reductor.midi.parser.events.NoteOffEvent;
 import reductor.midi.parser.events.NoteOnEvent;
 
@@ -37,7 +36,7 @@ class ImporterTest {
         ons.add( noteOn(C4, 0) );
         ons.add( noteOn(C4, 480) ); offs.add( noteOff(C4, 959) );
 
-        Exception exception = assertThrows(UnpairedNoteException.class, () -> Importer.toNotes(ons, offs));
+        Exception exception = assertThrows(RuntimeException.class, () -> MidiImporter.toNotes(ons, offs));
         assertEquals("unpaired note on", exception.getMessage());
 
     }
@@ -49,7 +48,7 @@ class ImporterTest {
         ons.add( noteOn(C4, 0) );
         ons.add( noteOn(D4, 0) ); offs.add( noteOff(D4, 1919) );
 
-        Exception exception = assertThrows(UnpairedNoteException.class, () -> Importer.toNotes(ons, offs));
+        Exception exception = assertThrows(RuntimeException.class, () -> MidiImporter.toNotes(ons, offs));
         assertEquals("unpaired note on", exception.getMessage());
 
     }
@@ -61,7 +60,7 @@ class ImporterTest {
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 479) );
                                   offs.add( noteOff(C4, 1919) );
 
-        Exception exception = assertThrows(UnpairedNoteException.class, () -> Importer.toNotes(ons, offs));
+        Exception exception = assertThrows(RuntimeException.class, () -> MidiImporter.toNotes(ons, offs));
         assertEquals("unpaired note off", exception.getMessage());
 
     }
@@ -73,7 +72,7 @@ class ImporterTest {
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 479) ); // quarter C
         ons.add( noteOn(C4, 0) ); offs.add( noteOff(C4, 1919) ); // whole C
 
-        assertDoesNotThrow(() -> Importer.toNotes(ons, offs));
+        assertDoesNotThrow(() -> MidiImporter.toNotes(ons, offs));
 
     }
 

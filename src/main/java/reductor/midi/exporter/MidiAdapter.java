@@ -4,52 +4,57 @@ import reductor.core.KeySignature;
 import reductor.core.Tempo;
 import reductor.core.TimeSignature;
 import reductor.core.Noted;
-import reductor.midi.parser.EventType;
+import reductor.midi.builder.SequenceBuilder;
+import reductor.midi.builder.TrackBuilder;
+import reductor.midi.validator.EventType;
 import reductor.core.*;
+import reductor.util.TimeUtil;
 
 import javax.sound.midi.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static reductor.midi.builder.SequenceBuilder.ACOUSTIC_GRAND_PIANO;
 
-/**
- * Defines the necessary functions to convert a valid MIDI files from a `Piece` object.
- */
-public class Exporter {
 
-    private Exporter() { }
+public class FromPiece {
 
-    public static Sequence getSequence(Piece piece) throws InvalidMidiDataException {
-        return getSequence(piece.getNotes(),
-                piece.getTimeSignatures(),
-                piece.getKeySignatures(),
-                piece.getTempos()
-        );
+    private final TrackBuilder builder;
+
+    private FromPiece(){
+        this.builder =
     }
+
+    //public static Sequence export(Piece piece) {
+    //    return getSequence(piece.getNotes(),
+    //            piece.getTimeSignatures(),
+    //            piece.getKeySignatures(),
+    //            piece.getTempos()
+    //    );
+    //}
 
     public static Sequence getSequence(
             ArrayList<Note> notes,
             ArrayList<TimeSignature> timeSigs,
             ArrayList<KeySignature> keySigs,
-            ArrayList<Tempo> tempos
-    ) throws InvalidMidiDataException {
+            ArrayList<Tempo> tempos,
+            Piece piece
+    ) {
 
-        final int RESOLUTION = 480;
-        final int CHANNEL = 0;
-        final String TRACK_NAME = "Piano";
-        final String INSTRUMENT_NAME = "Piano";
+        final int channel = 0;
 
-        final Sequence seq = new Sequence(Sequence.PPQ, RESOLUTION);
-        final Track track = seq.createTrack();
+        TrackBuilder builder = TrackBuilder.builder()
+                .instrumentName(0, "Piano")
+                .trackName(0, "Piano")
+                .programChange(0, channel, ACOUSTIC_GRAND_PIANO);
 
-        track.add(toTrackNameEvent(TRACK_NAME));
-        track.add(toInstrumentNameEvent(INSTRUMENT_NAME));
-        track.add(toProgramChangeEvent(CHANNEL));
+        Sequence seq = SequenceBuilder.builder(piece.getResolution())
+                .track()
+                .build();
 
         for (TimeSignature timeSig : timeSigs) { track.add(toTimeSignatureEvent(timeSig)); }
         for (KeySignature keySig : keySigs) { track.add(toKeySignatureEvent(keySig)); }
         for (Tempo tempo : tempos) { track.add(toTempoEvent(tempo)); }
-
         for (MidiEvent event : toNoteEvents(notes, CHANNEL)) { track.add(event); }
 
         return seq;
@@ -89,12 +94,12 @@ public class Exporter {
                 bytes.length
         );
 
-        return new MidiEvent(message, keySignature.getRange().low());
+        return new MidiEvent(message, keySignature.getRange().getLow());
     }
 
     public static MidiEvent toTempoEvent(Tempo tempo) throws InvalidMidiDataException {
 
-        byte[] bytes = Util.convertBPMToMicroseconds(tempo.getBpm());
+        byte[] bytes = TimeUtil.convertBPMToMicroseconds(tempo.getBpm());
 
         MetaMessage message = new MetaMessage(
                 EventType.SET_TEMPO.getStatusByte(),
@@ -102,9 +107,8 @@ public class Exporter {
                 bytes.length
         );
 
-        return new MidiEvent(message, tempo.getRange().low());
+        return new MidiEvent(message, tempo.getRange().getLow());
     }
-
 
     public static MidiEvent toTimeSignatureEvent(TimeSignature timeSignature) throws InvalidMidiDataException {
 
@@ -142,7 +146,7 @@ public class Exporter {
                 bytes.length
         );
 
-        return new MidiEvent(message, timeSignature.getRange().low());
+        return new MidiEvent(message, timeSignature.getRange().getLow());
     }
 
     public static MidiEvent toProgramChangeEvent(int channel) throws InvalidMidiDataException {

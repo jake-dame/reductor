@@ -8,13 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class KeySignatureTest {
 
-    @Property
-    void ctor_ShouldReturnKeySignatureObjectMajor(@ForAll("validCMajorStrings") String s) {
-        KeySignature keySig = new KeySignature(s, new Range());
-        assertEquals(0, keySig.mode());
-        assertEquals(0, keySig.accidentals());
-    }
-
     @Provide
     Arbitrary<String> validCMajorStrings() {
         Arbitrary<String> letter = Arbitraries.of("C", "c");
@@ -24,10 +17,10 @@ public class KeySignatureTest {
     }
 
     @Property
-    void ctor_ShouldReturnKeySignatureObjectMinor(@ForAll("validCMinorStrings") String s) {
+    void ctor_ShouldReturnKeySignatureObjectMajor(@ForAll("validCMajorStrings") String s) {
         KeySignature keySig = new KeySignature(s, new Range());
-        assertEquals(1, keySig.mode());
-        assertEquals(-3, keySig.accidentals());
+        assertEquals(0, keySig.mode());
+        assertEquals(0, keySig.accidentals());
     }
 
     @Provide
@@ -37,6 +30,14 @@ public class KeySignatureTest {
         return Combinators.combine(letter, mode).as( (l, m) -> l + m )
                 .filter(s -> !s.equals("C"));
     }
+
+    @Property
+    void ctor_ShouldReturnKeySignatureObjectMinor(@ForAll("validCMinorStrings") String s) {
+        KeySignature keySig = new KeySignature(s, new Range());
+        assertEquals(1, keySig.mode());
+        assertEquals(-3, keySig.accidentals());
+    }
+
 
 
 }

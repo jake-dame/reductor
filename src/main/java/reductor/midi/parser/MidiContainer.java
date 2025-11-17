@@ -1,7 +1,8 @@
-package reductor.midi.parser;
+package reductor.midi.importer.parser;
 
 
-import reductor.midi.parser.events.*;
+import reductor.midi.importer.parser.events.*;
+import reductor.midi.importer.parser.events.*;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;

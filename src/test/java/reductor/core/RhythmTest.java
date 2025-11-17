@@ -11,14 +11,14 @@ class RhythmTest {
     @Test
     void testEnumBases() {
 
-        assertEquals(RhythmTypeAlpha.WHOLE, RhythmTypeAlpha.getEnumType(1920));
-        assertEquals(RhythmTypeAlpha.HALF, RhythmTypeAlpha.getEnumType(960));
-        assertEquals(RhythmTypeAlpha.QUARTER, RhythmTypeAlpha.getEnumType(480));
-        assertEquals(RhythmTypeAlpha.EIGHTH, RhythmTypeAlpha.getEnumType(240));
-        assertEquals(RhythmTypeAlpha.SIXTEENTH, RhythmTypeAlpha.getEnumType(120));
-        assertEquals(RhythmTypeAlpha.THIRTY_SECOND, RhythmTypeAlpha.getEnumType(60));
-        assertEquals(RhythmTypeAlpha.SIXTY_FOURTH, RhythmTypeAlpha.getEnumType(30));
-        assertEquals(RhythmTypeAlpha.ONE_TWENTY_EIGHTH, RhythmTypeAlpha.getEnumType(15));
+        assertEquals(RhythmType.WHOLE, RhythmType.getEnumType(1920));
+        assertEquals(RhythmType.HALF, RhythmType.getEnumType(960));
+        assertEquals(RhythmType.QUARTER, RhythmType.getEnumType(480));
+        assertEquals(RhythmType.EIGHTH, RhythmType.getEnumType(240));
+        assertEquals(RhythmType.SIXTEENTH, RhythmType.getEnumType(120));
+        assertEquals(RhythmType.THIRTY_SECOND, RhythmType.getEnumType(60));
+        assertEquals(RhythmType.SIXTY_FOURTH, RhythmType.getEnumType(30));
+        assertEquals(RhythmType.ONE_TWENTY_EIGHTH, RhythmType.getEnumType(15));
 
     }
 

@@ -2,7 +2,7 @@ package reductor.core.midi;
 
 import org.junit.jupiter.api.Test;
 import reductor.core.Range;
-import reductor.core.RhythmTypeBeta;
+import reductor.midi.importer.QuantizerRhythmType;
 
 import java.util.*;
 
@@ -19,16 +19,16 @@ class QuantizeTest {
         private final Range offset;
         private final Range expected;
 
-        private final long start;
-        private final RhythmTypeBeta type;
+        private final int start;
+        private final QuantizerRhythmType type;
         private final int tpq;
 
-        private TestPair(long start, RhythmTypeBeta type, int tpq) {
+        private TestPair(int start, QuantizerRhythmType type, int tpq) {
             this.start = start;
             this.type = type;
             this.tpq = tpq;
 
-            this.expected = new Range(start, (long) (start + type.duration - 1));
+            this.expected = new Range(start, (int) (start + type.duration - 1));
             this.offset = offset(expected);
         }
 
@@ -41,17 +41,17 @@ class QuantizeTest {
 
         static class TestPairBuilder {
 
-            private RhythmTypeBeta type;
-            private long start;
+            private QuantizerRhythmType type;
+            private int start;
             private int tpq;
 
 
-            TestPairBuilder type(RhythmTypeBeta type) {
+            TestPairBuilder type(QuantizerRhythmType type) {
                 this.type = type;
                 return this;
             }
 
-            TestPairBuilder startAt(long tick) {
+            TestPairBuilder startAt(int tick) {
                 this.start = tick;
                 return this;
             }
@@ -70,29 +70,29 @@ class QuantizeTest {
     }
 
     public static Range offset(Range range) {
-        return offset(range.low(), RhythmTypeBeta.type(range));
+        return offset(range.getLow(), QuantizerRhythmType.type(range));
     }
 
-    public static Range offset(long startTick, RhythmTypeBeta rhy) {
+    public static Range offset(int startTick, QuantizerRhythmType rhy) {
 
-        long stop = (long) (rhy.duration - 1);
+        int stop = (int) (rhy.duration - 1);
 
-        ArrayList<Long> offsets = new ArrayList<>();
+        ArrayList<Integer> offsets = new ArrayList<>();
 
-        long maxOffset = (long) (Math.log(rhy.duration));
+        int maxOffset = Math.toIntExact((int) (Math.log(rhy.duration)));
 
-        long i = -maxOffset;
+        int i = -maxOffset;
         while (i < maxOffset) {
             if (i == 0) { i++; continue;}
             offsets.add(i);
             i++;
         }
 
-        long offsetStart = offsets.get(new Random().nextInt(offsets.size()));
-        long offsetStop = offsets.get(new Random().nextInt(offsets.size()));
+        int offsetStart = offsets.get(new Random().nextInt(offsets.size()));
+        int offsetStop = offsets.get(new Random().nextInt(offsets.size()));
 
-        long newStart = Math.max(startTick + offsetStart, 0);
-        long newStop = stop + offsetStop - 1;
+        int newStart = Math.max(startTick + offsetStart, 0);
+        int newStop = stop + offsetStop - 1;
 
         return new Range(newStart, newStop);
     }
@@ -156,7 +156,7 @@ class QuantizeTest {
 
         var quantized = quantize(ranges, 480);
         assertEquals(new Range(0, 159), quantized.getFirst());
-        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.getFirst().duration() + 1));
+        assertEquals(QuantizerRhythmType.r_8in3, QuantizerRhythmType.type(quantized.getFirst().duration() + 1));
 
     }
 
@@ -169,7 +169,7 @@ class QuantizeTest {
 
         var quantized = quantize(ranges, 480);
         assertEquals(new Range(160, 319), quantized.getFirst());
-        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.getFirst().duration() + 1));
+        assertEquals(QuantizerRhythmType.r_8in3, QuantizerRhythmType.type(quantized.getFirst().duration() + 1));
 
     }
 
@@ -214,14 +214,14 @@ class QuantizeTest {
         assertEquals(new Range(1440, 1800 - 1), quantized.get(6));
         assertEquals(new Range(1800, 1920 - 1), quantized.get(7));
 
-        assertEquals(RhythmTypeBeta.r_4, RhythmTypeBeta.type(quantized.get(0)));
-        assertEquals(RhythmTypeBeta.r_4in3, RhythmTypeBeta.type(quantized.get(1)));
-        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(2)));
-        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(3)));
-        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(4)));
-        assertEquals(RhythmTypeBeta.r_8in3, RhythmTypeBeta.type(quantized.get(5)));
-        assertEquals(RhythmTypeBeta.r_8dot, RhythmTypeBeta.type(quantized.get(6)));
-        assertEquals(RhythmTypeBeta.r_16, RhythmTypeBeta.type(quantized.get(7)));
+        assertEquals(QuantizerRhythmType.r_4, QuantizerRhythmType.type(quantized.get(0)));
+        assertEquals(QuantizerRhythmType.r_4in3, QuantizerRhythmType.type(quantized.get(1)));
+        assertEquals(QuantizerRhythmType.r_8in3, QuantizerRhythmType.type(quantized.get(2)));
+        assertEquals(QuantizerRhythmType.r_8in3, QuantizerRhythmType.type(quantized.get(3)));
+        assertEquals(QuantizerRhythmType.r_8in3, QuantizerRhythmType.type(quantized.get(4)));
+        assertEquals(QuantizerRhythmType.r_8in3, QuantizerRhythmType.type(quantized.get(5)));
+        assertEquals(QuantizerRhythmType.r_8dot, QuantizerRhythmType.type(quantized.get(6)));
+        assertEquals(QuantizerRhythmType.r_16, QuantizerRhythmType.type(quantized.get(7)));
 
     }
 

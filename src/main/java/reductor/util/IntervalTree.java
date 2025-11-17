@@ -189,8 +189,8 @@ public class IntervalTree<T extends Ranged> {
 
         // Update node.max if elem to be added will set the new max right endpoint of elems in subtree rooted at
         // this node
-        if (node.max < elem.getRange().high()) {
-            node.max = elem.getRange().high();
+        if (node.max < elem.getRange().getHigh()) {
+            node.max = elem.getRange().getHigh();
         }
 
         if (elem.getRange().compareTo(node.getRange()) < 0) {
@@ -237,7 +237,7 @@ public class IntervalTree<T extends Ranged> {
 
         // Look left & right.
         if (node.left != null  &&  point <= node.left.getMax()) { query(node.left, point, matches); }
-        if (node.right != null  &&  point >= node.getRange().low()) { query(node.right, point, matches); }
+        if (node.right != null  &&  point >= node.getRange().getLow()) { query(node.right, point, matches); }
 
         // Continue to search
         return matches;
@@ -263,11 +263,11 @@ public class IntervalTree<T extends Ranged> {
         if (node.left == null  &&  node.right == null) { return matches; }
 
         // Look left & right.
-        if (node.left != null  &&  window.low() <= node.left.getMax()) {
+        if (node.left != null  &&  window.getLow() <= node.left.getMax()) {
             query(node.left, window, matches);
         }
 
-        if (node.right != null  &&  window.high() >= node.getRange().low()) {
+        if (node.right != null  &&  window.getHigh() >= node.getRange().getLow()) {
             query(node.right, window, matches);
         }
 
@@ -408,12 +408,12 @@ public class IntervalTree<T extends Ranged> {
     }
 
     /**
-     * @return The first tick in the tree. Equivalent to calling {@link Range#low()} on {@link IntervalTree#getMin()}.
+     * @return The first tick in the tree. Equivalent to calling {@link Range#getLow()} on {@link IntervalTree#getMin()}.
      */
-    public long getFirstTick() { return this.getMin().low(); }
+    public long getFirstTick() { return this.getMin().getLow(); }
 
     /**
-     * This does not necessarily correspond to calling {@link Range#high()} on {@link IntervalTree#getMax()} due to the
+     * This does not necessarily correspond to calling {@link Range#getHigh()} on {@link IntervalTree#getMax()} due to the
      * fact that the tree orders first by NOTE ON ticks, and then NOTE OFF ticks. The last note of a piece may start
      * *and* stop before the penultimate note ceases. Thus, the penultimate note contains the true last tick.
      *

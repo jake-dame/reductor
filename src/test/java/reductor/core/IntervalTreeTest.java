@@ -2,7 +2,9 @@ package reductor.core;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reductor.core.IntervalTree.Node;
+import reductor.core.builders.NoteBuilder;
+import reductor.util.IntervalTree;
+import reductor.util.IntervalTree.Node;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,97 +13,101 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-/// Unit tests for {@link IntervalTree}. Tests construction (which inherently tests insertion),
-/// and query
+/**
+ * Unit tests for {@link IntervalTree}. Tests construction (which inherently tests insertion),
+ * and query
+ */
 class IntervalTreeTest<T extends Ranged> {
 
-
-    /*
-        For list of T with ranges:
-            + [5,30], [7,20], [10,15], [10,17], [10,20], [10,22], [10,25], [12,30], [15,20]
-
-        The constructed tree should look like:
-
-                       _____10,20_____
-                      /               \
-                 7,20                  10,25
-                /     \               /     \
-           5,20       10,15      10,22       12,30
-           /  \        /  \       /  \        /  \
-                          10,17                 15,20
-
-        T with identical ranges but different associated data should be added to the node with the
-        corresponding range.
-
-        Exact duplicates should occur nowhere in the tree.
-    */
-    /// PitchUtil constants
-    static final int C = 0x3C;
-    static final int D = 0x3E;
-    private ArrayList<Note> distinctElems;
-    private ArrayList<Note> quasiDupElems;
+    private List<Range> inputRanges;
+    private List<Note> uniqueElements;
+    private List<Note> halfDuplicates;
+    private List<Note> fullDuplicates;
 
     @BeforeEach
     void setup() {
-        distinctElems = new ArrayList<>();
-        quasiDupElems = new ArrayList<>();
-        Note e1 = Note.builder().pitch(C).start(5).stop(30).build();
-        distinctElems.add(e1);
-        Note e2 = Note.builder().pitch(C).start(7).stop(20).build();
-        distinctElems.add(e2);
-        Note e3 = Note.builder().pitch(C).start(10).stop(15).build();
-        distinctElems.add(e3);
-        Note e4 = Note.builder().pitch(C).start(10).stop(17).build();
-        distinctElems.add(e4);
-        Note e5 = Note.builder().pitch(C).start(10).stop(20).build();
-        distinctElems.add(e5);
-        Note e6 = Note.builder().pitch(C).start(10).stop(22).build();
-        distinctElems.add(e6);
-        Note e7 = Note.builder().pitch(C).start(10).stop(25).build();
-        distinctElems.add(e7);
-        Note e8 = Note.builder().pitch(C).start(12).stop(30).build();
-        distinctElems.add(e8);
-        Note e9 = Note.builder().pitch(C).start(15).stop(20).build();
-        distinctElems.add(e9);
-        for (Note note : distinctElems) {
-            quasiDupElems.add(Note.builder()
-                    .pitch(D)
-                    .between(note.getRange().low(), note.getRange().high())
-                    .build());
-        }
+        inputRanges = RangeUtil.listOf(
+                5, 30,
+                7, 20,
+                10, 15,
+                10, 17,
+                10, 20,
+                10, 22,
+                10, 25,
+                12, 30,
+                15, 20
+        );
+
+        // list of input ranges mapped to Note objects with pitches of C
+        // these should each account for 1 new node as well as 1 new element
+        uniqueElements = inputRanges.stream()
+                .map(r -> NoteBuilder.builder().range(r).pitch("C").build())
+                .toList();
+
+        // same ranges as above but with pitches of D (same range, different data)
+        // these should not create new nodes, but should be added to an existing node's list of elements
+        halfDuplicates = uniqueElements.stream()
+                .map(n -> NoteBuilder.from(n).pitch("D").build())
+                .toList();
+
+        // full copies of the unique elements (same data AND same range)
+        // these should not contribute to the tree at all
+        fullDuplicates = uniqueElements.stream()
+                .map(n -> NoteBuilder.from(n).build())
+                .toList();
+    }
+
+    /*
+    For list of T with ranges:
+        + [5,30], [7,20], [10,15], [10,17], [10,20], [10,22], [10,25], [12,30], [15,20]
+
+    The constructed tree should look like:
+
+                   _____10,20_____
+                  /               \
+             7,20                  10,25
+            /     \               /     \
+       5,20       10,15      10,22       12,30
+       /  \        /  \       /  \        /  \
+                      10,17                 15,20
+
+    T's with identical ranges but different associated data should be added to the node with the
+    corresponding range.
+
+    Exact duplicates should occur nowhere in the tree.
+    */
+
+    @Test
+    void withUniqueElementsOnly() {
+        IntervalTree<Note> testTree = new IntervalTree<>(uniqueElements);
+        assertTrue(isInOrder(testTree), "in order traversal list should be in ascending order");
+        assertMaxesAreCorrect(testTree);
+        assertEquals(uniqueElements.size(), testTree.getSizeNodes(), "number of nodes should be equal to elems added");
+        assertEquals(uniqueElements.size(), testTree.getSizeElements(), "number of elements should be equal to elems added");
     }
 
     @Test
-    void constructionWithDistinctElems() {
-        IntervalTree<Note> tree = new IntervalTree<>(distinctElems);
+    void withHalfDuplicateElements() {
+        List<Note> inputList = new ArrayList<>(uniqueElements);
+        inputList.addAll(halfDuplicates);
+        //------------------
+        IntervalTree<Note> tree = new IntervalTree<>(inputList);
         assertTrue(isInOrder(tree), "in order traversal list should be in ascending order");
-        checkMaxes(tree);
-        assertEquals(distinctElems.size(), tree.getNumNodes(), "number of nodes should be equal to elems added");
-        assertEquals(distinctElems.size(), tree.getNumElements(), "number of elements should be equal to elems added");
+        assertMaxesAreCorrect(tree);
+        assertEquals(uniqueElements.size(), tree.getSizeNodes(), "number of nodes should be equal to size of one list");
+        assertEquals(inputList.size(), tree.getSizeElements(), "number of elements should be equal to sum of size of both lists");
     }
 
     @Test
-    void constructionWithQuasiDupElems() {
-        ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
-        distinctPlusQuasiDups.addAll(distinctElems);
-        distinctPlusQuasiDups.addAll(quasiDupElems);
-        IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
+    void withFullDuplicates() {
+        List<Note> inputList = new ArrayList<>(uniqueElements);
+        inputList.addAll(fullDuplicates);
+        //------------------
+        IntervalTree<Note> tree = new IntervalTree<>(inputList);
         assertTrue(isInOrder(tree), "in order traversal list should be in ascending order");
-        checkMaxes(tree);
-        assertEquals(distinctElems.size(), tree.getNumNodes(), "number of nodes should be equal to size of one list");
-        assertEquals(distinctElems.size() + quasiDupElems.size(), tree.getNumElements(), "number of elements should be equal to sum of size of both lists");
-    }
-
-    @Test
-    void constructionWithExactDuplicatesPresent() {
-        ArrayList<Note> distinctElemsWithExactDups = new ArrayList<>();
-        distinctElemsWithExactDups.addAll(distinctElems);
-        distinctElemsWithExactDups.addAll(distinctElems);
-        IntervalTree<Note> tree = new IntervalTree<>(distinctElemsWithExactDups);
-        assertTrue(isInOrder(tree), "in order traversal list should be in ascending order by Comp");
-        checkMaxes(tree);
-        assertEquals(distinctElems.size(), tree.getNumNodes(), "number of nodes should be equal to elems added");
-        assertEquals(distinctElems.size(), tree.getNumElements(), "number of elements should be equal to elems added");
+        assertMaxesAreCorrect(tree);
+        assertEquals(uniqueElements.size(), tree.getSizeNodes(), "number of nodes should be equal to size of one list");
+        assertEquals(uniqueElements.size(), tree.getSizeElements(), "number of elements should be equal to sum of size of both lists");
     }
 
     @Test
@@ -111,18 +117,16 @@ class IntervalTreeTest<T extends Ranged> {
 
     @Test
     void constructionWithEmptyList() {
-        ArrayList<Note> notes = new ArrayList<>();
+        List<Note> notes = new ArrayList<>();
         IntervalTree<Note> tree = new IntervalTree<>(notes);
         assertTrue(isInOrder(tree));
-        checkMaxes(tree);
-        assertEquals(0, tree.getNumNodes());
-        assertEquals(0, tree.getNumElements());
+        assertMaxesAreCorrect(tree);
+        assertEquals(0, tree.getSizeNodes());
+        assertEquals(0, tree.getSizeElements());
     }
 
     @Test
     void query() {
-
-
         /*
             Intervals: [5,20], [7,20], [10,15], [10,17], [10,20], [10,22], [10,25], [12,20], [15,20]
 
@@ -138,8 +142,8 @@ class IntervalTreeTest<T extends Ranged> {
                                                  15-------------20
         */
         ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
-        distinctPlusQuasiDups.addAll(distinctElems);
-        distinctPlusQuasiDups.addAll(quasiDupElems);
+        distinctPlusQuasiDups.addAll(uniqueElements);
+        distinctPlusQuasiDups.addAll(halfDuplicates);
         // This should have 8 nodes, each node with a C4 and a D4 Note.
         IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
         // Just a bunch of arbitrary ranges that I know cover all possible ranges generously.
@@ -151,7 +155,7 @@ class IntervalTreeTest<T extends Ranged> {
         // no-more-no-less matches are found.
         ArrayList<Note> totalMatches = new ArrayList<>();
         for (Range queryWindow : ranges) {
-            ArrayList<Note> matches = tree.query(queryWindow);
+            List<Note> matches = tree.query(queryWindow);
             for (Note match : matches) {
                 assertTrue(match.getRange().overlaps(queryWindow));
                 if (!totalMatches.contains(match)) {
@@ -179,22 +183,25 @@ class IntervalTreeTest<T extends Ranged> {
     @Test
     void queryNullTree() {
         IntervalTree<Note> tree = new IntervalTree<>();
-        assertEquals(new ArrayList<>(), tree.query(new Range(0, 100)), "query on a null tree should return an empty " +
-                "list");
+        assertEquals(new ArrayList<>(), tree.query(new Range(0, 100)),
+                "query on a null tree should return an empty list"
+        );
     }
 
     @Test
     void queryNullWindow() {
-        IntervalTree<Note> tree = new IntervalTree<>(distinctElems);
-        assertThrows(NullPointerException.class, () -> tree.query(null), "should throw when window is null and query is attempted");
+        IntervalTree<Note> tree = new IntervalTree<>(uniqueElements);
+        assertThrows(NullPointerException.class, () -> tree.query(null),
+                "should throw when window is null and query is attempted"
+        );
     }
 
     @Test
     void getLastTick() {
 
         ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
-        distinctPlusQuasiDups.addAll(distinctElems);
-        distinctPlusQuasiDups.addAll(quasiDupElems);
+        distinctPlusQuasiDups.addAll(uniqueElements);
+        distinctPlusQuasiDups.addAll(halfDuplicates);
         IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
 
         assertEquals(30L, tree.getLastTick());
@@ -204,8 +211,8 @@ class IntervalTreeTest<T extends Ranged> {
     void queryPastEndOfTree() {
 
         ArrayList<Note> distinctPlusQuasiDups = new ArrayList<>();
-        distinctPlusQuasiDups.addAll(distinctElems);
-        distinctPlusQuasiDups.addAll(quasiDupElems);
+        distinctPlusQuasiDups.addAll(uniqueElements);
+        distinctPlusQuasiDups.addAll(halfDuplicates);
         IntervalTree<Note> tree = new IntervalTree<>(distinctPlusQuasiDups);
 
         Range window = new Range(tree.getLastTick() + 1, tree.getLastTick() + 2);
@@ -249,47 +256,46 @@ class IntervalTreeTest<T extends Ranged> {
         assertEquals(List.of(), tree.query(961));
     }
 
+    // convenience
+    private <E extends Ranged> void assertMaxesAreCorrect(IntervalTree<E> tree) {
+        assertMaxesAreCorrect(tree.getRoot());
+    }
 
     /*
-     These two methods are used to iterate over every node in the tree
-     and, for each node, check its entire subtree to determine if the node indeed
-     stores the highest right endpoint (i.e., node.range().high()) stored in its subtree
-     as its node.max field
-
-     In order to do this correctly, POST-ORDER traversal is used (as the max of both left and right
-     are needed before checking this node's max)
+    Recurse through the tree and determine if the node stores the correct max (right-most
+    point, i.e. range.high, of its subtree). Post-order traversal is used as the max of both left
+    and right subtrees are needed before checking this node's max
     */
+    private int assertMaxesAreCorrect(Node node) {
 
-    private void checkMaxes(IntervalTree<Note> tree) { checkMaxes(tree.getRoot()); }
-
-    private long checkMaxes(Node node) {
-
+        // the tree cannot store negative values naturally
         if (node == null) { return -1; }
 
-        long leftMax = checkMaxes(node.left);
-        long rightMax = checkMaxes(node.right);
-        long thisMax = node.getRange().high();
+        int leftMax = assertMaxesAreCorrect(node.left);
+        int rightMax = assertMaxesAreCorrect(node.right);
+        int parentMax = node.getRange().getHigh();
 
-        long maxOfSubtreesAndThis = Math.max(thisMax, Math.max(leftMax, rightMax));
+        int maxOfSubtreesAndThis = Math.max(parentMax, Math.max(leftMax, rightMax));
 
-        assertEquals(node.getMax(), maxOfSubtreesAndThis);
+        assertEquals(node.getMax(), maxOfSubtreesAndThis,
+                node + " does not store the correct max of its subtrees"
+        );
 
         return maxOfSubtreesAndThis;
     }
 
-    // Testing helper function that returns true if the passed tree's elements are indeed in order
-    private boolean isInOrder(IntervalTree<Note> tree) {
+    // helper
+    private <E extends Ranged> boolean isInOrder(IntervalTree<E> tree) {
 
-        ArrayList<Note> inOrderList = tree.toList();
+        List<E> inOrderList = tree.toList();
 
         for (int i = 1; i < inOrderList.size(); i++) {
-            Note prev = inOrderList.get(i - 1);
-            Note curr = inOrderList.get(i);
+            E prev = inOrderList.get(i - 1);
+            E curr = inOrderList.get(i);
             if (curr.getRange().compareTo(prev.getRange()) < 0) { return false; }
         }
 
         return true;
     }
-
 
 }

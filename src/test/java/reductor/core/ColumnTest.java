@@ -1,6 +1,7 @@
 package reductor.core;
 
 import org.junit.jupiter.api.Test;
+import reductor.util.NoteUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -248,10 +249,6 @@ class ColumnTest {
 
         assertEquals(new Pitch("Eb4").value(), c.getSplitPointPitch());
     }
-
-
-    /* Below are "real-life" tests -- actual chords from actual pieces (sources from score, not MIDI) */
-
 
     //@Test
     //void chopinPreludeCMinor() {

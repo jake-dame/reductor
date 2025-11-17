@@ -1,7 +1,7 @@
-package reductor.midi.parser.events;
+package reductor.midi.importer.parser.events;
 
 
-import reductor.core.Util;
+import reductor.util.TimeUtil;
 
 import javax.sound.midi.MidiEvent;
 
@@ -19,7 +19,7 @@ public final class SetTempoEvent extends MetaEvent {
     }
 
     public int getBPM() {
-        return Util.convertMicrosecondsToBPM(this.getMessage().getData());
+        return TimeUtil.convertMicrosecondsToBPM(this.getMessage().getData());
     }
 
 

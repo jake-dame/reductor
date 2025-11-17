@@ -1,4 +1,4 @@
-package reductor.core;
+package reductor.util;
 
 
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class KeySignatureUtil {
+public class KeyUtil {
 
 
     private final static Pattern PATTERN_KEY_SIG = Pattern.compile("""
@@ -22,10 +22,10 @@ public class KeySignatureUtil {
            $
            """);
 
-    static final Map<Integer, String> keysMajorItoS;
-    static final Map<Integer, String> keysMinorItoS;
-    static final Map<String, Integer> keysMajorStoI;
-    static final Map<String, Integer> keysMinorStoI;
+    public static final Map<Integer, String> keysMajorItoS;
+    public static final Map<Integer, String> keysMinorItoS;
+    public static final Map<String, Integer> keysMajorStoI;
+    public static final Map<String, Integer> keysMinorStoI;
 
     static {
 

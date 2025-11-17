@@ -1,9 +1,9 @@
 package reductor.core;
 
+import reductor.midi.MidiReader;
 import reductor.midi.importer.Importer;
 import reductor.midi.importer.UnpairedNoteException;
-import reductor.midi.reader.Reader;
-import reductor.midi.parser.MidiContainer;
+import reductor.midi.importer.parser.MidiContainer;
 
 import javax.sound.midi.InvalidMidiDataException;
 import java.nio.file.Path;
@@ -43,7 +43,7 @@ public class PieceFactory {
 
         Piece piece = null;
         try {
-            var sequence = Reader.readInMidiFile(filePath);
+            var sequence = MidiReader.readInMidiFile(filePath);
             var mc = new MidiContainer(sequence);
             piece = PieceFactory.getPiece(mc);
         } catch(InvalidMidiDataException | UnpairedNoteException e) {

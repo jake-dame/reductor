@@ -1,7 +1,7 @@
-package reductor.midi.parser.events;
+package reductor.midi.importer.parser.events;
 
 
-import reductor.midi.parser.EventType;
+import reductor.midi.importer.parser.EventType;
 
 import javax.sound.midi.*;
 

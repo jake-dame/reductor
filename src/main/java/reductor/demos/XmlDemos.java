@@ -1,10 +1,11 @@
-package reductor.musicxml;
+package reductor.demos;
 
 
 import org.audiveris.proxymusic.*;
 import org.audiveris.proxymusic.ScorePartwise.Part;
 import org.audiveris.proxymusic.ScorePartwise.Part.Measure;
 import org.audiveris.proxymusic.util.Marshalling;
+import reductor.musicxml.MusicXmlWriter;
 import reductor.musicxml.builder.*;
 
 
@@ -21,7 +22,7 @@ public class XmlDemos {
     }
 
     public static class DemoScorePartwiseBuilder {
-        static void main() throws Marshalling.MarshallingException, IOException {
+        static void main() {
 
             // FOR DEMO PURPOSES -- empty components
             ScorePartwise.Part tenor = FACTORY.createScorePartwisePart();
@@ -76,6 +77,7 @@ public class XmlDemos {
             //     + If something is not really reusable, just do it inline
             //     + Easier to see exactly what will be produced by the Builder
 
+            // TODO Change these back to Consumers
             ScorePartwise sp2 = ScorePartwiseBuilder.builder()
                     .workNumber("D.911")
                     .workTitle("Winterreise")
@@ -114,6 +116,7 @@ public class XmlDemos {
         }
     }
 
+    // TODO Parts class
     //public static class DemoScorePartwiseBuilderConveniences {
     //    static void main() {
     //
@@ -136,21 +139,9 @@ public class XmlDemos {
     //    }
     //}
 
-    public static class DemoScorePartBuilder {
-        static void main() {
-            System.out.println();
-        }
-    }
-
-    public static class DemoPartBuilder {
-        static void main() {
-            System.out.println();
-        }
-    }
-
     public static class DemoMeasureBuilder {
         static void main() {
-
+            // TODO fill this out
             Time time = TimeBuilder.builder().build();
 
             Direction direction = DirectionBuilder.builder().build();
@@ -167,8 +158,8 @@ public class XmlDemos {
 
     public static class DemoNoteBuilder {
         static void main() throws Marshalling.MarshallingException, IOException {
-
-            //SET-UP
+            // TODO just invoke Defaults.scorePartwiseSinglePart
+            //SET-UP this
             ScorePartwise sp = FACTORY.createScorePartwise();
             PartList pl = FACTORY.createPartList();
             sp.setPartList(pl);
@@ -192,8 +183,7 @@ public class XmlDemos {
 
             measure.getNoteOrBackupOrForward().add(note);
 
-            MusicXmlWriter.write(sp, "note-test");
-
+            MusicXmlWriter.write(sp, "note-demo");
         }
     }
 

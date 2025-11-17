@@ -1,9 +1,11 @@
 package reductor.core;
 
 
+import reductor.util.KeySignatureUtil;
+
 import java.util.regex.Matcher;
 
-import static reductor.core.KeySignatureUtil.*;
+import static reductor.util.KeySignatureUtil.*;
 
 
 public class KeySignature implements Ranged {

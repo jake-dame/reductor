@@ -1,9 +1,8 @@
-package reductor.musicxml.exporter.builder;
+package reductor.musicxml.builder;
 
 
 import org.audiveris.proxymusic.*;
 import org.audiveris.proxymusic.ScorePartwise.Part;
-import org.audiveris.proxymusic.opus.Score;
 import reductor.dev.Defaults;
 
 import java.lang.String;
@@ -385,10 +384,6 @@ public class ScorePartwiseBuilder {
 
         this.scorePartwise.getIdentification().getCreator().add(tt);
         return this;
-    }
-
-    public static ScorePartwise of() {
-        return builder().build();
     }
 
     //public static ScorePartwise of(Parts parts) {

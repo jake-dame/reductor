@@ -1,8 +1,7 @@
-package reductor.musicxml.writer;
+package reductor.musicxml;
 
 
 import org.audiveris.proxymusic.ScorePartwise;
-import org.audiveris.proxymusic.TypedText;
 import org.audiveris.proxymusic.util.Marshalling;
 import reductor.app.Paths;
 
@@ -10,23 +9,23 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
-import java.util.Optional;
 
 
-public class Writer {
+public class MusicXmlWriter {
 
-    private static final String EXTENSION = ".musicxml";
 
-    private Writer() {}
+    private MusicXmlWriter() {}
 
-    public static Path write(ScorePartwise scorePartwise, String baseName)
-            throws IOException, Marshalling.MarshallingException {
+    public static Path write(ScorePartwise scorePartwise, String baseName) {
 
-        Path path = Paths.getOutPath(baseName, EXTENSION);
+        Path path = null;
+        final String extension = ".musicxml";
+        path = Paths.getOutPath(baseName, extension);
 
         try (OutputStream stream = Files.newOutputStream(path)) {
             Marshalling.marshal(scorePartwise, stream, true, 2);
+        } catch (Marshalling.MarshallingException | IOException e) {
+            throw new RuntimeException(e);
         }
 
         return path;

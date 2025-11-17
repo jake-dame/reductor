@@ -7,65 +7,57 @@ import reductor.core.TimeSignature;
 import reductor.core.Ranged;
 import reductor.core.builders.NoteBuilder;
 import reductor.core.builders.PieceBuilder;
+import reductor.midi.MidiUtil;
 import reductor.midi.parser.MidiContainer;
 import reductor.midi.parser.events.Event;
-import reductor.midi.EventType;
+import reductor.midi.validator.EventType;
 import reductor.midi.parser.events.NoteOffEvent;
 import reductor.midi.parser.events.NoteOnEvent;
 import reductor.core.*;
-import reductor.util.TimeUtil;
 
 import javax.sound.midi.*;
 import java.util.*;
 
 
-/**
- * Defines the necessary function to build a `Piece` object out of MIDI data.
- */
-public class MidiAdapter {
+public class MidiImporter {
 
 
-    private MidiAdapter() { }
+    private MidiImporter(){}
 
+    public static Piece toPiece(MidiContainer mc) {
 
-    public static Piece toPiece(MidiContainer mc) throws UnpairedNoteException {
+        int len = Math.toIntExact(mc.getSequenceLengthInTicks());
 
-        Application.resolution = mc.getResolution();
+        List<Note> notes = toNotes(mc.getNoteOnEvents(), mc.getNoteOffEvents());
+        List<TimeSignature> timeSigs = assignRanges(mc.getTimeSignatureEvents(),
+                len, TimeSignature.class);
+        List<KeySignature> keySigs = assignRanges(mc.getKeySignatureEvents(),
+                len, KeySignature.class);
+        List<Tempo> tempos = assignRanges(mc.getSetTempoEvents(),
+                len, Tempo.class);
 
-        ArrayList<Note> notes = toNotes(mc.getNoteOnEvents(), mc.getNoteOffEvents());
-        ArrayList<TimeSignature> timeSigs = assignRanges(mc.getTimeSignatureEvents(),
-                mc.getSequenceLengthInTicks(), TimeSignature.class);
-        ArrayList<KeySignature> keySigs = assignRanges(mc.getKeySignatureEvents(),
-                mc.getSequenceLengthInTicks(), KeySignature.class);
-        ArrayList<Tempo> tempos = assignRanges(mc.getSetTempoEvents(),
-                mc.getSequenceLengthInTicks(), Tempo.class);
-
-        return PieceBuilder.builder()
-                .notes(notes)
-                .timeSigs(timeSigs)
-                .keySigs(keySigs)
-                .tempos(tempos)
-                .resolution(mc.getResolution())
+        return PieceBuilder.builder(mc.getResolution())
+                .note(notes)
+                .timeSignature(timeSigs)
+                .keySignature(keySigs)
+                .tempo(tempos)
                 .build();
     }
 
     // See `docs/note-pairing-and-midi.md`
-    public static ArrayList<Note> toNotes(
-            ArrayList<NoteOnEvent> noteOnEvents,
-            ArrayList<NoteOffEvent> noteOffEvents
-    ) throws UnpairedNoteException {
+    public static List<Note> toNotes(List<NoteOnEvent> noteOnEvents, List<NoteOffEvent> noteOffEvents) {
 
         // Don't want to alter the original lists (by sorting them)
         // LinkedLists work fine for us here (need easy removals, but don't care about random access)
-        ArrayList<NoteOnEvent> noteOnEventsCopy = new ArrayList<>(noteOnEvents);
+        List<NoteOnEvent> noteOnEventsCopy = new ArrayList<>(noteOnEvents);
         noteOnEventsCopy.sort(Comparator.comparingLong(NoteOnEvent::getTick));
         LinkedList<NoteOnEvent> ons = new LinkedList<>(noteOnEvents);
 
-        ArrayList<NoteOffEvent> noteOffEventsCopy = new ArrayList<>(noteOffEvents);
+        List<NoteOffEvent> noteOffEventsCopy = new ArrayList<>(noteOffEvents);
         noteOffEventsCopy.sort(Comparator.comparingLong(NoteOffEvent::getTick));
         LinkedList<NoteOffEvent> offs = new LinkedList<>(noteOffEvents);
 
-        ArrayList<Note> outNotes = new ArrayList<>();
+        List<Note> outNotes = new ArrayList<>();
         NoteOnEvent on;
         NoteOffEvent off;
         Iterator<NoteOnEvent> onsIterator = ons.iterator();
@@ -86,11 +78,14 @@ public class MidiAdapter {
                     //     Inclusive ones are a big problem for this program.
                     if (off.getTick() != on.getTick()) {
 
+                        int onInt = Math.toIntExact(on.getTick());
+                        int offInt = Math.toIntExact(off.getTick());
+
                         // Found a match/pair --> construct the `Note` object
                         Note note = NoteBuilder.builder()
                                 .pitch(new Pitch(on.getPitch()))
-                                .start(on.getTick())
-                                .stop(off.getTick())
+                                .start(onInt)
+                                .stop(offInt)
                                 .instrument(on.getTrackName())
                                 .build();
 
@@ -108,18 +103,18 @@ public class MidiAdapter {
         } // end ons while()
 
         // For testing / debugging purposes
-        ArrayList<NoteOnEvent> unpairedOns = new ArrayList<>(ons);
-        ArrayList<NoteOffEvent> unpairedOffs = new ArrayList<>(offs);
+        List<NoteOnEvent> unpairedOns = new ArrayList<>(ons);
+        List<NoteOffEvent> unpairedOffs = new ArrayList<>(offs);
         // end
 
         if (!ons.isEmpty()) {
-            throw new UnpairedNoteException(
+            throw new RuntimeException(
                     "unpaired note on", new Throwable(unpairedOns.toString())
             );
         }
 
         if (!offs.isEmpty()) {
-            throw new UnpairedNoteException(
+            throw new RuntimeException(
                     "unpaired note off", new Throwable(unpairedOffs.toString())
             );
         }
@@ -139,7 +134,7 @@ public class MidiAdapter {
         byte[] data;
 
         if (event.getMessage() instanceof MetaMessage mm
-                &&  mm.getType() == EventType.KEY_SIGNATURE.getStatusByte()) {
+                &&  mm.getType() == EventType.KEY_SIGNATURE.code()) {
             data = mm.getData();
         } else {
             throw new RuntimeException(
@@ -177,7 +172,7 @@ public class MidiAdapter {
 
         byte[] data;
         if (event.getMessage() instanceof MetaMessage mm) {
-            if (mm.getType() == EventType.SET_TEMPO.getStatusByte()) {
+            if (mm.getType() == EventType.SET_TEMPO.code()) {
                 data = mm.getData();
             } else {
                 throw new RuntimeException("toTempo was given an event that is not a set tempo event");
@@ -186,14 +181,14 @@ public class MidiAdapter {
             throw new RuntimeException("toTempo was given an event that is not a set tempo event");
         }
 
-        return new Tempo(TimeUtil.convertMicrosecondsToBPM(data), range);
+        return new Tempo(MidiUtil.convertMicrosecondsToBPM(data), range);
     }
 
     public static TimeSignature toTimeSignature(MidiEvent event, Range range) {
 
         byte[] data;
         if (event.getMessage() instanceof MetaMessage mm
-                &&  mm.getType() == EventType.TIME_SIGNATURE.getStatusByte()) {
+                &&  mm.getType() == EventType.TIME_SIGNATURE.code()) {
             data = mm.getData();
         } else {
             throw new RuntimeException("toTimeSignature was given an event that is not time signature event");
@@ -214,29 +209,29 @@ public class MidiAdapter {
 
     }
 
-    public static <E extends Event<?>, C extends Ranged> ArrayList<C> assignRanges(
+    public static <E extends Event<?>, C extends Ranged> List<C> assignRanges(
             List<E> midiEvents,
-            long sequenceLengthInTicks,
+            int sequenceLengthInTicks,
             Class<C> classToConvertTo
     ) {
 
         if (midiEvents.isEmpty()) { return new ArrayList<>(); }
-        ArrayList<E> eventsCopy = new ArrayList<>(midiEvents);
+        List<E> eventsCopy = new ArrayList<>(midiEvents);
         eventsCopy.sort(Comparator.comparingLong(Event::getTick));
 
-        ArrayList<C> out = new ArrayList<>();
+        List<C> out = new ArrayList<>();
 
         int size = eventsCopy.size();
         for (int i = 0; i < size; i++) {
 
             Event<?> event = eventsCopy.get(i);
 
-            long tick = event.getTick();
-            long nextTick;
+            int tick = Math.toIntExact(event.getTick());
+            int nextTick;
 
-            nextTick = i == size - 1
+            nextTick = Math.toIntExact(i == size - 1
                     ? sequenceLengthInTicks + 1
-                    : eventsCopy.get(i+1).getTick();
+                    : eventsCopy.get(i + 1).getTick());
 
             // This checks for the "same" midi meta event being sent at the same time, just on different tracks
             if (tick == nextTick) { continue; }

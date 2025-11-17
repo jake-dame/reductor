@@ -1,15 +1,12 @@
-package reductor.musicxml.exporter.builder;
+package reductor.dev;
 
 
 import org.audiveris.proxymusic.*;
 import org.audiveris.proxymusic.ScorePartwise.Part;
-import org.audiveris.proxymusic.ScorePartwise.Part.Measure;
 import reductor.core.Piece;
-import reductor.core.builders.PieceBuilder;
 import reductor.midi.MidiReader;
-import reductor.midi.importer.MidiAdapter;
-import reductor.midi.importer.UnpairedNoteException;
-import reductor.midi.importer.parser.MidiContainer;
+import reductor.midi.importer.MidiImporter;
+import reductor.midi.parser.MidiContainer;
 
 import javax.sound.midi.InvalidMidiDataException;
 import java.lang.String;
@@ -21,6 +18,8 @@ import java.nio.file.Path;
 public class Defaults {
 
     public static final ObjectFactory FACTORY = new ObjectFactory();
+
+    //region clefs
 
     public static Clef trebleClef() {
         Clef c = FACTORY.createClef();
@@ -49,6 +48,20 @@ public class Defaults {
         c.setLine(new BigInteger("4"));
         return c;
     }
+
+    //endregion
+
+
+    //region musicxml
+
+    public static Part defaultPart() {
+        Part part = FACTORY.createScorePartwisePart();
+        part.setId("P1");
+        return part;
+    }
+
+
+    //endregion
 
 
 
@@ -102,42 +115,42 @@ public class Defaults {
     //    return null;
     //}
 
-    private static Measure defaultMeasure() {
-        Part.Measure measure = FACTORY.createScorePartwisePartMeasure();
-        measure.setNumber("1");
-
-        Attributes attributes = FACTORY.createAttributes();
-        attributes.setDivisions(new BigDecimal("480"));
-
-        Key key = FACTORY.createKey();
-        key.setFifths(new BigInteger("2"));
-        key.setMode("major");
-        //key.setNumber(new BigInteger("2"));
-        attributes.getKey().add(key);
-
-        Time time = FACTORY.createTime();
-        time.getTimeSignature().add(FACTORY.createTimeBeats("3"));
-        time.getTimeSignature().add(FACTORY.createTimeBeatType("4"));
-        //time.setNumber(new BigInteger("1"));
-        attributes.getTime().add(time);
-
-        //attributes.getClef().add(MeasureBuilder.buildTrebleClef());
-        //attributes.getClef().add(MeasureBuilder.buildBassClef());
-        //
-        attributes.setStaves(new BigInteger("2"));
-
-        measure.getNoteOrBackupOrForward().add(attributes);
-
-        Direction direction = FACTORY.createDirection();
-        Sound sound = FACTORY.createSound();
-        sound.setTempo(new BigDecimal("120"));
-        direction.setSound(sound);
-        measure.getNoteOrBackupOrForward().add(direction);
-
-        measure.getNoteOrBackupOrForward().add(defaultNote());
-
-        return measure;
-    }
+    //private static Measure defaultMeasure() {
+    //    Part.Measure measure = FACTORY.createScorePartwisePartMeasure();
+    //    measure.setNumber("1");
+    //
+    //    Attributes attributes = FACTORY.createAttributes();
+    //    attributes.setDivisions(new BigDecimal("480"));
+    //
+    //    Key key = FACTORY.createKey();
+    //    key.setFifths(new BigInteger("2"));
+    //    key.setMode("major");
+    //    //key.setNumber(new BigInteger("2"));
+    //    attributes.getKey().add(key);
+    //
+    //    Time time = FACTORY.createTime();
+    //    time.getTimeSignature().add(FACTORY.createTimeBeats("3"));
+    //    time.getTimeSignature().add(FACTORY.createTimeBeatType("4"));
+    //    //time.setNumber(new BigInteger("1"));
+    //    attributes.getTime().add(time);
+    //
+    //    //attributes.getClef().add(MeasureBuilder.buildTrebleClef());
+    //    //attributes.getClef().add(MeasureBuilder.buildBassClef());
+    //    //
+    //    attributes.setStaves(new BigInteger("2"));
+    //
+    //    measure.getNoteOrBackupOrForward().add(attributes);
+    //
+    //    Direction direction = FACTORY.createDirection();
+    //    Sound sound = FACTORY.createSound();
+    //    sound.setTempo(new BigDecimal("120"));
+    //    direction.setSound(sound);
+    //    measure.getNoteOrBackupOrForward().add(direction);
+    //
+    //    measure.getNoteOrBackupOrForward().add(defaultNote());
+    //
+    //    return measure;
+    //}
 
     public static final Step DEF_PITCH_STEP = Step.valueOf("F");
     public static final BigDecimal DEF_PITCH_ALTER = new BigDecimal("1");
@@ -178,12 +191,33 @@ public class Defaults {
         try {
             var sequence = MidiReader.readInMidiFile(filePath);
             var mc = new MidiContainer(sequence);
-            piece = MidiAdapter.toPiece(mc);
-        } catch(InvalidMidiDataException | UnpairedNoteException e) {
+            piece = MidiImporter.toPiece(mc);
+        } catch(InvalidMidiDataException e) {
             System.err.println(e.getMessage());
         }
 
         return piece;
+    }
+
+
+    public static ScorePart generateScorePartFromPart(Part p) {
+        ScorePart scorePart = FACTORY.createScorePart();
+        String id = "";
+        if (p.getId() instanceof ScorePart sp) {
+            id = sp.getId();
+        } else if (p.getId() instanceof String str){
+            id = str;
+        } else {
+            throw new RuntimeException("part did not have an id of either a scorepart object or a string");
+        }
+        scorePart.setId(id);
+        return scorePart;
+    }
+
+    public static Part generatePartFromScorePart(ScorePart s) {
+        Part p = FACTORY.createScorePartwisePart();
+        p.setId(s);
+        return p;
     }
 
 

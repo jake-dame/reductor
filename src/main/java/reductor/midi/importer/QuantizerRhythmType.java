@@ -1,10 +1,16 @@
-package reductor.core;
+package reductor.midi.importer;
 
+/*
+TODO: this is a "legacy" RhythmType enum that is only used by midi importer quantize.java.
+      quantize.java should be re-adapted to use reductor.core.RhythmType
+*/
+
+import reductor.core.Range;
 
 import static reductor.core.Bases.*;
 
 
-public enum RhythmTypeBeta {
+public enum QuantizerRhythmType {
 
 
     r_0(3000, 1, 1),
@@ -62,7 +68,7 @@ public enum RhythmTypeBeta {
     // ==========================  CONSTRUCTORS  ========================== //
 
 
-    RhythmTypeBeta(double base, double multiplier, double divisor) {
+    QuantizerRhythmType(double base, double multiplier, double divisor) {
         this.base = base;
         this.multiplier = multiplier;
         this.divisor = divisor;
@@ -89,34 +95,34 @@ public enum RhythmTypeBeta {
     public boolean isNon() { return this.divisor == 9; }
     public boolean isUnholy() { return !isTrip() && !isQuint() && !isSept() && !isNon(); }
 
-    public static Range toRange(RhythmTypeBeta type) {
-        return new Range(0, (long) (type.duration - 1));
+    public static Range toRange(QuantizerRhythmType type) {
+        return new Range(0, (int) (type.duration - 1));
     }
 
-    public static Range toRange(double start, RhythmTypeBeta type) {
-        return new Range((long) start, (long) (start + (long) (type.duration - 1)));
+    public static Range toRange(double start, QuantizerRhythmType type) {
+        return new Range((int) start, (int) (start + (int) (type.duration - 1)));
     }
 
-    public static RhythmTypeBeta type(Range range) {
+    public static QuantizerRhythmType type(Range range) {
         return type(range.getHigh() - range.getLow());
     }
 
-    public static RhythmTypeBeta type(double duration) {
+    public static QuantizerRhythmType type(double duration) {
 
         if (WHOLE < duration) { return r_0; }
 
-        for (RhythmTypeBeta val : RhythmTypeBeta.values()) {
+        for (QuantizerRhythmType val : QuantizerRhythmType.values()) {
             if (val.duration == duration) { return val; }
         }
 
         return closestMatch(duration);
     }
 
-    public static RhythmTypeBeta closestMatch(double duration) {
+    public static QuantizerRhythmType closestMatch(double duration) {
 
-        RhythmTypeBeta currVal = r_1;
-        var values = RhythmTypeBeta.values();
-        for (RhythmTypeBeta val : values) {
+        QuantizerRhythmType currVal = r_1;
+        var values = QuantizerRhythmType.values();
+        for (QuantizerRhythmType val : values) {
             double currSmallest = Math.abs(currVal.duration - duration);
             double thisDiff = Math.abs(val.duration - duration);
             if (thisDiff < currSmallest) { currVal = val;  }

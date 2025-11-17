@@ -1,4 +1,4 @@
-package reductor.midi;
+package reductor.midi.validator;
 
 
 import javax.sound.midi.MetaMessage;
@@ -8,15 +8,17 @@ import javax.sound.midi.ShortMessage;
 
 public enum EventType {
 
-    // Meta messages (14 total)
+    // Meta messages
+    SEQUENCE_NUMBER(0x0),
     TEXT(0x1),
     COPYRIGHT_NOTICE(0x2),
     TRACK_NAME(0x3),
     INSTRUMENT_NAME(0x4),
     LYRICS(0x5),
     MARKER(0x6),
+    CUE_POINT(0x7),
     CHANNEL_PREFIX(0x20),
-    PORT_CHANGE(0x21),
+    PORT_CHANGE(0x21), // TODO
     END_OF_TRACK(0x2F),
     SET_TEMPO(0x51),
     SMPTE_OFFSET(0x54),
@@ -24,7 +26,7 @@ public enum EventType {
     KEY_SIGNATURE(0x59),
     SEQUENCER_SPECIFIC(0x7F),
 
-    // Channel/Voice messages (7 total)
+    // Channel/Voice messages
     NOTE_OFF(0x80),
     NOTE_ON(0x90),
     POLY_TOUCH(0xA0),
@@ -33,17 +35,14 @@ public enum EventType {
     CHANNEL_PRESSURE(0xD0),
     PITCH_BEND(0xE0);
 
-
     private final int statusByte;
 
-    EventType(int statusByte) { this.statusByte = statusByte; }
+    EventType(int statusByte) {
+        this.statusByte = statusByte;
+    }
 
 
-    // TODO: this is brittle -- delete unless you add every single type in the MIDI spec
-    public boolean isMeta() { return this.ordinal() < 15; }
-    public boolean isChannel() { return !isMeta(); }
-
-    public int getStatusByte() { return this.statusByte; }
+    public int code() { return this.statusByte; }
 
     /** Given a {@link javax.sound.midi.MidiEvent}, returns the enum constant/object
      * corresponding to a MIDI message. */

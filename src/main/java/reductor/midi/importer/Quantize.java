@@ -1,7 +1,7 @@
 package reductor.midi.importer;
 
 import reductor.core.Range;
-import reductor.core.RhythmTypeBeta;
+import reductor.core.RangeUtil;
 
 import java.util.*;
 
@@ -11,25 +11,25 @@ public class Quantize {
 
     public static Range quantize(Range inRange, int tpq) {
 
-        long scale = 480 / tpq;
+        int scale = 480 / tpq;
 
-        long scaledLow = inRange.low() * scale;
-        long scaledHigh = inRange.high() * scale;
+        int scaledLow = inRange.getLow() * scale;
+        int scaledHigh = inRange.getHigh() * scale;
 
         Range range = new Range(scaledLow, scaledHigh);
 
-        RhythmTypeBeta rhy = RhythmTypeBeta.type(range.high() - range.low());
+        QuantizerRhythmType rhy = QuantizerRhythmType.type(range.getHigh() - range.getLow());
 
         double gridWindowSize = rhy.base / rhy.divisor;
-        Range gridWindow = new Range(0, (long) (gridWindowSize - 1));
+        Range gridWindow = new Range(0, (int) (gridWindowSize - 1));
 
         final long tolerance = 4;
-        while (gridWindow.overlappingRegion(range) < tolerance) {
-            gridWindow = Range.getShiftedInstance(gridWindow, gridWindow.duration());
+        while (gridWindow.overlappingRegionLength(range) < tolerance) {
+            gridWindow = RangeUtil.getShiftedInstance(gridWindow, gridWindow.duration());
         }
 
-        range = range.setLow(gridWindow.low());
-        range = range.setHigh((long) (range.low() + rhy.duration - 1));
+        range = range.setLow(gridWindow.getLow());
+        range = range.setHigh((int) (range.getLow() + rhy.duration - 1));
 
         return range;
     }

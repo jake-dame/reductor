@@ -20,7 +20,7 @@ public class Box implements Ranged, Noted, Comparable<Box> {
     Box(ArrayList<Column> columns) {
         this.columns = new ArrayList<>(columns);
         this.columns.sort(null);
-        this.range = Range.concatenate(this.columns);
+        this.range = RangeUtil.concatenate(this.columns);
         this.findFloorAndCeiling();
     }
 

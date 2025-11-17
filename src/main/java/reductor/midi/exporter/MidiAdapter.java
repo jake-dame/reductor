@@ -1,193 +1,92 @@
-package reductor.midi.exporter;
-
-import reductor.core.KeySignature;
-import reductor.core.Tempo;
-import reductor.core.TimeSignature;
-import reductor.core.Noted;
-import reductor.midi.builder.SequenceBuilder;
-import reductor.midi.builder.TrackBuilder;
-import reductor.midi.validator.EventType;
-import reductor.core.*;
-import reductor.util.TimeUtil;
-
-import javax.sound.midi.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import static reductor.midi.builder.SequenceBuilder.ACOUSTIC_GRAND_PIANO;
-
-
-public class FromPiece {
-
-    private final TrackBuilder builder;
-
-    private FromPiece(){
-        this.builder =
-    }
-
-    //public static Sequence export(Piece piece) {
-    //    return getSequence(piece.getNotes(),
-    //            piece.getTimeSignatures(),
-    //            piece.getKeySignatures(),
-    //            piece.getTempos()
-    //    );
-    //}
-
-    public static Sequence getSequence(
-            ArrayList<Note> notes,
-            ArrayList<TimeSignature> timeSigs,
-            ArrayList<KeySignature> keySigs,
-            ArrayList<Tempo> tempos,
-            Piece piece
-    ) {
-
-        final int channel = 0;
-
-        TrackBuilder builder = TrackBuilder.builder()
-                .instrumentName(0, "Piano")
-                .trackName(0, "Piano")
-                .programChange(0, channel, ACOUSTIC_GRAND_PIANO);
-
-        Sequence seq = SequenceBuilder.builder(piece.getResolution())
-                .track()
-                .build();
-
-        for (TimeSignature timeSig : timeSigs) { track.add(toTimeSignatureEvent(timeSig)); }
-        for (KeySignature keySig : keySigs) { track.add(toKeySignatureEvent(keySig)); }
-        for (Tempo tempo : tempos) { track.add(toTempoEvent(tempo)); }
-        for (MidiEvent event : toNoteEvents(notes, CHANNEL)) { track.add(event); }
-
-        return seq;
-    }
-
-    public static <T extends Noted> ArrayList<MidiEvent> toNoteEvents(List<T> notedElems, int channel) throws InvalidMidiDataException {
-
-        final ArrayList<MidiEvent> out = new ArrayList<>();
-        final int MEDIAN_VELOCITY = 64;
-
-        for (T elem : notedElems) {
-            ArrayList<Note> notes = elem.getNotes();
-
-            for (Note note : notes) {
-                ShortMessage onMessage = new ShortMessage(ShortMessage.NOTE_ON, channel,
-                        note.pitch(), MEDIAN_VELOCITY);
-                MidiEvent noteOnEvent = new MidiEvent(onMessage, note.start());
-                out.add(noteOnEvent);
-
-                ShortMessage offMessage = new ShortMessage(ShortMessage.NOTE_OFF, channel,
-                        note.pitch(), 0);
-                MidiEvent noteOffEvent = new MidiEvent(offMessage, note.stop());
-                out.add(noteOffEvent);
-            }
-
-        }
-
-        return out;
-    }
-
-    public static MidiEvent toKeySignatureEvent(KeySignature keySignature) throws InvalidMidiDataException {
-        byte[] bytes = new byte[]{(byte) keySignature.accidentals(), (byte) keySignature.mode()};
-
-        MetaMessage message = new MetaMessage(
-                EventType.KEY_SIGNATURE.getStatusByte(),
-                bytes,
-                bytes.length
-        );
-
-        return new MidiEvent(message, keySignature.getRange().getLow());
-    }
-
-    public static MidiEvent toTempoEvent(Tempo tempo) throws InvalidMidiDataException {
-
-        byte[] bytes = TimeUtil.convertBPMToMicroseconds(tempo.getBpm());
-
-        MetaMessage message = new MetaMessage(
-                EventType.SET_TEMPO.getStatusByte(),
-                bytes,
-                bytes.length
-        );
-
-        return new MidiEvent(message, tempo.getRange().getLow());
-    }
-
-    public static MidiEvent toTimeSignatureEvent(TimeSignature timeSignature) throws InvalidMidiDataException {
-
-        int upperNumeral = timeSignature.numerator();
-        int lowerNumeral = timeSignature.denominator();
-
-        if (upperNumeral > 128 || upperNumeral < 1) {
-            throw new IllegalArgumentException("invalid upperNumeral: " + upperNumeral);
-        }
-
-        if (lowerNumeral > 128 || lowerNumeral < 1) {
-            throw new IllegalArgumentException("invalid lowerNumeral: " + lowerNumeral);
-        }
-
-        int exponent = 0;
-        int lowerNumeralCopy = lowerNumeral;
-        while (lowerNumeralCopy >= 2) {
-            lowerNumeralCopy /= 2;
-            exponent++;
-        }
-
-        byte clockTicksPerTick = (byte) (24 * (4 / lowerNumeral)); // TODO: double-check this
-        byte thirtySecondsPerBeat = 8;
-
-        byte[] bytes = new byte[]{
-                (byte) upperNumeral,
-                (byte) exponent,
-                clockTicksPerTick,
-                (byte) (32 / lowerNumeral)
-        };
-
-        MetaMessage message = new MetaMessage(
-                EventType.TIME_SIGNATURE.getStatusByte(),
-                bytes,
-                bytes.length
-        );
-
-        return new MidiEvent(message, timeSignature.getRange().getLow());
-    }
-
-    public static MidiEvent toProgramChangeEvent(int channel) throws InvalidMidiDataException {
-
-        final int ACOUSTIC_GRAND_PIANO = 0x0;
-
-        ShortMessage message = new ShortMessage(
-                ShortMessage.PROGRAM_CHANGE,
-                channel,
-                ACOUSTIC_GRAND_PIANO,
-                0  // Data2 for program change messages is ignored as it is n/a; the method needs it, though
-
-        );
-
-        return new MidiEvent(message, 0);
-    }
-
-    public static MidiEvent toTrackNameEvent(String trackName) throws InvalidMidiDataException {
-
-        byte[] bytes = trackName.getBytes();
-
-        MetaMessage message = new MetaMessage(
-                EventType.TRACK_NAME.getStatusByte(),
-                bytes,
-                bytes.length
-        );
-
-        return new MidiEvent(message, 0);
-    }
-
-    public static MidiEvent toInstrumentNameEvent(String instrumentName) throws InvalidMidiDataException {
-
-        byte[] bytes = instrumentName.getBytes();
-
-        MetaMessage message = new MetaMessage(
-                EventType.TRACK_NAME.getStatusByte(),
-                bytes,
-                bytes.length
-        );
-
-        return new MidiEvent(message, 0);
-    }
-
-}
+//package reductor.midi.exporter;
+//
+//import reductor.core.KeySignature;
+//import reductor.core.Tempo;
+//import reductor.core.TimeSignature;
+//import reductor.midi.builder.SequenceBuilder;
+//import reductor.core.*;
+//
+//import javax.sound.midi.*;
+//
+//import static reductor.midi.builder.SequenceBuilder.ACOUSTIC_GRAND_PIANO;
+//
+//
+//public class MidiAdapter {
+//
+//    private final SequenceBuilder.TrackBuilder builder;
+//    private final int channel = 0;
+//
+//    private MidiAdapter(int resolution){
+//        this.builder = SequenceBuilder.TrackBuilder.builder(resolution);
+//    }
+//
+//    public static Sequence toSequence(Piece piece) {
+//        MidiAdapter midiAdapter = new MidiAdapter(piece.getResolution());
+//        midiAdapter.adaptPiece(piece);
+//        return SequenceBuilder.builder(piece.getResolution())
+//                .track(midiAdapter.builder.build())
+//                .build();
+//    }
+//
+//    private void adaptPiece(Piece piece) {
+//        this.builder.instrumentName(0, "Piano")
+//                .trackName(0, "Piano")
+//                .programChange(0, channel, ACOUSTIC_GRAND_PIANO);
+//        for (Tempo t : piece.getTempos()) { this.adaptTempo(t); }
+//        for (TimeSignature t : piece.getTimeSignatures()) { this.adaptTimeSignature(t); }
+//        for (KeySignature t : piece.getKeySignatures()) { this.adaptKeySignature(t); }
+//        for (Note n : piece.getNotes()) { adaptNote(n); }
+//    }
+//
+//    private void adaptKeySignature(KeySignature keySignature) {
+//        long startTick = keySignature.getRange().getLow();
+//        int accidentals = keySignature.accidentals();
+//        int mode = keySignature.mode();
+//        this.builder.keySignature(startTick, accidentals, mode);
+//    }
+//
+//    private void adaptTempo(Tempo tempo) {
+//        long startTick = tempo.getRange().getLow();
+//        int bpm = tempo.getBpm();
+//        this.builder.tempo(tempo.getRange().getLow(), tempo.getBpm());
+//    }
+//
+//    private void adaptTimeSignature(TimeSignature timeSignature) {
+//        long startTick = timeSignature.getRange().getLow();
+//        int numerator = timeSignature.numerator();
+//        int denominator = timeSignature.denominator();
+//        this.builder.timeSignature(startTick, numerator, denominator);
+//    }
+//
+//    private void adaptNote(Note note) {
+//        this.builder.noteOn(note.start(), 0, note.getPitch().value(), 64);
+//        this.builder.noteOff(note.stop(), 0, note.getPitch().value(), 0);
+//    }
+//
+//    //public static <T extends Noted> ArrayList<MidiEvent> toNoteEvents(List<T> notedElems, int channel) throws InvalidMidiDataException {
+//    //
+//    //    final ArrayList<MidiEvent> out = new ArrayList<>();
+//    //    final int MEDIAN_VELOCITY = 64;
+//    //
+//    //    for (T elem : notedElems) {
+//    //        ArrayList<Note> notes = elem.getNotes();
+//    //
+//    //        for (Note note : notes) {
+//    //            ShortMessage onMessage = new ShortMessage(ShortMessage.NOTE_ON, channel,
+//    //                    note.pitch(), MEDIAN_VELOCITY);
+//    //            MidiEvent noteOnEvent = new MidiEvent(onMessage, note.start());
+//    //            out.add(noteOnEvent);
+//    //
+//    //            ShortMessage offMessage = new ShortMessage(ShortMessage.NOTE_OFF, channel,
+//    //                    note.pitch(), 0);
+//    //            MidiEvent noteOffEvent = new MidiEvent(offMessage, note.stop());
+//    //            out.add(noteOffEvent);
+//    //        }
+//    //
+//    //    }
+//    //
+//    //    return out;
+//    //}
+//
+//
+//}

@@ -1,4 +1,4 @@
-package reductor.midi.reader;
+package reductor.midi;
 
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 
-public class Reader {
+public class MidiReader {
 
-
-    private Reader() {}
-
+    private MidiReader() {}
 
     public static Sequence readInMidiFile(Path path) {
 
@@ -28,12 +26,12 @@ public class Reader {
         return sequence;
     }
 
-    private static void validateSequence(Sequence sequence, Path path)
+    static void validateSequence(Sequence sequence, Path path)
             throws InvalidMidiDataException, IOException {
 
         if (sequence.getDivisionType() != Sequence.PPQ) {
             System.err.println("this program does not support SMPTE timing");
-            throw new RuntimeException();
+            throw new IllegalArgumentException();
         }
 
         int fileType = MidiSystem.getMidiFileFormat(path.toFile()).getType();
@@ -46,6 +44,5 @@ public class Reader {
         }
 
     }
-
 
 }

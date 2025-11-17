@@ -1,12 +1,13 @@
-package reductor.midi.dev;
+package reductor.dev;
 
-import reductor.core.PitchUtil;
+import reductor.util.PitchUtil;
 
 import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -15,41 +16,10 @@ import java.util.ArrayList;
 @SuppressWarnings("ForLoopReplaceableByForEach")
 public class MidiDebugger {
 
+    private MidiDebugger() {}
 
-    static void main(String[] args) throws InvalidMidiDataException, IOException {
-
-        Sequence seq = MidiSystem.getSequence(new File("musicxml_test.mid"));
-        Track[] tracks = seq.getTracks();
-
-        System.err.println("res: " + seq.getResolution());
-
-        for (Track track : tracks) {
-            for (int i = 0; i < track.size(); i++) {
-                MidiEvent event = track.get(i);
-                MidiMessage message = event.getMessage();
-
-                // ======== DO SOMETHING BELOW: =========
-                if (message instanceof ShortMessage sm) {
-
-                    if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() != 0) {
-                        System.out.println(PitchUtil.parseMidiValue(sm.getData1(), true) +"("+sm.getData1()+")" + " on: " + event.getTick()); }
-                    if ((sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0) || sm.getCommand() == ShortMessage.NOTE_OFF) {
-                        System.out.println("\t" + PitchUtil.parseMidiValue(sm.getData1(), true) + " off: " + event.getTick()); }
-
-                }
-                // ========================================
-
-            }
-        }
-
-    }
-
-
-    private MidiDebugger() { }
-
-
-    /// Given a list of MidiEvents, prints only the Note On/Off events
-    public static void printNotes(ArrayList<MidiEvent> events) {
+    // Given a list of MidiEvents, prints only the Note On/Off events
+    public static void printNotes(List<MidiEvent> events) {
 
         int currChannel = -1;
         for (MidiEvent event : events) {
@@ -87,27 +57,18 @@ public class MidiDebugger {
         }
     }
 
-    /// This avoids anything having to do with the midi library or midi, and just reads in raw bytes using java.nio
+    // This avoids anything having to do with the midi library or midi, and just reads in raw bytes using java.nio
     public static void printRawBytes(String filePath) throws IOException {
-
         byte[] data = java.nio.file.Files.readAllBytes(Path.of(filePath));
-
         int lineCtr = 0;
-
-        // For each byte in the file:
         for (int i = 0; i < data.length; i++) {
-
             // Mask because java
             int b = data[i] & 0xFF;
-
+            // "0x4d 0x54 0x68 0x64"... the first line is just the format declaration thing
             // Any time this occurs in a SMF it is a meta message marker. Give it a new line.
-            if (b == 0xFF) {
-                System.out.println();
-                lineCtr++;
-            }
-
+            if (b == 0xFF) { System.out.println(); lineCtr++; }
             // There are some 0x90s and 0x80 in the first few meta messages. This just means its safe to start
-            // looking for note events.
+            // looking for note events. 4 is arbitrary.
             if (4 < lineCtr) {
                 // This will indicate a note on. Give it a new line.
                 if (0x90 <= b  &&  b <= 0x9F) { System.out.println(); }
@@ -115,7 +76,6 @@ public class MidiDebugger {
                 if (0x80 <=b  &&  b <= 0x8F) { System.out.println("\t"); }
             }
 
-            // Finally, print the bytes in "hex viewer" format
             System.out.print("0x" + Integer.toHexString(b) + " ");
         }
 

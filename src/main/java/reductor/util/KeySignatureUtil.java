@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class KeyUtil {
+public class KeySignatureUtil {
 
 
     private final static Pattern PATTERN_KEY_SIG = Pattern.compile("""

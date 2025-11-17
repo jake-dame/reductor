@@ -1,7 +1,7 @@
-package reductor.midi.importer.parser.events;
+package reductor.midi.parser.events;
 
 
-import reductor.midi.importer.parser.EventType;
+import reductor.midi.validator.EventType;
 
 import javax.sound.midi.*;
 
@@ -42,7 +42,7 @@ public abstract class Event<T extends MidiMessage> {
                 case NOTE_ON -> {
                     int velocity = sm.getData2();
                     if (velocity == 0) {
-                        sm.setMessage(EventType.NOTE_OFF.getStatusByte(), sm.getChannel(), sm.getData1(),
+                        sm.setMessage(EventType.NOTE_OFF.code(), sm.getChannel(), sm.getData1(),
                                 sm.getData2());
                         yield new NoteOffEvent(event);
                     } else {

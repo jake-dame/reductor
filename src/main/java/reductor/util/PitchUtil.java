@@ -1,4 +1,4 @@
-package reductor.core;
+package reductor.util;
 
 
 import java.util.HashMap;

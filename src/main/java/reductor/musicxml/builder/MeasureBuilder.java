@@ -1,4 +1,4 @@
-package reductor.musicxml.exporter.builder;
+package reductor.musicxml.builder;
 
 
 import org.audiveris.proxymusic.*;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static reductor.dev.Defaults.*;
-import static reductor.util.TimeUtil.calculateMaxSubdivisionsPerMeasure;
+import static reductor.util.TimeUtil.calculateMeasureDuration;
 
 
 /*
@@ -176,7 +176,7 @@ public class MeasureBuilder {
         // time signature and subdivisions per quarter note; no computation can be done without these
         private boolean validContext;
 
-        private long divisions;
+        private int divisions;
         private int numerator;
         private int denominator;
 
@@ -197,11 +197,11 @@ public class MeasureBuilder {
             assert a.getTime() != null;
             assert 1 < a.getTime().get(0).getTimeSignature().size();
 
-            this.divisions = a.getDivisions().longValueExact();
+            this.divisions = a.getDivisions().intValueExact();
             this.numerator = Integer.parseInt(a.getTime().get(0).getTimeSignature().get(0).getValue());
             this.denominator = Integer.parseInt(a.getTime().get(0).getTimeSignature().get(1).getValue());
 
-            this.measureDuration = calculateMaxSubdivisionsPerMeasure(this.divisions, this.numerator, this.denominator);
+            this.measureDuration = calculateMeasureDuration(this.divisions, this.numerator, this.denominator);
             this.noteCache = new NoteContext(this.divisions);
             this.validContext = true;
         }

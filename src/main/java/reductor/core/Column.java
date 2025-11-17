@@ -1,5 +1,7 @@
 package reductor.core;
 
+//import reductor.devv.HandSplittingFunctions;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,7 +35,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
 
     /**
      * Pure Columns are those that contain only Notes that exactly match the Column's range (i.e. no notes extend
-     * behind or ahead of the Column.
+     * behind or ahead of the Column).
      */
     boolean isPure;
     /**
@@ -41,14 +43,14 @@ public class Column implements Ranged, Noted, Comparable<Column> {
      * */
     boolean isSemiPure;
 
-    /**
-     * The algorithm used to decide the boundaries of notes that go to each hand. Uses a default function upon
-     * construction, but, when put into larger contexts, such as when this Column is part of a collection of Columns
-     * (e.g. in a {@linkplain Box}), the container might decide that a different heuristic might be better for
-     * splitting the hands, at which point it would call {@linkplain Column#splitHands}; an example of this would be if
-     * the hands could be split based on textural or melodic differences, rather than using defaults. A Column, of
-     * course, cannot know this until that time.
-     */
+    ///**
+    // * The algorithm used to decide the boundaries of notes that go to each hand. Uses a default function upon
+    // * construction, but, when put into larger contexts, such as when this Column is part of a collection of Columns
+    // * (e.g. in a {@linkplain Box}), the container might decide that a different heuristic might be better for
+    // * splitting the hands, at which point it would call {@linkplain Column#splitHands}; an example of this would be if
+    // * the hands could be split based on textural or melodic differences, rather than using defaults. A Column, of
+    // * course, cannot know this until that time.
+    // */
     Consumer<Column> splitFunc;
 
     Column LH;
@@ -62,7 +64,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /**
      * Primary constructor which takes a list of {@linkplain Note}, and a {@linkplain Range}.
      */
-    public Column(ArrayList<Note> notes, Range range) {
+    public Column(List<Note> notes, Range range) {
 
         this.range = new Range(range);
 
@@ -78,7 +80,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
         this.middle = new Column(this, false);
         this.RH = new Column(this, false);
 
-        this.splitHands(HandSplittingFunctions::defaultHandSplitter);
+        //this.splitHands(HandSplittingFunctions::defaultHandSplitter);
     }
 
     /**
@@ -131,7 +133,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
             if (this.range.compareTo(note.getRange()) != 0) {
                 this.isPure = false;
             }
-            if (this.range.high() < note.getRange().high()) {
+            if (this.range.getHigh() < note.getRange().getHigh()) {
                 this.isPure = false;
                 this.isSemiPure = false;
                 return;
@@ -147,7 +149,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     private void markHoldovers() {
 
         Function<Note, Note> transformHoldovers = note ->
-                note.start() < this.range.low()
+                note.start() < this.range.getLow()
                         ? note.setIsHeld(true)
                         : note;
 
@@ -168,14 +170,14 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /**
      * Re-calculates the hand distribution based on the passed function representing another heuristic algorithm.
      */
-    boolean splitHands(Consumer<Column> splitFunc) {
-
-        if (LH == null && RH == null && middle == null) { return false; }
-
-        this.splitFunc = splitFunc;
-        this.splitFunc.accept(this);
-        return true;
-    }
+    //boolean splitHands(Consumer<Column> splitFunc) {
+    //
+    //    if (LH == null && RH == null && middle == null) { return false; }
+    //
+    //    this.splitFunc = splitFunc;
+    //    this.splitFunc.accept(this);
+    //    return true;
+    //}
 
     /**
      * Returns the distance between this Column's lowest and highest notes, in terms of pitch.
@@ -268,7 +270,7 @@ public class Column implements Ranged, Noted, Comparable<Column> {
     /**
      * See {@linkplain Column#range}.
      */
-    Range getActualRange() { return Range.concatenate(this.notes); }
+    Range getActualRange() { return RangeUtil.concatenate(this.notes); }
 
 
     /* =========

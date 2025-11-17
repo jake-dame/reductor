@@ -1,4 +1,4 @@
-package reductor.musicxml.exporter.builder;
+package reductor.musicxml.builder;
 
 
 import jakarta.xml.bind.JAXBElement;

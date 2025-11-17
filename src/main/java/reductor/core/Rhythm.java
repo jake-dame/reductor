@@ -8,11 +8,11 @@ public class Rhythm {
 
     // in enum ordinal order: whole, half, quarter, 8th, 16th, 32nd, 64th, 128th
     // `base` is the nearest note value in that list _without going over_
-    private RhythmTypeAlpha base;
+    private RhythmType base;
     // This can be gotten from the enum at any time, just nice to have calculated once
-    private final long baseDuration;
+    private final int baseDuration;
     // The duration passed to the constructor
-    private final long actualDuration;
+    private final int actualDuration;
 
     private boolean isTriplet;
     // There is absolutely no way to tell between these two from MIDI data, for equivalent durations
@@ -27,7 +27,7 @@ public class Rhythm {
         return new Rhythm(range.length() + 1);
     }
 
-    public static Rhythm fromType(RhythmTypeAlpha enumVal) {
+    public static Rhythm fromType(RhythmType enumVal) {
         return new Rhythm(enumVal.getDuration());
     }
 
@@ -42,9 +42,9 @@ public class Rhythm {
         this.isOrnament = other.isOrnament;
     }
 
-    public Rhythm(long actualDuration) {
+    public Rhythm(int actualDuration) {
 
-        this.base = RhythmTypeAlpha.getEnumType(actualDuration);
+        this.base = RhythmType.getEnumType(actualDuration);
         this.actualDuration = actualDuration;
         this.baseDuration = this.base.getDuration();
 
@@ -67,7 +67,7 @@ public class Rhythm {
             }
         }
 
-        if (this.base.compareTo(RhythmTypeAlpha.THIRTY_SECOND) > 0) {
+        if (this.base.compareTo(RhythmType.THIRTY_SECOND) > 0) {
             isOrnament = true;
         }
 
@@ -83,10 +83,10 @@ public class Rhythm {
                 + "This note is some species of EIGHTH note: tied, dotted, tripleted, etc.
          2.) However, due to how triplets work, a triplet EIGHTH is actually defined by being part of a trio that fits
           into a QUARTER note, i.e., the next biggest rhythm value.
-                + Triplet HALF noteList fit into a WHOLE note
-                + Triple QUARTER noteList fit into a HALF note
+                + Triplet HALF note fit into a WHOLE note
+                + Triple QUARTER note fit into a HALF note
                 + etc.
-         3.) But, because the actual duration of triplet noteList are LESS than their species version (i.e. a triplet
+         3.) But, because the actual duration of triplet note are LESS than their species version (i.e. a triplet
          EIGHTH is smaller in duration than an EIGHTH), they actually get assigned the next smallest base/species (e
          .g. a triplet EIGHTH gets assigned as "some form of SIXTEENTH")
          4.) To check for triplet values, we need to check if something is exactly (or within some threshold of)
@@ -101,7 +101,7 @@ public class Rhythm {
 
         */
 
-        RhythmTypeAlpha enclosingRhythm;
+        RhythmType enclosingRhythm;
 
         int ordinal = this.base.ordinal();
         if (ordinal == 0) {
@@ -109,22 +109,22 @@ public class Rhythm {
             return;
         } else if (ordinal == 1) {
             // this is a HALF note
-            enclosingRhythm = RhythmTypeAlpha.values()[ordinal - 1];
+            enclosingRhythm = RhythmType.values()[ordinal - 1];
         } else {
             // this is anything else
-            enclosingRhythm =  RhythmTypeAlpha.values()[ordinal - 2];
+            enclosingRhythm =  RhythmType.values()[ordinal - 2];
         }
 
         var tripletedValue = enclosingRhythm.getDuration() / 3;
         if (actualDuration == tripletedValue) {
             isTriplet = true;
             // Re-assign to be more accurate ("some species of")
-            this.base = RhythmTypeAlpha.values()[base.ordinal() - 1];
+            this.base = RhythmType.values()[base.ordinal() - 1];
         }
 
     }
 
-    public long getDuration() { return this.actualDuration; }
+    public int getDuration() { return this.actualDuration; }
 
     public boolean isTriplet() { return this.isTriplet; }
     public boolean isDotted() { return this.isDotted; }
@@ -159,7 +159,7 @@ public class Rhythm {
         return str + " " + this.base;
     }
 
-    public static Range toRange(long startTick, Rhythm rhythm) {
+    public static Range toRange(int startTick, Rhythm rhythm) {
         return new Range(startTick, rhythm.getDuration());
     }
 

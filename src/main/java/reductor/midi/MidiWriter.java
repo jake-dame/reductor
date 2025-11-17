@@ -1,4 +1,4 @@
-package reductor.midi.writer;
+package reductor.midi;
 
 
 import reductor.app.Paths;
@@ -8,17 +8,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 
-public class Writer {
+public class MidiWriter {
 
-
-    private static final String EXTENSION = ".mid";
-
-    // For now, this program will only ever produce single-sequence, single-track piano MIDI files.
-    private static final int MIDI_FILE_TYPE = 0;
-
-
-    private Writer() {}
-
+    private MidiWriter() {}
 
     /**
      * Given a {@link javax.sound.midi.Sequence}, writes out a MIDI file.
@@ -27,13 +19,26 @@ public class Writer {
      * @param baseName A base name to give the file
      * @return The Path of the written out file
      */
-    public static Path write(Sequence sequence, String baseName) throws IOException {
+    public static Path write(Sequence sequence, String baseName) {
 
-        Path path = Paths.getOutPath(baseName, EXTENSION);
+        // javax.sound will throw an exception anyway, but without telling you why, so throw here
+        if (sequence.getTracks().length == 0) {
+            throw new RuntimeException("must add at least one track to sequence");
+        }
 
-        MidiSystem.write(sequence, MIDI_FILE_TYPE, path.toFile());
+        // SMF File Type: 0 -> one seq, one trk; 1 -> one seq, two or more trks; 2 -> two or more seq
+        int midiFileType = (sequence.getTracks().length == 1) ? 0 : 1;
 
-        return path;
+        Path outPath;
+        final String extension = ".mid";
+        try {
+            outPath = Paths.getOutPath(baseName, extension);
+            MidiSystem.write(sequence, midiFileType, outPath.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return outPath;
     }
 
 

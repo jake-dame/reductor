@@ -1,5 +1,9 @@
-package reductor.core;
+package reductor.util;
 
+
+import reductor.core.Note;
+import reductor.core.Pitch;
+import reductor.core.builders.NoteBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +17,7 @@ public class NoteUtil {
      */
     public static ArrayList<Note> toList(List<String> strings) {
         ArrayList<Note> out = new ArrayList<>();
-        for (String str : strings) { out.add( Note.builder().pitch(new Pitch(str)).build() ); }
+        for (String str : strings) { out.add( NoteBuilder.builder().pitch(new Pitch(str)).build() ); }
         return out;
     }
 

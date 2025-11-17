@@ -1,64 +1,69 @@
 package reductor.app;
 
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
+/*
+ This class is mostly for dev use and output filepath creation
+ It's purely for internal consistency and producing predictable file names
 
+ Output directory for now is fixed at the root and `outputs/`, may become configurable later
+*/
 public class Paths {
 
-
-    public static final Path DIR_PIECES = Path.of("assets", "pieces");
-    public static final Path DIR_TESTS = Path.of("assets", "tests");
-
-    private static final Path DIR_OUTPUTS = Path.of("outputs");
-
+    public static final Path PIECES_SOURCE = Path.of("assets", "pieces");
+    public static final Path TESTS_SOURCE = Path.of("assets", "tests");
+    static Path OUTPUT_DIR = Path.of("outputs");
+    /*
+     1 or more of:
+         - letter {L} (including diacritical) OR
+         - decimal number {Nd} OR
+         - '-'
+     `\\p` == unicode property
+    */
+    private static final Pattern FILENAME_PATTERN = Pattern.compile("^[\\p{L}\\p{Nd}\\-]+$");
 
     private Paths() {}
 
-
-    public static String getFileBaseName(Path path) {
-        String fileName = path.getFileName().toString();
-        return fileName.substring(0, fileName.lastIndexOf('.'));
-    }
-
-    public static Path getOutPath(String baseName, String extension) throws IOException {
-        createOutputDirectory();
-        validateOutPath(baseName, extension);
-        return getUniqueOutPath(baseName, extension);
-    }
-
-    private static void createOutputDirectory() throws IOException {
-        Files.createDirectories(DIR_OUTPUTS);
-    }
-
-    private static void validateOutPath(String baseName, String extension) {
-
-        Path path = Path.of(baseName);
-
-        if (path.getFileName().toString().contains(".")) {
-            throw new IllegalArgumentException("baseName only, no extension: " + baseName);
+    /*
+     Filename style: "composer-title-movement" where composer is surname, title is anything,
+         and movement is roman numeral. All lowercase.
+     Example: "beethoven-sonata-no-9-i.musicxml"
+    */
+    public static Path getOutPath(String baseName, String extension) {
+        try {
+            Files.createDirectories(OUTPUT_DIR);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        if (path.getNameCount() != 1) {
-            throw new IllegalArgumentException("no separators in baseName: " + baseName);
+        /*
+         this doesn't ensure that the mapping is correct, just since this function is currently
+         public-facing, is needed. Internally this will never happen
+        */
+        if (extension == null
+                        || (!extension.equals(".musicxml")
+                        && !extension.equals(".mid")
+                        && !extension.isEmpty())
+        ) {
+            throw new RuntimeException("valid extensions are '.musicxml' or '.mid'");
         }
-
+        if (!FILENAME_PATTERN.matcher(baseName).matches()) {
+            throw new RuntimeException("valid file names can only contain letters, numbers, or '-'");
+        }
+        return appendUniqueSuffix(baseName, extension);
     }
 
-    private static Path getUniqueOutPath(String baseName, String extension) {
-
-        Path path = DIR_OUTPUTS.resolve(baseName + extension);
-
+    /* If "beethoven-kreutzer-i.musicxml" already exists --> "beethoven-kreutzer-i(1).midi */
+    static Path appendUniqueSuffix(String baseName, String extension) {
+        Path path = OUTPUT_DIR.resolve(baseName + extension);
         int counter = 1;
         while (Files.exists(path)) {
-            path = DIR_OUTPUTS.resolve(baseName + "(" + counter + ")" + extension);
+            path = OUTPUT_DIR.resolve(baseName + "(" + counter + ")" + extension);
             counter++;
         }
-
         return path;
     }
-
 
 }

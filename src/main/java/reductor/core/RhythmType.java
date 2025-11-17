@@ -1,6 +1,10 @@
 package reductor.core;
 
-public enum RhythmTypeAlpha {
+
+import reductor.app.Application;
+
+
+public enum RhythmType {
 
     //WHOLE(4),
     //HALF(2),
@@ -51,19 +55,19 @@ public enum RhythmTypeAlpha {
     DOTTED_ONE_TWENTY_EIGHTH(ONE_TWENTY_EIGHTH.multiplier * 1.5);
 
     private final double multiplier;
-    private long duration;
+    private int duration;
 
     static private boolean durationsSet;
 
-    RhythmTypeAlpha(double multiplier) {
+    RhythmType(double multiplier) {
         this.multiplier = multiplier;
     }
 
     private static void setDurations() {
 
         if (!durationsSet) {
-            for (RhythmTypeAlpha val : RhythmTypeAlpha.values()) {
-                val.duration = (long) (val.multiplier * Piece.TPQ);
+            for (RhythmType val : RhythmType.values()) {
+                val.duration = (int) (val.multiplier * Application.resolution);
             }
 
             durationsSet = true;
@@ -71,28 +75,28 @@ public enum RhythmTypeAlpha {
 
     }
 
-    public long getDuration() {
+    public int getDuration() {
         setDurations();
         return this.duration;
     }
 
-    static long getDuration(RhythmTypeAlpha enumVal) {
+    static long getDuration(RhythmType enumVal) {
         setDurations();
         return enumVal.duration;
     }
 
-    static Range getEquivalentRange(RhythmTypeAlpha enumVal) {
+    static Range getEquivalentRange(RhythmType enumVal) {
         setDurations();
         return new Range(0, enumVal.duration - 1);
     }
 
-    public static RhythmTypeAlpha getEnumType(long duration) {
+    public static RhythmType getEnumType(long duration) {
 
         setDurations();
 
-        RhythmTypeAlpha[] arr = RhythmTypeAlpha.values();
+        RhythmType[] arr = RhythmType.values();
         int i = 0;
-        RhythmTypeAlpha currType = WHOLE;
+        RhythmType currType = WHOLE;
 
         while (i < arr.length && duration < currType.duration) {
             currType = arr[i];

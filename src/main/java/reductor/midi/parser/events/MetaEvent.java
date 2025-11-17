@@ -1,4 +1,4 @@
-package reductor.midi.importer.parser.events;
+package reductor.midi.parser.events;
 
 
 import javax.sound.midi.MetaMessage;

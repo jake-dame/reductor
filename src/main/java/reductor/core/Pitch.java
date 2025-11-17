@@ -1,24 +1,29 @@
 package reductor.core;
 
 
+import reductor.util.PitchUtil;
+
 import java.util.regex.Matcher;
 
 
 public class Pitch implements Comparable<Pitch> {
-
-    private final String str;
 
     private final int letter;
     private final int accidental;
     private final int register;
     private final int value;
 
+    private final String str;
 
-    public Pitch(String str) { this(str, true); }
+    public Pitch(String str) {
+        this(str, true);
+    }
 
-    public Pitch(int midiValue) { this(PitchUtil.parseMidiValue(midiValue, true), true); }
+    public Pitch(int midiValue) {
+        this(PitchUtil.parseMidiValue(midiValue, true), true);
+    }
 
-    Pitch(Pitch other) {
+    public Pitch(Pitch other) {
         this.str = other.str;
         this.letter = other.letter;
         this.accidental = other.accidental;

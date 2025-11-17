@@ -49,7 +49,7 @@ Open `.mid` files in IntelliJ tabs as hex:
 
 MuseScore still outputs legacy DTD-based files.
 
-W3c/MusicXML has since "deprecated" DTD's in favor of XSD's. Additionally, those DTD files still use HTTP, so IntelliJ, for example, will not be able to fetch it by default and will scream at you when reviewing XML.
+MusicXML has since "deprecated" DTD's in favor of XSD's. Additionally, those DTD files still use HTTP, so IntelliJ, for example, will not be able to fetch it by default and will scream at you when reviewing XML.
 
 I have not yet found a way to fix the warning in IntelliJ so that it applies to any files produces either by MuseScore (input) or ProxyMusic (output). I just turned off warnings for it in IntelliJ.
 

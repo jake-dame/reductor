@@ -44,7 +44,7 @@ Appendices:
 
 ## MusicXML
 
-[W3C - MusicXML](https://www.w3.org/2021/06/musicxml40/musicxml-reference/) (official)
+[MusicXML](https://www.w3.org/2021/06/musicxml40/musicxml-reference/) (official)
 
 
 ## Assets (Music Files)

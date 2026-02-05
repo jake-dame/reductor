@@ -1,12 +1,4 @@
-################################ .gitignore for 'reductor'
-################ dev
-assets/resources
-assets/tests
-**/outputs/
-**/scribblins/
-.aaa-todo.md
-gradle.properties
-src/main/java/reductor/devv
+# .gitignore: "reductor"
 
 ################ Gradle
 .gradle/
@@ -14,14 +6,14 @@ src/main/java/reductor/devv
 
 ################ IntelliJ
 .idea/
-*.iml
 out/
+*.iml
 
 ################ jqwik
 .jqwik-database
 junit-platform.properties
 
-################ JVM: crash logs
+################ JVM crash logs
 hs_err_pid*
 replay_pid*
 
@@ -37,3 +29,13 @@ replay_pid*
 ################ XML
 partwise.dtd
 musicxml.xsd
+
+################ dev only
+assets/resources
+assets/tests
+**/outputs/
+**/scribblins/
+.aaa-todo.md
+gradle.properties
+src/main/java/reductor/devv
+

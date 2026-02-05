@@ -1,8 +1,8 @@
 # Third-Party Notices
 
-This project uses the following third-party library:
+This project uses the following third-party libraries:
 
-## proxymusic
+1. proxymusic
 
 - Repository: https://github.com/Audiveris/proxymusic
 - Authors: Audiveris project contributors

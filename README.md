@@ -1,7 +1,5 @@
 # reductor
 
-## Synopsis
-
 `reductor` is an orchestral reduction generation program (takes orchestral or multi-instrument scores and attempts to reduce them to a part playable by a solo pianist).
 
 __Work in progress.__

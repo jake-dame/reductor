@@ -1,16 +1,13 @@
 # reductor
 
-
 ## Synopsis
-
 
 `reductor` is an orchestral reduction generation program (takes orchestral or multi-instrument scores and attempts to reduce them to a part playable by a solo pianist).
 
-Work in progress.
+__Work in progress.__
 
 
 ## Documentation
-
 
 See [docs/](docs) for narrative and reference documentation, links for supporting software, further reading, etc.
 
@@ -35,17 +32,15 @@ Further: [MuseScore 4 CLI handbook page](https://musescore.org/en/handbook/4/com
 
 ## Nits
 
-
 ### Opening MIDI Files in Tabs (IntelliJ)
 
-Open `.mid` files in IntelliJ tabs as hex:
+To be able to open `.mid` files in IntelliJ tabs as hex:
 
-1. Install/Enablge the BinEd Hex Viewer
+1. Install/Enable the BinEd Hex Viewer
 2. In Settings > Editor > File Types > "Binary File (Opened by BinEd plugin)" > + > `*.mid`, and re-assign from Text.
 
 
 ### MusicXML External Resources
-
 
 MuseScore still outputs legacy DTD-based files.
 
@@ -59,9 +54,9 @@ Both the DTD (`partwise.dtd`) and XSD (
 
 ## Credits
 
+Originally a Capstone project by Jake Dame for Master of Software Development - MSD, Fall 2024
 
-Origin: Capstone project by Jake Dame for Master of Software Development - MSD, Fall 2024
+- University of Utah
+- Dr. Ben Jones, advisor
 
-University of Utah
-
-Dr. Ben Jones, advisor
+Continued as a passion project.

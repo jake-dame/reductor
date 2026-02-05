@@ -2,7 +2,7 @@
 
 This project uses the following third-party libraries:
 
-1. proxymusic
+1. __proxymusic__
 
 - Repository: https://github.com/Audiveris/proxymusic
 - Authors: Audiveris project contributors
